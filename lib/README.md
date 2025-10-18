@@ -7,7 +7,7 @@ This directory contains the Flutter source code for HisabBox.
 - `lib/` - Application source code
   - `main.dart` - Application entry point
   - `models/` - Data models
-  - `providers/` - State management
+  - `controllers/` - State management
   - `screens/` - UI screens
   - `services/` - Business logic services
   - `widgets/` - Reusable UI components

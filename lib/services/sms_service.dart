@@ -16,12 +16,14 @@ class SmsService {
     telephony.listenIncomingSms(
       onNewMessage: _onNewMessage,
       onBackgroundMessage: _onBackgroundMessage,
+      listenInBackground: true,
     );
   }
 
-  static void _onBackgroundMessage(SmsMessage message) {
+  @pragma('vm:entry-point')
+  static Future<void> _onBackgroundMessage(SmsMessage message) async {
     // Handle SMS in background
-    _processMessage(message);
+    await _processMessage(message);
   }
 
   void _onNewMessage(SmsMessage message) {
@@ -41,8 +43,9 @@ class SmsService {
 
     // Save to database if it's a valid transaction
     if (transaction != null) {
-      final isEnabled =
-          await ProviderSettingsService.isProviderEnabled(transaction.provider);
+      final isEnabled = await ProviderSettingsService.isProviderEnabled(
+        transaction.provider,
+      );
       if (!isEnabled) {
         return;
       }
@@ -59,10 +62,14 @@ class SmsService {
     final messages = await telephony.getInboxSms(
       columns: [SmsColumn.ADDRESS, SmsColumn.BODY, SmsColumn.DATE],
       filter: SmsFilter.where(SmsColumn.DATE)
-          .greaterThanOrEqualTo(startDate?.millisecondsSinceEpoch.toString() ?? '0')
+          .greaterThanOrEqualTo(
+            startDate?.millisecondsSinceEpoch.toString() ?? '0',
+          )
           .and(SmsColumn.DATE)
-          .lessThanOrEqualTo(endDate?.millisecondsSinceEpoch.toString() ?? 
-              DateTime.now().millisecondsSinceEpoch.toString()),
+          .lessThanOrEqualTo(
+            endDate?.millisecondsSinceEpoch.toString() ??
+                DateTime.now().millisecondsSinceEpoch.toString(),
+          ),
     );
 
     for (final message in messages) {

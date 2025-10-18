@@ -261,16 +261,16 @@ Convenience helper that returns just the list of enabled providers.
 
 ---
 
-## Transaction Provider
+## Transaction Controller
 
 ### Properties
 
-- `transactions`: List<Transaction> - Current transaction list
-- `isLoading`: bool - Loading state
-- `activeProviders`: List<Provider> - Currently active provider filters
-- `totalSent`: double - Total amount sent
-- `totalReceived`: double - Total amount received
-- `balance`: double - Current balance (received - sent)
+- `transactions`: RxList<Transaction> - Current transaction list
+- `isLoading`: RxBool - Loading state
+- `activeProviders`: RxList<Provider> - Currently active provider filters
+- `totalSent`: double - Total amount sent (computed)
+- `totalReceived`: double - Total amount received (computed)
+- `balance`: double - Current balance (computed)
 
 ### Methods
 
@@ -315,21 +315,21 @@ Trigger webhook synchronization.
 
 **Usage Example:**
 ```dart
-final provider = Provider.of<TransactionProvider>(context, listen: false);
-await provider.loadTransactions();
-await provider.setActiveProviders([Provider.bkash, Provider.nagad]);
+final controller = Get.find<TransactionController>();
+await controller.loadTransactions();
+await controller.setActiveProviders([Provider.bkash, Provider.nagad]);
 ```
 
 ---
 
-## Settings Provider
+## Settings Controller
 
 ### Properties
 
-- `webhookEnabled`: bool - Webhook sync enabled
-- `webhookUrl`: String - Webhook URL
-- `autoSync`: bool - Auto-sync enabled
-- `providerSettings`: Map<Provider, bool> - Enabled/disabled state for each provider
+- `webhookEnabled`: RxBool - Webhook sync enabled
+- `webhookUrl`: RxString - Webhook URL
+- `autoSync`: RxBool - Auto-sync enabled
+- `providerSettings`: RxMap<Provider, bool> - Enabled/disabled state for each provider
 - `enabledProviders`: List<Provider> - Convenience list of enabled providers
 
 ### Methods

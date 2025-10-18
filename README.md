@@ -84,7 +84,7 @@ The product roadmap is anchored by twelve acceptance criteria:
 
 - **Models** – `Transaction` aggregates parsed metadata plus raw SMS and MD5-based transaction hash.
 - **Services** – `SmsService`, `ProviderSettingsService`, `WebhookService`, `DatabaseService`, and `PermissionService` encapsulate business logic.
-- **Providers** – `TransactionProvider` and `SettingsProvider` expose reactive state to the UI.
+- **Controllers** – `TransactionController` and `SettingsController` expose reactive state via GetX.
 - **UI Screens** – Dashboard, Settings, Import, and optional Error Log/App Lock surfaces.
 
 ### Technology Stack
@@ -92,13 +92,13 @@ The product roadmap is anchored by twelve acceptance criteria:
 | Domain | Technology |
 | --- | --- |
 | Framework | Flutter ≥ 3.24 (Dart 3) |
-| State Management | Provider / Riverpod compatible |
+| State Management | GetX |
 | Persistence | Drift (SQLite) |
 | Settings | SharedPreferences |
 | Background Tasks | WorkManager + native BroadcastReceiver |
 | Networking | Dio |
 | SMS Handling | sms_advanced + Kotlin receiver |
-| Dependency Injection | GetIt / Riverpod |
+| Dependency Injection | GetX service locator |
 | Logging | Local-only logger |
 
 ## Getting Started
@@ -181,9 +181,9 @@ lib/
 ├── main.dart                 # App entry point
 ├── models/                   # Data models
 │   └── transaction.dart
-├── providers/                # State management
-│   ├── transaction_provider.dart
-│   └── settings_provider.dart
+├── controllers/              # State management
+│   ├── transaction_controller.dart
+│   └── settings_controller.dart
 ├── screens/                  # UI screens
 │   ├── dashboard_screen.dart
 │   ├── settings_screen.dart

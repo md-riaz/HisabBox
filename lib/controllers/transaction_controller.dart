@@ -1,37 +1,39 @@
-import 'package:flutter/foundation.dart';
+import 'package:get/get.dart';
 import 'package:hisabbox/models/transaction.dart';
 import 'package:hisabbox/services/database_service.dart';
 import 'package:hisabbox/services/webhook_service.dart';
 
-class TransactionProvider extends ChangeNotifier {
-  List<Transaction> _transactions = [];
-  bool _isLoading = false;
-  List<Provider> _activeProviders = Provider.values;
+class TransactionController extends GetxController {
+  final RxList<Transaction> transactions = <Transaction>[].obs;
+  final RxBool isLoading = false.obs;
+  final RxList<Provider> activeProviders = Provider.values.obs;
 
-  List<Transaction> get transactions => _transactions;
-  bool get isLoading => _isLoading;
-  List<Provider> get activeProviders => _activeProviders;
+  @override
+  void onInit() {
+    super.onInit();
+    loadTransactions();
+  }
 
   Future<void> loadTransactions({
     DateTime? startDate,
     DateTime? endDate,
     int limit = 30,
   }) async {
-    _isLoading = true;
-    notifyListeners();
+    isLoading.value = true;
 
     try {
-      _transactions = await DatabaseService.instance.getTransactions(
-        providers: _activeProviders,
+      final result = await DatabaseService.instance.getTransactions(
+        providers: activeProviders.toList(growable: false),
         startDate: startDate,
         endDate: endDate,
         limit: limit,
       );
+      transactions.assignAll(result);
     } catch (e) {
+      // ignore: avoid_print
       print('Error loading transactions: $e');
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      isLoading.value = false;
     }
   }
 
@@ -41,6 +43,7 @@ class TransactionProvider extends ChangeNotifier {
       await WebhookService.processNewTransaction(transaction);
       await loadTransactions();
     } catch (e) {
+      // ignore: avoid_print
       print('Error adding transaction: $e');
     }
   }
@@ -50,57 +53,66 @@ class TransactionProvider extends ChangeNotifier {
       await DatabaseService.instance.deleteTransaction(id);
       await loadTransactions();
     } catch (e) {
+      // ignore: avoid_print
       print('Error deleting transaction: $e');
     }
   }
 
   Future<void> setActiveProviders(List<Provider> providers) async {
-    _activeProviders = providers;
+    activeProviders.assignAll(providers);
     await loadTransactions();
   }
 
   Future<void> syncWithWebhook() async {
     try {
-      await WebhookService.syncTransactions();
+      await WebhookService.syncTransactionsManually();
       await loadTransactions();
     } catch (e) {
+      // ignore: avoid_print
       print('Error syncing with webhook: $e');
     }
   }
 
   Future<int> getTransactionCount() async {
-    return await DatabaseService.instance.getTransactionCount(
-      providers: _activeProviders,
+    return DatabaseService.instance.getTransactionCount(
+      providers: activeProviders.toList(growable: false),
     );
   }
 
   Future<double> getTotalSent() async {
-    return await DatabaseService.instance.getTotalAmount(
-      providers: _activeProviders,
+    return DatabaseService.instance.getTotalAmount(
+      providers: activeProviders.toList(growable: false),
       type: TransactionType.sent,
     );
   }
 
   Future<double> getTotalReceived() async {
-    return await DatabaseService.instance.getTotalAmount(
-      providers: _activeProviders,
+    return DatabaseService.instance.getTotalAmount(
+      providers: activeProviders.toList(growable: false),
       type: TransactionType.received,
     );
   }
 
   double get totalSent {
-    return _transactions
-        .where((t) => t.type == TransactionType.sent || t.type == TransactionType.cashout || t.type == TransactionType.payment)
+    return transactions
+        .where(
+          (t) =>
+              t.type == TransactionType.sent ||
+              t.type == TransactionType.cashout ||
+              t.type == TransactionType.payment,
+        )
         .fold(0.0, (sum, t) => sum + t.amount);
   }
 
   double get totalReceived {
-    return _transactions
-        .where((t) => t.type == TransactionType.received || t.type == TransactionType.cashin)
+    return transactions
+        .where(
+          (t) =>
+              t.type == TransactionType.received ||
+              t.type == TransactionType.cashin,
+        )
         .fold(0.0, (sum, t) => sum + t.amount);
   }
 
-  double get balance {
-    return totalReceived - totalSent;
-  }
+  double get balance => totalReceived - totalSent;
 }

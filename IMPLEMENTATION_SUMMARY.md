@@ -54,10 +54,10 @@ A production-ready Android application that:
 
 ### Design Patterns
 - **Singleton**: Database, SMS, and Webhook services
-- **Provider**: State management for UI
+- **GetX**: State management for UI
 - **Repository**: Database service acts as data repository
 - **Factory**: Transaction model creation
-- **Observer**: Provider pattern for state updates
+- **Observer**: GetX reactive streams for UI updates
 
 ### Key Components
 
@@ -331,7 +331,7 @@ UI Rebuilds
 - cupertino_icons (iOS icons)
 
 **State Management**
-- provider (State management)
+- get (State management)
 
 **Storage**
 - sqflite (Local database)
@@ -343,7 +343,7 @@ UI Rebuilds
 - permission_handler (Runtime permissions)
 
 **Networking**
-- http (Webhook communication)
+- dio (Webhook communication)
 
 **Background Processing**
 - workmanager (Background tasks)

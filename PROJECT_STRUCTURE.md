@@ -24,9 +24,9 @@ HisabBox/
 │   │   ├── transaction.dart          # Transaction model
 │   │   └── transaction.g.dart        # Generated JSON serialization
 │   │
-│   ├── providers/                    # State management
-│   │   ├── settings_provider.dart    # Settings state
-│   │   └── transaction_provider.dart # Transaction state
+│   ├── controllers/                  # State management
+│   │   ├── settings_controller.dart  # Settings state
+│   │   └── transaction_controller.dart # Transaction state
 │   │
 │   ├── screens/                      # UI screens
 │   │   ├── dashboard_screen.dart     # Main dashboard
@@ -94,9 +94,9 @@ HisabBox/
 - **transaction.dart**: Core data model for transactions
 - **transaction.g.dart**: Auto-generated JSON serialization code
 
-#### Providers
-- **transaction_provider.dart**: Manages transaction state and filtering
-- **settings_provider.dart**: Manages app settings
+#### Controllers
+- **transaction_controller.dart**: Manages transaction state and filtering
+- **settings_controller.dart**: Manages app settings
 
 #### Screens
 - **dashboard_screen.dart**: Main screen with transactions and summary
