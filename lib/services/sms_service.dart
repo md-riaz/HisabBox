@@ -1,6 +1,8 @@
 import 'package:telephony/telephony.dart';
 import 'package:hisabbox/services/sms_parser.dart';
 import 'package:hisabbox/services/database_service.dart';
+import 'package:hisabbox/services/provider_settings_service.dart';
+import 'package:hisabbox/services/webhook_service.dart';
 import 'package:hisabbox/models/transaction.dart';
 
 class SmsService {
@@ -30,7 +32,7 @@ class SmsService {
   static Future<void> _processMessage(SmsMessage message) async {
     final address = message.address ?? '';
     final body = message.body ?? '';
-    final timestamp = message.date != null 
+    final timestamp = message.date != null
         ? DateTime.fromMillisecondsSinceEpoch(message.date!)
         : DateTime.now();
 
@@ -39,7 +41,14 @@ class SmsService {
 
     // Save to database if it's a valid transaction
     if (transaction != null) {
+      final isEnabled =
+          await ProviderSettingsService.isProviderEnabled(transaction.provider);
+      if (!isEnabled) {
+        return;
+      }
+
       await DatabaseService.instance.insertTransaction(transaction);
+      await WebhookService.processNewTransaction(transaction);
     }
   }
 

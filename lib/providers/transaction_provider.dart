@@ -15,6 +15,7 @@ class TransactionProvider extends ChangeNotifier {
   Future<void> loadTransactions({
     DateTime? startDate,
     DateTime? endDate,
+    int limit = 30,
   }) async {
     _isLoading = true;
     notifyListeners();
@@ -24,6 +25,7 @@ class TransactionProvider extends ChangeNotifier {
         providers: _activeProviders,
         startDate: startDate,
         endDate: endDate,
+        limit: limit,
       );
     } catch (e) {
       print('Error loading transactions: $e');
@@ -36,6 +38,7 @@ class TransactionProvider extends ChangeNotifier {
   Future<void> addTransaction(Transaction transaction) async {
     try {
       await DatabaseService.instance.insertTransaction(transaction);
+      await WebhookService.processNewTransaction(transaction);
       await loadTransactions();
     } catch (e) {
       print('Error adding transaction: $e');
@@ -51,9 +54,9 @@ class TransactionProvider extends ChangeNotifier {
     }
   }
 
-  void setActiveProviders(List<Provider> providers) {
+  Future<void> setActiveProviders(List<Provider> providers) async {
     _activeProviders = providers;
-    loadTransactions();
+    await loadTransactions();
   }
 
   Future<void> syncWithWebhook() async {
