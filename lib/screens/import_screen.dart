@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:hisabbox/providers/transaction_provider.dart';
+import 'package:get/get.dart';
+import 'package:hisabbox/controllers/transaction_controller.dart';
 import 'package:hisabbox/services/sms_service.dart';
 
 class ImportScreen extends StatefulWidget {
@@ -14,11 +14,14 @@ class _ImportScreenState extends State<ImportScreen> {
   bool _isImporting = false;
   DateTime? _startDate;
   DateTime? _endDate;
+  final TransactionController _transactionController =
+      Get.find<TransactionController>();
 
   Future<void> _selectStartDate() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: _startDate ?? DateTime.now().subtract(const Duration(days: 30)),
+      initialDate:
+          _startDate ?? DateTime.now().subtract(const Duration(days: 30)),
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
     );
@@ -56,8 +59,7 @@ class _ImportScreenState extends State<ImportScreen> {
         endDate: _endDate,
       );
 
-      final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
-      await transactionProvider.loadTransactions();
+      await _transactionController.loadTransactions();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -67,9 +69,9 @@ class _ImportScreenState extends State<ImportScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Import failed: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Import failed: $e')));
       }
     } finally {
       if (mounted) {
@@ -83,9 +85,7 @@ class _ImportScreenState extends State<ImportScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Import SMS'),
-      ),
+      appBar: AppBar(title: const Text('Import SMS')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

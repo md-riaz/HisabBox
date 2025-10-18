@@ -97,7 +97,7 @@ class Transaction {
         (e) => e.name == map['type'],
         orElse: () => TransactionType.other,
       ),
-      amount: map['amount'] as double,
+      amount: (map['amount'] as num).toDouble(),
       recipient: map['recipient'] as String?,
       sender: map['sender'] as String?,
       transactionId: map['transactionId'] as String,

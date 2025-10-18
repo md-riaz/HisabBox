@@ -16,7 +16,7 @@ HisabBox is an offline-first Flutter application designed to parse financial SMS
 ### Presentation Layer
 - **Screens**: User-facing pages (Dashboard, Settings, Import)
 - **Widgets**: Reusable UI components
-- **Providers**: State management using Provider pattern
+- **Controllers**: State management using GetX
 
 ### Business Logic Layer
 - **Services**: Core business logic and external integrations
@@ -125,21 +125,21 @@ CREATE TABLE transactions (
 
 ### State Management
 
-**Pattern**: Provider (from provider package)
+**Pattern**: GetX controllers and reactive streams
 
-**Providers**:
+**Controllers**:
 
-1. **TransactionProvider**
+1. **TransactionController**
    - Manages transaction list
    - Handles filtering by provider
    - Calculates summary statistics
-   - Coordinates with Database Service
+   - Coordinates with Database Service and Webhook Service
 
-2. **SettingsProvider**
+2. **SettingsController**
    - Manages app settings
    - Webhook configuration
    - Auto-sync preferences
-   - Persistence via SharedPreferences
+   - Persists preferences via SharedPreferences
 
 ### Permission Handling
 
@@ -166,7 +166,7 @@ SMS Received
   → SMS Parser extracts transaction data
   → Database Service stores transaction
   → (Optional) Webhook Service syncs to cloud
-  → UI updates via Provider
+  → UI updates via GetX
 ```
 
 ### User Opens App
@@ -327,8 +327,8 @@ Trigger Sync
 - flutter: Framework
 - sqflite: Local database
 - telephony: SMS access
-- provider: State management
-- http: Webhook communication
+- get: State management
+- dio: Webhook communication
 
 **UI**:
 - material_color_utilities: Material 3 colors
