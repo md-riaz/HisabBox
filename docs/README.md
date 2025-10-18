@@ -39,6 +39,7 @@ This directory contains comprehensive documentation for HisabBox.
   - Settings Provider API
   - Models documentation
   - Testing examples
+- **[PRODUCT_VISION.md](PRODUCT_VISION.md)** - Product vision, actors, goals, and acceptance criteria
 
 ## Additional Documentation
 

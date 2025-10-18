@@ -1,55 +1,107 @@
 # HisabBox
 
-An offline-first SMS parser that tracks bKash, Nagad, Rocket, and bank messages, converting them into structured transactions.
+HisabBox is a persistent, webhook-driven SMS automation hub for Bangladesh’s mobile money ecosystem. It converts bKash, Nagad, Rocket, and bank alerts into structured JSON, stores them locally, and pushes each transaction to your webhook the moment connectivity is available.
 
-## Features
+## Vision
 
-- **Offline-First Architecture**: All data is stored locally using SQLite for maximum privacy and zero data loss
-- **SMS Parsing**: Automatically parses financial SMS from multiple providers:
-  - bKash
-  - Nagad
-  - Rocket
-  - Bank transactions
-- **Material 3 Dashboard**: Modern, intuitive interface built with Material Design 3
-- **Provider Filtering**: Filter transactions by payment provider
-- **Webhook Sync**: Securely push transaction updates to your webhook endpoint
-- **Import Historical Data**: Import and parse past SMS messages
-- **Background Monitoring**: Continuously monitors new SMS even when app is closed
-- **Persistent Storage**: Data persists across app restarts and device reboots
-- **Privacy-First**: All data stored locally, webhook sync is optional
+Deliver a **local-first transaction gateway** that never misses a financial SMS, keeps the data in the user’s control, and provides a push-only bridge to downstream automation or accounting systems.
 
-## Architecture
+## Product Pillars
 
-### Data Flow
-1. SMS received on device
-2. SMS parser extracts transaction details
-3. Transaction saved to local SQLite database
-4. If webhook enabled, transaction synced to remote endpoint
-5. Dashboard displays transactions with filters
+1. **Persistent Capture** – Native receivers and a foreground service keep listening even after app kills or device reboots.
+2. **Provider Control** – Users decide which mobile financial services and banks are parsed.
+3. **Offline Resilience** – Transactions are stored in SQLite/Drift and queued until the internet returns.
+4. **Webhook-Only Automation** – Structured payloads are POSTed to the user’s endpoint with WorkManager retries and no polling.
+5. **Privacy & Transparency** – Data never leaves the device unless a webhook is explicitly configured.
+
+## Feature Highlights
+
+- **Automatic SMS Parsing** for bKash, Nagad, Rocket, and Bangladeshi bank alerts with Bangla/English digit normalization.
+- **Provider Toggles** so Rocket or any other sender can be paused without uninstalling the app.
+- **Historical Imports** by message count or time range to backfill older statements.
+- **Material 3 Dashboard** showing the most recent 20–30 transactions with provider colors, amounts, balances, and TrxIDs.
+- **Webhook Push Engine** powered by Dio + WorkManager, featuring exponential backoff and idempotent transaction hashes.
+- **Offline Queueing & Recovery** to guarantee delivery once connectivity resumes.
+- **Error Log & Privacy Controls** including optional app lock and local-only diagnostics.
+
+## Core Scenarios
+
+### Dashboard
+View the latest transactions in a responsive list with provider filters and Bangla/English language toggle. Cards surface transaction type, amount, balance (when available), timestamp, and TrxID at a glance.
+
+### Provider Control
+Enable or disable individual providers from Settings. Disabled senders are ignored during live listening and historical imports.
+
+### SMS Capture Control
+Choose between **Start Listening Now** for future messages or **Import History** to backfill the last _N_ messages per provider.
+
+### Persistent Background Operation
+Native BroadcastReceivers insert transactions into Drift instantly, ensuring persistence even when the Flutter runtime is stopped or the device reboots.
+
+### Webhook Push
+Configure a webhook URL to receive JSON payloads for every new transaction. Failed deliveries retry automatically with exponential backoff until acknowledged.
+
+### Maintenance Utilities
+Reimport recent SMS, purge old data to reclaim space, or export CSV backups for manual bookkeeping.
+
+## Goals & Success Criteria
+
+The product roadmap is anchored by twelve acceptance criteria:
+
+1. Capture and display SMS in real time.
+2. Continue ingesting after the app is killed.
+3. Respect provider disablement settings.
+4. Parse historical messages on demand.
+5. Push to webhook immediately when configured.
+6. Retry failures without data loss.
+7. Resume seamlessly after device reboot.
+8. Deduplicate duplicate SMS by transaction hash.
+9. Queue offline transactions until connectivity returns.
+10. Refresh regex registries dynamically when updated.
+11. Provide clear guidance when permissions are missing.
+12. Operate through power-saving constraints.
+
+## System Architecture
+
+### End-to-End Flow
+```
+[SMS Provider]
+     ↓
+[Android BroadcastReceiver + Foreground Service]
+     ↓
+[Parser Engine & Provider Registry]
+     ↓
+[SQLite (Drift) Persistence]
+     ↓
+[Dashboard UI / Settings]
+     ↓
+[Webhook Sync Worker (Dio + WorkManager)]
+     ↓
+[User Webhook Endpoint]
+```
 
 ### Key Components
 
-#### Models
-- `Transaction`: Core data model for financial transactions
-- Enums: `Provider` (bKash, Nagad, Rocket, Bank), `TransactionType` (sent, received, cashout, etc.)
+- **Models** – `Transaction` aggregates parsed metadata plus raw SMS and MD5-based transaction hash.
+- **Services** – `SmsService`, `ProviderSettingsService`, `WebhookService`, `DatabaseService`, and `PermissionService` encapsulate business logic.
+- **Providers** – `TransactionProvider` and `SettingsProvider` expose reactive state to the UI.
+- **UI Screens** – Dashboard, Settings, Import, and optional Error Log/App Lock surfaces.
 
-#### Services
-- `DatabaseService`: SQLite database management
-- `SmsParser`: Regex-based parser for different SMS formats
-- `SmsService`: SMS monitoring and historical import
-- `WebhookService`: Secure webhook synchronization
-- `PermissionService`: Runtime permission handling
+### Technology Stack
 
-#### Providers (State Management)
-- `TransactionProvider`: Manages transaction state and filtering
-- `SettingsProvider`: Manages app settings and webhook configuration
+| Domain | Technology |
+| --- | --- |
+| Framework | Flutter ≥ 3.24 (Dart 3) |
+| State Management | Provider / Riverpod compatible |
+| Persistence | Drift (SQLite) |
+| Settings | SharedPreferences |
+| Background Tasks | WorkManager + native BroadcastReceiver |
+| Networking | Dio |
+| SMS Handling | sms_advanced + Kotlin receiver |
+| Dependency Injection | GetIt / Riverpod |
+| Logging | Local-only logger |
 
-#### Screens
-- `DashboardScreen`: Main screen with transaction list and summary
-- `SettingsScreen`: Configure webhook and sync settings
-- `ImportScreen`: Import historical SMS messages
-
-## Setup
+## Getting Started
 
 ### Prerequisites
 - Flutter SDK (>=3.0.0)
@@ -103,6 +155,10 @@ The app requires the following Android permissions:
 - Use provider filter chips on dashboard
 - Select/deselect providers (bKash, Nagad, Rocket, Bank)
 - Transactions update automatically
+
+### Provider Toggles & Import Controls
+- Navigate to **Settings → Provider Control** to disable Rocket or any other sender.
+- Choose **Start Listening Now** for live capture or **Import History** to backfill older messages.
 
 ### Importing Historical Data
 1. Tap import icon in dashboard

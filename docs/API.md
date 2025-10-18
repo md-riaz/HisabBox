@@ -179,6 +179,27 @@ Enable or disable webhook sync.
 
 **Returns:** `Future<void>`
 
+#### `isAutoSyncEnabled()`
+Check whether automatic syncing is enabled.
+
+**Returns:** `Future<bool>`
+
+#### `setAutoSyncEnabled(bool enabled)`
+Update the auto-sync flag stored in shared preferences.
+
+**Parameters:**
+- `enabled`: Boolean flag
+
+**Returns:** `Future<void>`
+
+#### `processNewTransaction(Transaction transaction)`
+Process a newly captured transaction and trigger background sync when auto-sync is enabled.
+
+**Parameters:**
+- `transaction`: Newly inserted transaction
+
+**Returns:** `Future<void>`
+
 #### `syncTransactions()`
 Sync all unsynced transactions to webhook.
 
@@ -201,6 +222,45 @@ Test webhook connectivity.
 
 ---
 
+## Provider Settings Service
+
+### Overview
+
+Utility for persisting enabled/disabled flags for each SMS provider. These
+preferences are accessible from both the UI and background isolates to ensure
+disabled providers are ignored everywhere.
+
+### Static Methods
+
+#### `isProviderEnabled(Provider provider)`
+Check whether a provider is enabled.
+
+**Parameters:**
+- `provider`: Provider to check
+
+**Returns:** `Future<bool>`
+
+#### `setProviderEnabled(Provider provider, bool enabled)`
+Persist the enabled state for a provider.
+
+**Parameters:**
+- `provider`: Provider to update
+- `enabled`: Boolean flag
+
+**Returns:** `Future<void>`
+
+#### `getProviderSettings()`
+Return a map containing the enabled flag for every provider.
+
+**Returns:** `Future<Map<Provider, bool>>`
+
+#### `getEnabledProviders()`
+Convenience helper that returns just the list of enabled providers.
+
+**Returns:** `Future<List<Provider>>`
+
+---
+
 ## Transaction Provider
 
 ### Properties
@@ -214,12 +274,13 @@ Test webhook connectivity.
 
 ### Methods
 
-#### `loadTransactions({startDate, endDate})`
-Load transactions from database.
+#### `loadTransactions({startDate, endDate, limit = 30})`
+Load transactions from the database.
 
 **Parameters:**
 - `startDate`: DateTime? - Start date filter
 - `endDate`: DateTime? - End date filter
+- `limit`: int - Maximum number of rows to fetch (defaults to the 30 most recent transactions)
 
 **Returns:** `Future<void>`
 
@@ -245,7 +306,7 @@ Update active provider filters.
 **Parameters:**
 - `providers`: List of providers to show
 
-**Returns:** `void`
+**Returns:** `Future<void>`
 
 #### `syncWithWebhook()`
 Trigger webhook synchronization.
@@ -256,7 +317,7 @@ Trigger webhook synchronization.
 ```dart
 final provider = Provider.of<TransactionProvider>(context, listen: false);
 await provider.loadTransactions();
-provider.setActiveProviders([Provider.bkash, Provider.nagad]);
+await provider.setActiveProviders([Provider.bkash, Provider.nagad]);
 ```
 
 ---
@@ -268,6 +329,8 @@ provider.setActiveProviders([Provider.bkash, Provider.nagad]);
 - `webhookEnabled`: bool - Webhook sync enabled
 - `webhookUrl`: String - Webhook URL
 - `autoSync`: bool - Auto-sync enabled
+- `providerSettings`: Map<Provider, bool> - Enabled/disabled state for each provider
+- `enabledProviders`: List<Provider> - Convenience list of enabled providers
 
 ### Methods
 
@@ -297,6 +360,15 @@ Enable/disable auto-sync.
 
 **Parameters:**
 - `enabled`: Boolean flag
+
+**Returns:** `Future<void>`
+
+#### `setProviderEnabled(Provider provider, bool enabled)`
+Enable or disable SMS ingestion for a provider.
+
+**Parameters:**
+- `provider`: Provider to update
+- `enabled`: True to capture SMS, false to ignore
 
 **Returns:** `Future<void>`
 
