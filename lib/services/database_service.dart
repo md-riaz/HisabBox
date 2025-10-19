@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:hisabbox/models/transaction.dart';
@@ -35,6 +36,7 @@ class DatabaseService {
         recipient TEXT,
         sender TEXT,
         transactionId TEXT NOT NULL,
+        transactionHash TEXT NOT NULL,
         timestamp TEXT NOT NULL,
         note TEXT,
         rawMessage TEXT NOT NULL,
@@ -54,6 +56,10 @@ class DatabaseService {
     await db.execute('''
       CREATE INDEX idx_synced ON transactions(synced)
     ''');
+
+    await db.execute('''
+      CREATE UNIQUE INDEX idx_transaction_hash ON transactions(transactionHash)
+    ''');
   }
 
   Future<String> insertTransaction(Transaction transaction) async {
@@ -61,9 +67,21 @@ class DatabaseService {
     await db.insert(
       'transactions',
       transaction.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
+      conflictAlgorithm: ConflictAlgorithm.ignore,
     );
     return transaction.id;
+  }
+
+  @visibleForTesting
+  Future<void> resetForTesting() async {
+    final db = _database;
+    if (db != null) {
+      await db.close();
+      _database = null;
+    }
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, 'hisabbox.db');
+    await deleteDatabase(path);
   }
 
   Future<List<Transaction>> getTransactions({

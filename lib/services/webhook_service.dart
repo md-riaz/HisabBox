@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
@@ -15,13 +16,18 @@ class WebhookService {
   static const String _webhookSyncTask = 'webhook_sync_task';
   static const String _webhookUniqueName = 'webhook_sync_unique';
 
-  static final Dio _dio = Dio(
+  static Dio _dio = Dio(
     BaseOptions(
       headers: const {'Content-Type': 'application/json'},
       connectTimeout: const Duration(seconds: 15),
       receiveTimeout: const Duration(seconds: 15),
     ),
   );
+
+  @visibleForTesting
+  static void setHttpClientForTesting(Dio dio) {
+    _dio = dio;
+  }
 
   static Future<void> initialize() async {
     await Workmanager().initialize(

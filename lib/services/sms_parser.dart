@@ -65,56 +65,65 @@ class SmsParser {
     caseSensitive: false,
   );
 
+  static const Set<String> _bkashSenderIds = {'bkash', 'bkashalert', '16247'};
+  static const Set<String> _nagadSenderIds = {'nagad', 'nagadalert', '16167'};
+  static const Set<String> _rocketSenderIds = {
+    'rocket',
+    'rocketalert',
+    '16216',
+    'dbbl',
+  };
+
   static Transaction? parse(String address, String message, DateTime timestamp) {
-    final lowercaseMsg = message.toLowerCase();
     final lowercaseAddress = address.toLowerCase();
 
     // Check for bKash
-    if (_isBkashMessage(lowercaseAddress, lowercaseMsg)) {
+    if (_isBkashSender(lowercaseAddress)) {
       return _parseBkash(message, timestamp);
     }
 
     // Check for Nagad
-    if (_isNagadMessage(lowercaseAddress, lowercaseMsg)) {
+    if (_isNagadSender(lowercaseAddress)) {
       return _parseNagad(message, timestamp);
     }
 
     // Check for Rocket
-    if (_isRocketMessage(lowercaseAddress, lowercaseMsg)) {
+    if (_isRocketSender(lowercaseAddress)) {
       return _parseRocket(message, timestamp);
     }
 
     // Check for Bank
-    if (_isBankMessage(lowercaseAddress, lowercaseMsg)) {
+    if (_isBankSender(lowercaseAddress)) {
       return _parseBank(message, timestamp);
     }
 
     return null;
   }
 
-  static bool _isBkashMessage(String address, String message) {
-    return address.contains('bkash') || 
-           message.contains('bkash') ||
-           address.contains('16247');
+  static bool _isBkashSender(String address) {
+    return _matchesSender(address, _bkashSenderIds);
   }
 
-  static bool _isNagadMessage(String address, String message) {
-    return address.contains('nagad') || 
-           message.contains('nagad') ||
-           address.contains('16167');
+  static bool _isNagadSender(String address) {
+    return _matchesSender(address, _nagadSenderIds);
   }
 
-  static bool _isRocketMessage(String address, String message) {
-    return address.contains('rocket') || 
-           message.contains('rocket') ||
-           address.contains('16216');
+  static bool _isRocketSender(String address) {
+    return _matchesSender(address, _rocketSenderIds);
   }
 
-  static bool _isBankMessage(String address, String message) {
-    final bankKeywords = ['bank', 'debit', 'credit', 'a/c', 'account', 'balance'];
-    return bankKeywords.any((keyword) => 
-      address.contains(keyword) || message.contains(keyword)
-    );
+  static bool _isBankSender(String address) {
+    final bankKeywords = ['bank', 'a/c', 'account'];
+    return bankKeywords.any((keyword) => address.contains(keyword));
+  }
+
+  static bool _matchesSender(String address, Set<String> knownSenders) {
+    for (final sender in knownSenders) {
+      if (address == sender || address.contains(sender)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   static Transaction? _parseBkash(String message, DateTime timestamp) {
@@ -123,13 +132,19 @@ class SmsParser {
     // Try sent pattern
     var match = _bkashSentPattern.firstMatch(message);
     if (match != null) {
+      final recipient = match.group(2)?.trim();
       return Transaction(
         id: id,
         provider: Provider.bkash,
         type: TransactionType.sent,
         amount: _parseAmount(match.group(1)!),
-        recipient: match.group(2)?.trim(),
+        recipient: recipient,
         transactionId: match.group(3)!,
+        transactionHash: Transaction.generateHash(
+          counterparty: recipient,
+          messageBody: message,
+          timestamp: timestamp,
+        ),
         timestamp: timestamp,
         rawMessage: message,
         createdAt: DateTime.now(),
@@ -139,13 +154,19 @@ class SmsParser {
     // Try received pattern
     match = _bkashReceivedPattern.firstMatch(message);
     if (match != null) {
+      final sender = match.group(2)?.trim();
       return Transaction(
         id: id,
         provider: Provider.bkash,
         type: TransactionType.received,
         amount: _parseAmount(match.group(1)!),
-        sender: match.group(2)?.trim(),
+        sender: sender,
         transactionId: match.group(3)!,
+        transactionHash: Transaction.generateHash(
+          counterparty: sender,
+          messageBody: message,
+          timestamp: timestamp,
+        ),
         timestamp: timestamp,
         rawMessage: message,
         createdAt: DateTime.now(),
@@ -155,13 +176,19 @@ class SmsParser {
     // Try cashout pattern
     match = _bkashCashoutPattern.firstMatch(message);
     if (match != null) {
+      final recipient = match.group(2)?.trim();
       return Transaction(
         id: id,
         provider: Provider.bkash,
         type: TransactionType.cashout,
         amount: _parseAmount(match.group(1)!),
-        recipient: match.group(2)?.trim(),
+        recipient: recipient,
         transactionId: match.group(3)!,
+        transactionHash: Transaction.generateHash(
+          counterparty: recipient,
+          messageBody: message,
+          timestamp: timestamp,
+        ),
         timestamp: timestamp,
         rawMessage: message,
         createdAt: DateTime.now(),
@@ -177,6 +204,11 @@ class SmsParser {
         type: TransactionType.payment,
         amount: _parseAmount(match.group(1)!),
         transactionId: match.group(2)!,
+        transactionHash: Transaction.generateHash(
+          counterparty: null,
+          messageBody: message,
+          timestamp: timestamp,
+        ),
         timestamp: timestamp,
         rawMessage: message,
         createdAt: DateTime.now(),
@@ -192,13 +224,19 @@ class SmsParser {
     // Try sent pattern
     var match = _nagadSentPattern.firstMatch(message);
     if (match != null) {
+      final recipient = match.group(2)?.trim();
       return Transaction(
         id: id,
         provider: Provider.nagad,
         type: TransactionType.sent,
         amount: _parseAmount(match.group(1)!),
-        recipient: match.group(2)?.trim(),
+        recipient: recipient,
         transactionId: match.group(3)!,
+        transactionHash: Transaction.generateHash(
+          counterparty: recipient,
+          messageBody: message,
+          timestamp: timestamp,
+        ),
         timestamp: timestamp,
         rawMessage: message,
         createdAt: DateTime.now(),
@@ -208,13 +246,19 @@ class SmsParser {
     // Try received pattern
     match = _nagadReceivedPattern.firstMatch(message);
     if (match != null) {
+      final sender = match.group(2)?.trim();
       return Transaction(
         id: id,
         provider: Provider.nagad,
         type: TransactionType.received,
         amount: _parseAmount(match.group(1)!),
-        sender: match.group(2)?.trim(),
+        sender: sender,
         transactionId: match.group(3)!,
+        transactionHash: Transaction.generateHash(
+          counterparty: sender,
+          messageBody: message,
+          timestamp: timestamp,
+        ),
         timestamp: timestamp,
         rawMessage: message,
         createdAt: DateTime.now(),
@@ -230,6 +274,11 @@ class SmsParser {
         type: TransactionType.cashout,
         amount: _parseAmount(match.group(1)!),
         transactionId: match.group(2)!,
+        transactionHash: Transaction.generateHash(
+          sender: null,
+          messageBody: message,
+          timestamp: timestamp,
+        ),
         timestamp: timestamp,
         rawMessage: message,
         createdAt: DateTime.now(),
@@ -245,13 +294,19 @@ class SmsParser {
     // Try sent pattern
     var match = _rocketSentPattern.firstMatch(message);
     if (match != null) {
+      final recipient = match.group(2)?.trim();
       return Transaction(
         id: id,
         provider: Provider.rocket,
         type: TransactionType.sent,
         amount: _parseAmount(match.group(1)!),
-        recipient: match.group(2)?.trim(),
+        recipient: recipient,
         transactionId: match.group(3)!,
+        transactionHash: Transaction.generateHash(
+          sender: recipient,
+          messageBody: message,
+          timestamp: timestamp,
+        ),
         timestamp: timestamp,
         rawMessage: message,
         createdAt: DateTime.now(),
@@ -261,13 +316,19 @@ class SmsParser {
     // Try received pattern
     match = _rocketReceivedPattern.firstMatch(message);
     if (match != null) {
+      final sender = match.group(2)?.trim();
       return Transaction(
         id: id,
         provider: Provider.rocket,
         type: TransactionType.received,
         amount: _parseAmount(match.group(1)!),
-        sender: match.group(2)?.trim(),
+        sender: sender,
         transactionId: match.group(3)!,
+        transactionHash: Transaction.generateHash(
+          counterparty: sender,
+          messageBody: message,
+          timestamp: timestamp,
+        ),
         timestamp: timestamp,
         rawMessage: message,
         createdAt: DateTime.now(),
@@ -283,6 +344,11 @@ class SmsParser {
         type: TransactionType.cashout,
         amount: _parseAmount(match.group(1)!),
         transactionId: match.group(2)!,
+        transactionHash: Transaction.generateHash(
+          counterparty: null,
+          messageBody: message,
+          timestamp: timestamp,
+        ),
         timestamp: timestamp,
         rawMessage: message,
         createdAt: DateTime.now(),
@@ -304,6 +370,11 @@ class SmsParser {
         type: TransactionType.sent,
         amount: _parseAmount(match.group(1)!),
         transactionId: id,
+        transactionHash: Transaction.generateHash(
+          sender: null,
+          messageBody: message,
+          timestamp: timestamp,
+        ),
         timestamp: timestamp,
         rawMessage: message,
         createdAt: DateTime.now(),
@@ -319,6 +390,11 @@ class SmsParser {
         type: TransactionType.received,
         amount: _parseAmount(match.group(1)!),
         transactionId: id,
+        transactionHash: Transaction.generateHash(
+          sender: null,
+          messageBody: message,
+          timestamp: timestamp,
+        ),
         timestamp: timestamp,
         rawMessage: message,
         createdAt: DateTime.now(),

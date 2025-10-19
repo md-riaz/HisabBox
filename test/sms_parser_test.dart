@@ -1,8 +1,35 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hisabbox/services/sms_parser.dart';
 import 'package:hisabbox/models/transaction.dart';
+import 'package:hisabbox/services/database_service.dart';
+import 'package:hisabbox/services/sms_parser.dart';
+import 'package:hisabbox/services/webhook_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUpAll(() {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  });
+
+  setUp(() async {
+    await DatabaseService.instance.resetForTesting();
+    SharedPreferences.setMockInitialValues({});
+    WebhookService.setHttpClientForTesting(
+      Dio(
+        BaseOptions(
+          headers: const {'Content-Type': 'application/json'},
+          connectTimeout: const Duration(seconds: 15),
+          receiveTimeout: const Duration(seconds: 15),
+        ),
+      ),
+    );
+  });
+
   group('SmsParser - bKash', () {
     test('parses bKash sent transaction', () {
       const message = 'You have sent Tk1,500.00 to 01712345678 successfully. Fee Tk25.00. TrxID ABC123XYZ at 2024-01-01 12:00:00';
@@ -149,19 +176,94 @@ void main() {
     test('returns null for non-financial SMS', () {
       const message = 'Hello, how are you?';
       final timestamp = DateTime.now();
-      
+
       final transaction = SmsParser.parse('Unknown', message, timestamp);
-      
+
       expect(transaction, isNull);
     });
 
     test('returns null for unrecognized format', () {
       const message = 'Some random text with amount 100';
       final timestamp = DateTime.now();
-      
+
       final transaction = SmsParser.parse('RandomSender', message, timestamp);
-      
+
       expect(transaction, isNull);
+    });
+
+    test('does not parse known template from unverified sender', () {
+      const message =
+          'You have sent Tk1,500.00 to 01712345678 successfully. Fee Tk25.00. TrxID ABC123XYZ at 2024-01-01 12:00:00';
+      final timestamp = DateTime(2024, 1, 1, 12, 0, 0);
+
+      final transaction = SmsParser.parse('01700000000', message, timestamp);
+
+      expect(transaction, isNull);
+    });
+  });
+
+  group('SmsParser - Hashing and deduplication', () {
+    test('generates identical hashes for duplicate messages', () {
+      const message =
+          'You have sent Tk1,500.00 to 01712345678 successfully. Fee Tk25.00. TrxID ABC123XYZ at 2024-01-01 12:00:00';
+      final timestamp = DateTime(2024, 1, 1, 12, 0, 0);
+
+      final first = SmsParser.parse('bKash', message, timestamp);
+      final second = SmsParser.parse('bKash', message, timestamp);
+
+      expect(first, isNotNull);
+      expect(second, isNotNull);
+      expect(first!.transactionHash, second!.transactionHash);
+    });
+
+    test('ignores duplicate SMS and emits a single webhook call', () async {
+      SharedPreferences.setMockInitialValues({
+        'webhook_enabled': true,
+        'webhook_url': 'https://example.com/webhook',
+        'auto_sync': true,
+      });
+
+      const message =
+          'You have received Tk2,000.00 from 01798765432. TrxID DEF456GHI at 2024-01-02 14:30:00';
+      final timestamp = DateTime(2024, 1, 2, 14, 30, 0);
+
+      final first = SmsParser.parse('bKash', message, timestamp)!;
+      final duplicate = SmsParser.parse('bKash', message, timestamp)!;
+
+      await DatabaseService.instance.insertTransaction(first);
+      await DatabaseService.instance.insertTransaction(duplicate);
+
+      final db = await DatabaseService.instance.database;
+      final rows = await db.query('transactions');
+      expect(rows.length, 1);
+
+      int callCount = 0;
+      WebhookService.setHttpClientForTesting(
+        Dio()
+          ..interceptors.add(
+            InterceptorsWrapper(
+              onRequest: (options, handler) {
+                callCount++;
+                handler.resolve(
+                  Response(
+                    requestOptions: options,
+                    statusCode: 200,
+                    data: {},
+                  ),
+                );
+              },
+            ),
+          ),
+      );
+
+      final success = await WebhookService.syncTransactions();
+      expect(success, isTrue);
+      expect(callCount, 1);
+
+      // Subsequent syncs with the duplicate should not trigger new calls.
+      final secondSync = await WebhookService.syncTransactions();
+      expect(secondSync, isTrue);
+      expect(callCount, 1);
     });
   });
 }
