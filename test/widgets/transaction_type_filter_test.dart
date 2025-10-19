@@ -44,7 +44,7 @@ void main() {
       TransactionType.values.length,
     );
 
-    final targetType = TransactionType.sent;
+    const targetType = TransactionType.sent;
     final chipFinder = find.widgetWithText(FilterChip, targetType.displayName);
     expect(chipFinder, findsOneWidget);
 

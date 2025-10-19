@@ -92,45 +92,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ...providerSettings.entries
                         .where((entry) => entry.key != Provider.other)
                         .map((entry) {
-                          final providerType = entry.key;
-                          final isEnabled = entry.value;
-                          return SwitchListTile(
-                            title: Text(providerType.displayName),
-                            subtitle: Text(
-                              isEnabled
-                                  ? 'Enabled — transactions will be recorded'
-                                  : 'Disabled — SMS will be ignored',
-                            ),
-                            secondary: Icon(
-                              providerType.glyph,
-                              color: providerType.accentColor,
-                            ),
-                            value: isEnabled,
-                            onChanged: (value) async {
-                              final scaffoldMessenger = ScaffoldMessenger.of(
-                                context,
-                              );
-                              await _settingsController.setProviderEnabled(
-                                providerType,
-                                value,
-                              );
-
-                              await _transactionController.loadTransactions();
-
-                              if (!mounted) return;
-
-                              scaffoldMessenger.showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    value
-                                        ? '${providerType.displayName} enabled'
-                                        : '${providerType.displayName} disabled',
-                                  ),
-                                ),
-                              );
-                            },
+                      final providerType = entry.key;
+                      final isEnabled = entry.value;
+                      return SwitchListTile(
+                        title: Text(providerType.displayName),
+                        subtitle: Text(
+                          isEnabled
+                              ? 'Enabled — transactions will be recorded'
+                              : 'Disabled — SMS will be ignored',
+                        ),
+                        secondary: Icon(
+                          providerType.glyph,
+                          color: providerType.accentColor,
+                        ),
+                        value: isEnabled,
+                        onChanged: (value) async {
+                          final scaffoldMessenger = ScaffoldMessenger.of(
+                            context,
                           );
-                        }),
+                          await _settingsController.setProviderEnabled(
+                            providerType,
+                            value,
+                          );
+
+                          await _transactionController.loadTransactions();
+
+                          if (!mounted) return;
+
+                          scaffoldMessenger.showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                value
+                                    ? '${providerType.displayName} enabled'
+                                    : '${providerType.displayName} disabled',
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    }),
                   ],
                 ),
               ),

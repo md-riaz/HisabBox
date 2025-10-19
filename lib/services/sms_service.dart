@@ -1,4 +1,4 @@
-import 'package:another_telephony/another_telephony.dart';
+import 'package:another_telephony/telephony.dart';
 import 'package:hisabbox/services/sms_parser.dart';
 import 'package:hisabbox/services/database_service.dart';
 import 'package:hisabbox/services/provider_settings_service.dart';
@@ -7,7 +7,7 @@ import 'package:hisabbox/models/transaction.dart';
 
 class SmsService {
   static final SmsService instance = SmsService._init();
-  final AnotherTelephony telephony = AnotherTelephony.instance;
+  final Telephony telephony = Telephony.instance;
 
   SmsService._init();
 
@@ -39,7 +39,7 @@ class SmsService {
         : DateTime.now();
 
     // Parse the SMS
-    final transaction = SmsParser.parse(address, body, timestamp);
+    final Transaction? transaction = SmsParser.parse(address, body, timestamp);
 
     // Save to database if it's a valid transaction
     if (transaction != null) {

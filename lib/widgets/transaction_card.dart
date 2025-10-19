@@ -123,8 +123,7 @@ class TransactionCard extends StatelessWidget {
             const SizedBox(height: 4),
             if (transaction.recipient != null)
               Text('To: ${transaction.recipient}'),
-            if (transaction.sender != null)
-              Text('From: ${transaction.sender}'),
+            if (transaction.sender != null) Text('From: ${transaction.sender}'),
             Text('TrxID: ${transaction.transactionId}'),
             Text(
               dateFormat.format(transaction.timestamp),
@@ -136,7 +135,8 @@ class TransactionCard extends StatelessWidget {
             if (transaction.synced)
               Row(
                 children: [
-                  Icon(Icons.cloud_done, size: 14, color: Colors.green.shade600),
+                  Icon(Icons.cloud_done,
+                      size: 14, color: Colors.green.shade600),
                   const SizedBox(width: 4),
                   Text(
                     'Synced',

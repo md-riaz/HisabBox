@@ -27,6 +27,7 @@
 /packages/flutter/coverage/
 version
 analysis_benchmark.json
+flutter/
 
 # packages file containing multi-root paths
 .packages.generated
@@ -47,15 +48,15 @@ unlinked.ds
 unlinked_spec.ds
 
 # Android related
-**/android/**/gradle-wrapper.jar
 .gradle/
 **/android/captures/
-**/android/gradlew
-**/android/gradlew.bat
 **/android/local.properties
 **/android/**/GeneratedPluginRegistrant.java
 **/android/key.properties
 *.jks
+android/gradle/wrapper/gradle-wrapper.jar
+android/gradlew
+android/gradlew.bat
 
 # iOS/XCode related
 **/ios/**/*.mode1v3

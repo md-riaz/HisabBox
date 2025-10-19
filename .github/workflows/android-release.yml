@@ -1,24 +1,20 @@
-name: Android Split APK Release
+name: Android Workflow Validation
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
 
 jobs:
-  build-release:
+  analyze:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Derive version from tag
-        id: version
-        run: |
-          tag_name="$GITHUB_REF_NAME"
-          version="${tag_name#v}"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "Derived version $version from tag $tag_name"
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -28,21 +24,5 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Build split APKs
-        run: flutter build apk --release --split-per-abi
-
-      - name: Collect release artifacts
-        run: |
-          mkdir -p release
-          cp build/app/outputs/flutter-apk/app-*-release.apk release/
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          name: HisabBox v${{ steps.version.outputs.version }}
-          body: |
-            Automated release for version ${{ steps.version.outputs.version }} generated from tag ${{ github.ref_name }}.
-          files: release/*.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run Flutter analyze
+        run: flutter analyze
