@@ -87,12 +87,12 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
                         Icon(
                           Icons.inbox_outlined,
                           size: 64,
-                          color: Colors.grey,
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         Text(
                           'No transactions found',
-                          style: TextStyle(fontSize: 16, color: Colors.grey),
+                          style: TextStyle(fontSize: 16, color: theme.colorScheme.onSurfaceVariant),
                         ),
                       ],
                     ),
