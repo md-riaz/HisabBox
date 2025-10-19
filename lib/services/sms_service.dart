@@ -1,4 +1,4 @@
-import 'package:telephony/telephony.dart';
+import 'package:another_telephony/another_telephony.dart';
 import 'package:hisabbox/services/sms_parser.dart';
 import 'package:hisabbox/services/database_service.dart';
 import 'package:hisabbox/services/provider_settings_service.dart';
@@ -7,7 +7,7 @@ import 'package:hisabbox/models/transaction.dart';
 
 class SmsService {
   static final SmsService instance = SmsService._init();
-  final Telephony telephony = Telephony.instance;
+  final AnotherTelephony telephony = AnotherTelephony.instance;
 
   SmsService._init();
 

@@ -5,7 +5,7 @@ import 'package:hisabbox/models/transaction.dart';
 /// Manages the enabled/disabled state of SMS providers.
 ///
 /// Provider preferences are stored in [SharedPreferences] so they can be
-/// accessed from background isolates (for example, when the telephony plugin
+/// accessed from background isolates (for example, when the another_telephony plugin
 /// processes messages while the Flutter runtime is killed).
 class ProviderSettingsService {
   static const String _providerPrefix = 'provider_enabled_';

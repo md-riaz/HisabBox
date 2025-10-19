@@ -94,7 +94,7 @@ CREATE TABLE transactions (
 - Work in foreground and background
 
 **Integration**:
-- Uses telephony package for SMS access
+- Uses another_telephony package for SMS access
 - Delegates parsing to SMS Parser
 - Saves results to Database Service
 
@@ -326,7 +326,7 @@ Trigger Sync
 **Core**:
 - flutter: Framework
 - sqflite: Local database
-- telephony: SMS access
+- another_telephony: SMS access
 - get: State management
 - dio: Webhook communication
 
