@@ -2,6 +2,19 @@ name: Android Workflow Validation
 
 on:
   workflow_dispatch:
+    inputs:
+      release_body:
+        description: 'Optional release notes to include in the GitHub release.'
+        required: false
+        default: ''
+      draft:
+        description: 'Create the GitHub release as a draft when set to true.'
+        required: false
+        default: 'false'
+      prerelease:
+        description: 'Mark the GitHub release as a prerelease when set to true.'
+        required: false
+        default: 'false'
   release:
     types: [published]
 
@@ -28,6 +41,19 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Determine release metadata
+        id: release_metadata
+        run: |
+          version=$(grep '^version:' pubspec.yaml | head -n1 | awk '{print $2}')
+          if [ -z "$version" ]; then
+            echo "Unable to determine version from pubspec.yaml" >&2
+            exit 1
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag_name=v$version" >> "$GITHUB_OUTPUT"
+          echo "release_name=Release v$version" >> "$GITHUB_OUTPUT"
+
       - name: Rehydrate launcher icons
         run: |
           flutter create --platforms android --project-name tmp_icon_app tmp_icons
@@ -43,8 +69,19 @@ jobs:
           name: android-universal-apk
           path: build/app/outputs/flutter-apk/app-release.apk
 
-      - name: Upload universal APK to release
+      - name: Upload universal APK to GitHub release
         if: github.event_name == 'release'
         uses: softprops/action-gh-release@v1
         with:
           files: build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Create GitHub release with APK
+        if: github.event_name == 'workflow_dispatch'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: build/app/outputs/flutter-apk/app-release.apk
+          tag_name: ${{ steps.release_metadata.outputs.tag_name }}
+          name: ${{ steps.release_metadata.outputs.release_name }}
+          body: ${{ github.event.inputs.release_body }}
+          draft: ${{ github.event.inputs.draft == 'true' }}
+          prerelease: ${{ github.event.inputs.prerelease == 'true' }}
