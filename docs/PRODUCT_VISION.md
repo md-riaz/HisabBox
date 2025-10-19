@@ -66,7 +66,7 @@ SMS Provider → Telephony plugin background isolate → Parser Service → Drif
             → Dashboard UI / Settings ↔ WorkManager Sync → User Webhook
 ```
 
-Persistence guarantees: every SMS is captured through the plugin-managed background isolate, committed to storage, and queued for webhook delivery even if Flutter is killed or the device restarts.
+Persistence guarantees: every SMS is captured through the telephony plugin background isolate, committed to storage, and queued for webhook delivery even if Flutter is killed or the device restarts.
 
 ## 6. Architecture Overview
 
