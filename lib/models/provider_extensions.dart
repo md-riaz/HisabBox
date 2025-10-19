@@ -70,11 +70,11 @@ extension ProviderUiMetadata on Provider {
   String get matchingDescription {
     switch (this) {
       case Provider.bkash:
-        return 'Matches SMS from sender IDs like bKash, bKashAlert, and 16247.';
+        return 'Matches SMS from sender IDs like bKash and 16247.';
       case Provider.nagad:
-        return 'Matches SMS from sender IDs like Nagad, NagadAlert, and 16167.';
+        return 'Matches SMS from sender IDs like Nagad and 16167.';
       case Provider.rocket:
-        return 'Matches SMS from sender IDs like Rocket, RocketAlert, and 16216.';
+        return 'Matches SMS from sender IDs like Rocket and 16216.';
       case Provider.dutchBanglaBank:
         return 'Matches SMS containing Dutch-Bangla or DBBL account notifications.';
       case Provider.bracBank:
