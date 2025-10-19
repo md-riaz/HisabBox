@@ -4,35 +4,42 @@ import 'package:hisabbox/services/providers/sms_provider.dart';
 
 class BkashProvider extends SmsProvider {
   static final RegExp _sentPattern = RegExp(
-    r'You have sent Tk([\d,]+\.?\d*) to ([\d\s]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
+    r'You have sent Tk\s*([\d,]+(?:\.\d+)?) to ([\d\s]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
     caseSensitive: false,
+    dotAll: true,
   );
 
   static final RegExp _receivedPattern = RegExp(
-    r'You have received(?: [^T]+)? Tk([\d,]+\.?\d*) from ([^\.]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
+    r'You have received(?: [^T]+)? Tk\s*([\d,]+(?:\.\d+)?) from ([^\.]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
     caseSensitive: false,
     dotAll: true,
   );
 
   static final RegExp _receivedDepositPattern = RegExp(
-    r'You have received deposit from [^\.]+ of Tk([\d,]+\.?\d*) from ([^\.]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
+    r'You have received deposit from [^\.]+ of Tk\s*([\d,]+(?:\.\d+)?) from ([^\.]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
     caseSensitive: false,
     dotAll: true,
   );
 
   static final RegExp _cashoutPattern = RegExp(
-    r'Cash Out Tk([\d,]+\.?\d*) .*?from ([\d\s]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
-    caseSensitive: false,
-  );
-
-  static final RegExp _paymentPattern = RegExp(
-    r'Payment of Tk([\d,]+\.?\d*)(?: to ([^\.]+?))?.*?Trx[.\s]*ID[:\s]*([\w\d]+)',
+    r'Cash Out Tk\s*([\d,]+(?:\.\d+)?) .*?from ([\d\s]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
     caseSensitive: false,
     dotAll: true,
   );
 
+  static final RegExp _paymentPattern = RegExp(
+    r'Payment of Tk\s*([\d,]+(?:\.\d+)?).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
+    caseSensitive: false,
+    dotAll: true,
+  );
+
+  static final RegExp _paymentRecipientPattern = RegExp(
+    r'Payment of Tk\s*[\d,]+(?:\.\d+)? to ([^\.]+)',
+    caseSensitive: false,
+  );
+
   static final RegExp _billPaymentPattern = RegExp(
-    r'Bill successfully paid.*?Biller[:\s]*([^\n]+).*?Amount[:\s]*Tk\s*([\d,]+\.?\d*).*?Trx[.:\s]*ID[:\s]*([\w\d]+)',
+    r'Bill successfully paid.*?Biller[:\s]*([^\n]+).*?Amount[:\s]*Tk\s*([\d,]+(?:\.\d+)?).*?Trx[.:\s]*ID[:\s]*([\w\d]+)',
     caseSensitive: false,
     dotAll: true,
   );
@@ -111,16 +118,32 @@ class BkashProvider extends SmsProvider {
 
     final paymentMatch = _paymentPattern.firstMatch(message);
     if (paymentMatch != null) {
-      final rawRecipient = paymentMatch.group(2)?.trim();
+      final recipientMatch = _paymentRecipientPattern.firstMatch(message);
+      final rawRecipient = recipientMatch?.group(1)?.trim();
       final recipient = rawRecipient
-          ?.replaceAll(RegExp(r'(?:is|was) successful', caseSensitive: false), '')
+          ?.replaceAll(
+            RegExp(r'\sis successful$', caseSensitive: false),
+            '',
+          )
+          .replaceAll(
+            RegExp(r'\swas successful$', caseSensitive: false),
+            '',
+          )
+          .replaceAll(
+            RegExp(r'\ssuccessfully$', caseSensitive: false),
+            '',
+          )
+          .replaceAll(
+            RegExp(r'\ssuccessful$', caseSensitive: false),
+            '',
+          )
           .trim();
       return buildTransaction(
         provider: provider,
         type: TransactionType.payment,
         amount: parseAmount(paymentMatch.group(1)!),
         recipient: recipient?.isEmpty ?? true ? null : recipient,
-        transactionId: paymentMatch.group(3)!,
+        transactionId: paymentMatch.group(2)!,
         timestamp: timestamp,
         rawMessage: message,
       );
