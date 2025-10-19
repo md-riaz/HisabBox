@@ -71,11 +71,38 @@ class SmsParser {
     'rocket',
     'rocketalert',
     '16216',
-    'dbbl',
+  };
+
+  static const Map<Provider, Set<String>> _bankSenderIds = {
+    Provider.dutchBanglaBank: {'dbbl', 'dutch-bangla', 'dutchbangla'},
+    Provider.bracBank: {'bracbank', 'brac-bank', 'brac'},
+    Provider.cityBank: {'citybank', 'city-bank', 'thecitybank', 'cbl'},
+    Provider.bankAsia: {'bankasia', 'bank-asia'},
+    Provider.islamiBank: {'islami', 'ibbl', 'islami-bank'},
+  };
+
+  static final Map<Provider, List<RegExp>> _bankIdentifierPatterns = {
+    Provider.dutchBanglaBank: [
+      RegExp(r'dutch[-\s]?bangla', caseSensitive: false),
+      RegExp(r'\bdbbl\b', caseSensitive: false),
+    ],
+    Provider.bracBank: [RegExp(r'brac\s+bank', caseSensitive: false)],
+    Provider.cityBank: [
+      RegExp(r'city\s+bank', caseSensitive: false),
+      RegExp(r'\bcbl\b', caseSensitive: false),
+    ],
+    Provider.bankAsia: [RegExp(r'bank\s+asia', caseSensitive: false)],
+    Provider.islamiBank: [
+      RegExp(r'islami\s+bank', caseSensitive: false),
+      RegExp(r'\bibbl\b', caseSensitive: false),
+    ],
   };
 
   static Transaction? parse(
-      String address, String message, DateTime timestamp) {
+    String address,
+    String message,
+    DateTime timestamp,
+  ) {
     final lowercaseAddress = address.toLowerCase();
 
     // Check for bKash
@@ -94,8 +121,8 @@ class SmsParser {
     }
 
     // Check for Bank
-    if (_isBankSender(lowercaseAddress)) {
-      return _parseBank(message, timestamp);
+    if (_isBankSender(lowercaseAddress, message.toLowerCase())) {
+      return _parseBank(address, message, timestamp);
     }
 
     return null;
@@ -113,9 +140,17 @@ class SmsParser {
     return _matchesSender(address, _rocketSenderIds);
   }
 
-  static bool _isBankSender(String address) {
-    final bankKeywords = ['bank', 'a/c', 'account'];
-    return bankKeywords.any((keyword) => address.contains(keyword));
+  static bool _isBankSender(String address, String message) {
+    for (final senderSet in _bankSenderIds.values) {
+      if (_matchesSender(address, senderSet)) {
+        return true;
+      }
+    }
+
+    const bankKeywords = ['bank', 'a/c', 'account'];
+    return bankKeywords.any(
+      (keyword) => address.contains(keyword) || message.contains(keyword),
+    );
   }
 
   static bool _matchesSender(String address, Set<String> knownSenders) {
@@ -359,15 +394,20 @@ class SmsParser {
     return null;
   }
 
-  static Transaction? _parseBank(String message, DateTime timestamp) {
+  static Transaction? _parseBank(
+    String address,
+    String message,
+    DateTime timestamp,
+  ) {
     final id = DateTime.now().millisecondsSinceEpoch.toString();
+    final provider = _detectBankProvider(address, message);
 
     // Try debit pattern
     var match = _bankDebitPattern.firstMatch(message);
     if (match != null) {
       return Transaction(
         id: id,
-        provider: Provider.bank,
+        provider: provider,
         type: TransactionType.sent,
         amount: _parseAmount(match.group(1)!),
         transactionId: id,
@@ -387,7 +427,7 @@ class SmsParser {
     if (match != null) {
       return Transaction(
         id: id,
-        provider: Provider.bank,
+        provider: provider,
         type: TransactionType.received,
         amount: _parseAmount(match.group(1)!),
         transactionId: id,
@@ -403,6 +443,26 @@ class SmsParser {
     }
 
     return null;
+  }
+
+  static Provider _detectBankProvider(String address, String message) {
+    final normalizedAddress = address.toLowerCase();
+    for (final entry in _bankSenderIds.entries) {
+      if (_matchesSender(normalizedAddress, entry.value)) {
+        return entry.key;
+      }
+    }
+
+    final normalizedMessage = message.toLowerCase();
+    for (final entry in _bankIdentifierPatterns.entries) {
+      for (final pattern in entry.value) {
+        if (pattern.hasMatch(normalizedMessage)) {
+          return entry.key;
+        }
+      }
+    }
+
+    return Provider.other;
   }
 
   static double _parseAmount(String amountStr) {
