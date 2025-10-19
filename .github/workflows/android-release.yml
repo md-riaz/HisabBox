@@ -28,6 +28,12 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Rehydrate launcher icons
+        run: |
+          flutter create --platforms android --project-name tmp_icon_app tmp_icons
+          cp -R tmp_icons/android/app/src/main/res/mipmap-* android/app/src/main/res/
+          rm -rf tmp_icons
+
       - name: Build split APKs
         run: flutter build apk --release --split-per-abi
 
