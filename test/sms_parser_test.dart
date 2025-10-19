@@ -190,6 +190,16 @@ void main() {
 
       expect(transaction, isNull);
     });
+
+    test('does not parse known template from unverified sender', () {
+      const message =
+          'You have sent Tk1,500.00 to 01712345678 successfully. Fee Tk25.00. TrxID ABC123XYZ at 2024-01-01 12:00:00';
+      final timestamp = DateTime(2024, 1, 1, 12, 0, 0);
+
+      final transaction = SmsParser.parse('01700000000', message, timestamp);
+
+      expect(transaction, isNull);
+    });
   });
 
   group('SmsParser - Hashing and deduplication', () {

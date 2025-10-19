@@ -65,56 +65,65 @@ class SmsParser {
     caseSensitive: false,
   );
 
+  static const Set<String> _bkashSenderIds = {'bkash', 'bkashalert', '16247'};
+  static const Set<String> _nagadSenderIds = {'nagad', 'nagadalert', '16167'};
+  static const Set<String> _rocketSenderIds = {
+    'rocket',
+    'rocketalert',
+    '16216',
+    'dbbl',
+  };
+
   static Transaction? parse(String address, String message, DateTime timestamp) {
-    final lowercaseMsg = message.toLowerCase();
     final lowercaseAddress = address.toLowerCase();
 
     // Check for bKash
-    if (_isBkashMessage(lowercaseAddress, lowercaseMsg)) {
+    if (_isBkashSender(lowercaseAddress)) {
       return _parseBkash(message, timestamp);
     }
 
     // Check for Nagad
-    if (_isNagadMessage(lowercaseAddress, lowercaseMsg)) {
+    if (_isNagadSender(lowercaseAddress)) {
       return _parseNagad(message, timestamp);
     }
 
     // Check for Rocket
-    if (_isRocketMessage(lowercaseAddress, lowercaseMsg)) {
+    if (_isRocketSender(lowercaseAddress)) {
       return _parseRocket(message, timestamp);
     }
 
     // Check for Bank
-    if (_isBankMessage(lowercaseAddress, lowercaseMsg)) {
+    if (_isBankSender(lowercaseAddress)) {
       return _parseBank(message, timestamp);
     }
 
     return null;
   }
 
-  static bool _isBkashMessage(String address, String message) {
-    return address.contains('bkash') ||
-        message.contains('bkash') ||
-        address.contains('16247');
+  static bool _isBkashSender(String address) {
+    return _matchesSender(address, _bkashSenderIds);
   }
 
-  static bool _isNagadMessage(String address, String message) {
-    return address.contains('nagad') ||
-        message.contains('nagad') ||
-        address.contains('16167');
+  static bool _isNagadSender(String address) {
+    return _matchesSender(address, _nagadSenderIds);
   }
 
-  static bool _isRocketMessage(String address, String message) {
-    return address.contains('rocket') ||
-        message.contains('rocket') ||
-        address.contains('16216');
+  static bool _isRocketSender(String address) {
+    return _matchesSender(address, _rocketSenderIds);
   }
 
-  static bool _isBankMessage(String address, String message) {
-    final bankKeywords = ['bank', 'debit', 'credit', 'a/c', 'account', 'balance'];
-    return bankKeywords.any(
-      (keyword) => address.contains(keyword) || message.contains(keyword),
-    );
+  static bool _isBankSender(String address) {
+    final bankKeywords = ['bank', 'a/c', 'account'];
+    return bankKeywords.any((keyword) => address.contains(keyword));
+  }
+
+  static bool _matchesSender(String address, Set<String> knownSenders) {
+    for (final sender in knownSenders) {
+      if (address == sender || address.contains(sender)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   static Transaction? _parseBkash(String message, DateTime timestamp) {
