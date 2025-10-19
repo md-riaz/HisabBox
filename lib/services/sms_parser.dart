@@ -141,7 +141,7 @@ class SmsParser {
         recipient: recipient,
         transactionId: match.group(3)!,
         transactionHash: Transaction.generateHash(
-          sender: recipient,
+          counterparty: recipient,
           messageBody: message,
           timestamp: timestamp,
         ),
@@ -163,7 +163,7 @@ class SmsParser {
         sender: sender,
         transactionId: match.group(3)!,
         transactionHash: Transaction.generateHash(
-          sender: sender,
+          counterparty: sender,
           messageBody: message,
           timestamp: timestamp,
         ),
@@ -185,7 +185,7 @@ class SmsParser {
         recipient: recipient,
         transactionId: match.group(3)!,
         transactionHash: Transaction.generateHash(
-          sender: recipient,
+          counterparty: recipient,
           messageBody: message,
           timestamp: timestamp,
         ),
@@ -205,7 +205,7 @@ class SmsParser {
         amount: _parseAmount(match.group(1)!),
         transactionId: match.group(2)!,
         transactionHash: Transaction.generateHash(
-          sender: null,
+          counterparty: null,
           messageBody: message,
           timestamp: timestamp,
         ),
@@ -233,7 +233,7 @@ class SmsParser {
         recipient: recipient,
         transactionId: match.group(3)!,
         transactionHash: Transaction.generateHash(
-          sender: recipient,
+          counterparty: recipient,
           messageBody: message,
           timestamp: timestamp,
         ),
@@ -255,7 +255,7 @@ class SmsParser {
         sender: sender,
         transactionId: match.group(3)!,
         transactionHash: Transaction.generateHash(
-          sender: sender,
+          counterparty: sender,
           messageBody: message,
           timestamp: timestamp,
         ),
@@ -325,7 +325,7 @@ class SmsParser {
         sender: sender,
         transactionId: match.group(3)!,
         transactionHash: Transaction.generateHash(
-          sender: sender,
+          counterparty: sender,
           messageBody: message,
           timestamp: timestamp,
         ),
@@ -345,7 +345,7 @@ class SmsParser {
         amount: _parseAmount(match.group(1)!),
         transactionId: match.group(2)!,
         transactionHash: Transaction.generateHash(
-          sender: null,
+          counterparty: null,
           messageBody: message,
           timestamp: timestamp,
         ),

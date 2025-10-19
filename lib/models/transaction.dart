@@ -96,7 +96,8 @@ class Transaction {
     final timestamp = DateTime.parse(map['timestamp'] as String);
     final hash = (map['transactionHash'] as String?) ??
         Transaction.generateHash(
-          sender: map['sender'] as String?,
+          counterparty:
+              (map['sender'] as String?) ?? (map['recipient'] as String?),
           messageBody: map['rawMessage'] as String,
           timestamp: timestamp,
         );
@@ -157,17 +158,17 @@ class Transaction {
   }
 
   static String generateHash({
-    String? sender,
+    String? counterparty,
     required String messageBody,
     required DateTime timestamp,
   }) {
     final buffer = StringBuffer()
-      ..write(sender ?? '')
+      ..write(counterparty ?? '')
       ..write('|')
       ..write(messageBody)
       ..write('|')
       ..write(timestamp.toIso8601String());
     final bytes = utf8.encode(buffer.toString());
-    return md5.convert(bytes).toString();
+    return sha256.convert(bytes).toString();
   }
 }

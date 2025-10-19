@@ -87,54 +87,41 @@ class DatabaseService {
 
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
-      await db.execute(
-          "ALTER TABLE transactions ADD COLUMN transactionHash TEXT");
-
-      final existing = await db.query('transactions');
-      final batch = db.batch();
-      for (final row in existing) {
-        final timestamp = DateTime.parse(row['timestamp'] as String);
-        final hash = Transaction.generateHash(
-          sender: row['sender'] as String?,
-          messageBody: row['rawMessage'] as String,
-          timestamp: timestamp,
-        );
-        batch.update(
-          'transactions',
-          {'transactionHash': hash},
-          where: 'id = ?',
-          whereArgs: [row['id'] as String],
-        );
-      }
-      await batch.commit(noResult: true);
-
-      final rows = await db.query(
-        'transactions',
-        columns: ['id', 'transactionHash'],
-        orderBy: 'createdAt ASC',
-      );
-      final seen = <String>{};
-      for (final row in rows) {
-        final hash = row['transactionHash'] as String?;
-        final id = row['id'] as String;
-        if (hash == null || hash.isEmpty) {
-          continue;
-        }
-        if (seen.contains(hash)) {
-          await db.delete(
-            'transactions',
-            where: 'id = ?',
-            whereArgs: [id],
+      await db.execute('PRAGMA foreign_keys=off');
+      try {
+        await db.transaction((txn) async {
+          await txn.execute(
+            'ALTER TABLE transactions RENAME TO transactions_old',
           );
-        } else {
-          seen.add(hash);
-        }
-      }
+          await _createDB(txn, newVersion);
 
-      await db.execute('''
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_transaction_hash
-        ON transactions(transactionHash)
-      ''');
+          final existing = await txn.query(
+            'transactions_old',
+            orderBy: 'createdAt ASC',
+          );
+          final seenHashes = <String>{};
+
+          for (final row in existing) {
+            final timestamp = DateTime.parse(row['timestamp'] as String);
+            final hash = Transaction.generateHash(
+              counterparty: (row['sender'] as String?) ??
+                  (row['recipient'] as String?),
+              messageBody: row['rawMessage'] as String,
+              timestamp: timestamp,
+            );
+
+            if (seenHashes.add(hash)) {
+              final newRow = Map<String, Object?>.from(row)
+                ..['transactionHash'] = hash;
+              await txn.insert('transactions', newRow);
+            }
+          }
+
+          await txn.execute('DROP TABLE transactions_old');
+        });
+      } finally {
+        await db.execute('PRAGMA foreign_keys=on');
+      }
     }
   }
 

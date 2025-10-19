@@ -11,7 +11,7 @@ void main() {
         amount: 1000.0,
         transactionId: 'TRX123',
         transactionHash: Transaction.generateHash(
-          sender: null,
+          counterparty: null,
           messageBody: 'Test message',
           timestamp: DateTime(2024, 1, 1),
         ),
@@ -37,7 +37,7 @@ void main() {
         recipient: '01712345678',
         transactionId: 'TRX456',
         transactionHash: Transaction.generateHash(
-          sender: '01712345678',
+          counterparty: '01712345678',
           messageBody: 'Test message',
           timestamp: DateTime(2024, 1, 1),
         ),
@@ -64,7 +64,7 @@ void main() {
         'amount': 300.0,
         'transactionId': 'TRX789',
         'transactionHash': Transaction.generateHash(
-          sender: null,
+          counterparty: null,
           messageBody: 'Test message',
           timestamp: DateTime(2024, 1, 1, 12, 0, 0),
         ),
@@ -92,7 +92,7 @@ void main() {
         amount: 1000.0,
         transactionId: 'TRX123',
         transactionHash: Transaction.generateHash(
-          sender: null,
+          counterparty: null,
           messageBody: 'Test message',
           timestamp: DateTime(2024, 1, 1),
         ),
@@ -117,7 +117,7 @@ void main() {
         amount: 750.0,
         transactionId: 'TRX999',
         transactionHash: Transaction.generateHash(
-          sender: null,
+          counterparty: null,
           messageBody: 'Test message',
           timestamp: DateTime(2024, 1, 1, 12, 0, 0),
         ),
