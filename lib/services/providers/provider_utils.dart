@@ -1,6 +1,9 @@
 import 'package:hisabbox/models/transaction.dart';
+import 'package:uuid/uuid.dart';
 
-String generateInternalId() => DateTime.now().millisecondsSinceEpoch.toString();
+final _uuid = Uuid();
+
+String generateInternalId() => _uuid.v4();
 
 double parseAmount(String amountStr) {
   return double.parse(amountStr.replaceAll(',', ''));

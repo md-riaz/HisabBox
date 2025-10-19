@@ -1,6 +1,5 @@
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:hisabbox/models/transaction.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Manages the enabled/disabled state of SMS providers.
 ///
@@ -9,6 +8,14 @@ import 'package:hisabbox/models/transaction.dart';
 /// processes messages while the Flutter runtime is killed).
 class ProviderSettingsService {
   static const String _providerPrefix = 'provider_enabled_';
+  static const String _legacyBankKey = '${_providerPrefix}bank';
+  static const Set<Provider> _bankProviders = {
+    Provider.dutchBanglaBank,
+    Provider.bracBank,
+    Provider.cityBank,
+    Provider.bankAsia,
+    Provider.islamiBank,
+  };
 
   /// Returns whether [provider] is currently enabled.
   ///
@@ -16,7 +23,13 @@ class ProviderSettingsService {
   /// state without requiring additional migrations.
   static Future<bool> isProviderEnabled(Provider provider) async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_keyFor(provider)) ?? true;
+    final legacyBankPreference = prefs.getBool(_legacyBankKey);
+    return _readProviderPreference(
+          prefs,
+          provider,
+          legacyBankPreference,
+        ) ??
+        true;
   }
 
   /// Persists the enabled/disabled flag for [provider].
@@ -33,8 +46,15 @@ class ProviderSettingsService {
     final prefs = await SharedPreferences.getInstance();
     final Map<Provider, bool> result = {};
 
+    final legacyBankPreference = prefs.getBool(_legacyBankKey);
+
     for (final provider in Provider.values) {
-      result[provider] = prefs.getBool(_keyFor(provider)) ?? true;
+      result[provider] = _readProviderPreference(
+            prefs,
+            provider,
+            legacyBankPreference,
+          ) ??
+          true;
     }
 
     return result;
@@ -51,4 +71,21 @@ class ProviderSettingsService {
 
   static String _keyFor(Provider provider) =>
       '$_providerPrefix${provider.name}';
+
+  static bool? _readProviderPreference(
+    SharedPreferences prefs,
+    Provider provider,
+    bool? legacyBankPreference,
+  ) {
+    final storedPreference = prefs.getBool(_keyFor(provider));
+    if (storedPreference != null) {
+      return storedPreference;
+    }
+
+    if (legacyBankPreference != null && _bankProviders.contains(provider)) {
+      return legacyBankPreference;
+    }
+
+    return null;
+  }
 }
