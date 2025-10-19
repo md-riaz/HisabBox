@@ -29,8 +29,8 @@
             </intent-filter>
         </activity>
         
-        <!-- SMS Receiver -->
-        <receiver android:name="com.shounakmulay.telephony.sms.IncomingSmsReceiver"
+        <!-- SMS Receiver provided by another_telephony -->
+        <receiver android:name="com.wimlog.another_telephony.sms.IncomingSmsReceiver"
             android:permission="android.permission.BROADCAST_SMS" android:exported="true">
             <intent-filter>
                 <action android:name="android.provider.Telephony.SMS_RECEIVED"/>

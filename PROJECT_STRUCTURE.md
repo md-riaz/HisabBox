@@ -161,7 +161,7 @@ HisabBox/
 ### Core Dependencies
 - **flutter**: Framework
 - **sqflite**: Local database
-- **telephony**: SMS access
+- **another_telephony**: SMS access
 - **provider**: State management
 - **http**: Webhook communication
 - **permission_handler**: Permissions

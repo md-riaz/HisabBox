@@ -339,7 +339,7 @@ UI Rebuilds
 - shared_preferences (Settings storage)
 
 **SMS & Permissions**
-- telephony (SMS access)
+- another_telephony (SMS access)
 - permission_handler (Runtime permissions)
 
 **Networking**
