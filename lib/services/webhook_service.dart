@@ -99,8 +99,8 @@ class WebhookService {
     final url = await getWebhookUrl();
     if (url == null || url.isEmpty) return true;
 
-    final unsyncedTransactions = await DatabaseService.instance
-        .getUnsyncedTransactions();
+    final unsyncedTransactions =
+        await DatabaseService.instance.getUnsyncedTransactions();
 
     if (unsyncedTransactions.isEmpty) {
       return true;
@@ -128,7 +128,7 @@ class WebhookService {
       inputData: {'attempt': attempt},
       initialDelay: delay,
       existingWorkPolicy: ExistingWorkPolicy.replace,
-      constraints: const Constraints(networkType: NetworkType.connected),
+      constraints: Constraints(networkType: NetworkType.connected),
     );
   }
 

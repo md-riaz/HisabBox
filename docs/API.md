@@ -31,11 +31,12 @@ final transaction = Transaction(
 await DatabaseService.instance.insertTransaction(transaction);
 ```
 
-#### `getTransactions({providers, startDate, endDate, limit, offset})`
+#### `getTransactions({providers, types, startDate, endDate, limit, offset})`
 Retrieve transactions with optional filtering.
 
 **Parameters:**
 - `providers`: List<Provider>? - Filter by providers
+- `types`: List<TransactionType>? - Filter by transaction types
 - `startDate`: DateTime? - Start date filter
 - `endDate`: DateTime? - End date filter
 - `limit`: int? - Maximum number of results
@@ -47,6 +48,7 @@ Retrieve transactions with optional filtering.
 ```dart
 final transactions = await DatabaseService.instance.getTransactions(
   providers: [Provider.bkash, Provider.nagad],
+  types: [TransactionType.received, TransactionType.sent],
   startDate: DateTime(2024, 1, 1),
   endDate: DateTime.now(),
   limit: 50,

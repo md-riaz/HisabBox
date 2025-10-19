@@ -1,32 +1,28 @@
 import 'package:flutter/foundation.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:sqflite/sqflite.dart' as sqflite;
 import 'package:path/path.dart';
 import 'package:hisabbox/models/transaction.dart';
 
 class DatabaseService {
   static final DatabaseService instance = DatabaseService._init();
-  static Database? _database;
+  static sqflite.Database? _database;
 
   DatabaseService._init();
 
-  Future<Database> get database async {
+  Future<sqflite.Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDB('hisabbox.db');
     return _database!;
   }
 
-  Future<Database> _initDB(String filePath) async {
-    final dbPath = await getDatabasesPath();
+  Future<sqflite.Database> _initDB(String filePath) async {
+    final dbPath = await sqflite.getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: _createDB,
-    );
+    return await sqflite.openDatabase(path, version: 1, onCreate: _createDB);
   }
 
-  Future<void> _createDB(Database db, int version) async {
+  Future<void> _createDB(sqflite.Database db, int version) async {
     await db.execute('''
       CREATE TABLE transactions (
         id TEXT PRIMARY KEY,
@@ -67,7 +63,7 @@ class DatabaseService {
     await db.insert(
       'transactions',
       transaction.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.ignore,
+      conflictAlgorithm: sqflite.ConflictAlgorithm.ignore,
     );
     return transaction.id;
   }
@@ -79,26 +75,34 @@ class DatabaseService {
       await db.close();
       _database = null;
     }
-    final dbPath = await getDatabasesPath();
+    final dbPath = await sqflite.getDatabasesPath();
     final path = join(dbPath, 'hisabbox.db');
-    await deleteDatabase(path);
+    await sqflite.deleteDatabase(path);
   }
 
   Future<List<Transaction>> getTransactions({
     List<Provider>? providers,
+    List<TransactionType>? types,
     DateTime? startDate,
     DateTime? endDate,
     int? limit,
     int? offset,
   }) async {
     final db = await instance.database;
-    
+
     String whereClause = '1=1';
     List<dynamic> whereArgs = [];
 
     if (providers != null && providers.isNotEmpty) {
-      final providerNames = providers.map((p) => "'${p.name}'").join(',');
-      whereClause += ' AND provider IN ($providerNames)';
+      final placeholders = List.filled(providers.length, '?').join(',');
+      whereClause += ' AND provider IN ($placeholders)';
+      whereArgs.addAll(providers.map((provider) => provider.name));
+    }
+
+    if (types != null && types.isNotEmpty) {
+      final placeholders = List.filled(types.length, '?').join(',');
+      whereClause += ' AND type IN ($placeholders)';
+      whereArgs.addAll(types.map((type) => type.name));
     }
 
     if (startDate != null) {
@@ -170,27 +174,26 @@ class DatabaseService {
 
   Future<int> deleteTransaction(String id) async {
     final db = await instance.database;
-    return await db.delete(
-      'transactions',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.delete('transactions', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<int> getTransactionCount({List<Provider>? providers}) async {
     final db = await instance.database;
-    
+
     String whereClause = '1=1';
+    List<dynamic> whereArgs = [];
     if (providers != null && providers.isNotEmpty) {
-      final providerNames = providers.map((p) => "'${p.name}'").join(',');
-      whereClause += ' AND provider IN ($providerNames)';
+      final placeholders = List.filled(providers.length, '?').join(',');
+      whereClause += ' AND provider IN ($placeholders)';
+      whereArgs.addAll(providers.map((provider) => provider.name));
     }
 
     final result = await db.rawQuery(
       'SELECT COUNT(*) as count FROM transactions WHERE $whereClause',
+      whereArgs.isEmpty ? null : whereArgs,
     );
-    
-    return Sqflite.firstIntValue(result) ?? 0;
+
+    return sqflite.Sqflite.firstIntValue(result) ?? 0;
   }
 
   Future<double> getTotalAmount({
@@ -198,13 +201,14 @@ class DatabaseService {
     TransactionType? type,
   }) async {
     final db = await instance.database;
-    
+
     String whereClause = '1=1';
     List<dynamic> whereArgs = [];
 
     if (providers != null && providers.isNotEmpty) {
-      final providerNames = providers.map((p) => "'${p.name}'").join(',');
-      whereClause += ' AND provider IN ($providerNames)';
+      final placeholders = List.filled(providers.length, '?').join(',');
+      whereClause += ' AND provider IN ($placeholders)';
+      whereArgs.addAll(providers.map((provider) => provider.name));
     }
 
     if (type != null) {
@@ -216,7 +220,7 @@ class DatabaseService {
       'SELECT SUM(amount) as total FROM transactions WHERE $whereClause',
       whereArgs.isEmpty ? null : whereArgs,
     );
-    
+
     return (result.first['total'] as num?)?.toDouble() ?? 0.0;
   }
 
