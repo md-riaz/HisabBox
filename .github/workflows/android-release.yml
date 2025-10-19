@@ -34,17 +34,17 @@ jobs:
           cp -R tmp_icons/android/app/src/main/res/mipmap-* android/app/src/main/res/
           rm -rf tmp_icons
 
-      - name: Build split APKs
-        run: flutter build apk --release --split-per-abi
+      - name: Build universal release APK
+        run: flutter build apk --release
 
-      - name: Upload split APKs as workflow artifacts
+      - name: Upload universal APK as workflow artifact
         uses: actions/upload-artifact@v4
         with:
-          name: android-split-apks
-          path: build/app/outputs/flutter-apk/*-release.apk
+          name: android-universal-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
 
-      - name: Upload split APKs to release
+      - name: Upload universal APK to release
         if: github.event_name == 'release'
         uses: softprops/action-gh-release@v1
         with:
-          files: build/app/outputs/flutter-apk/*-release.apk
+          files: build/app/outputs/flutter-apk/app-release.apk

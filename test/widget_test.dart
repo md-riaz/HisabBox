@@ -8,6 +8,6 @@ void main() {
     // But it validates the basic structure
 
     // Verify that the app can be created
-    expect(() => const MyApp(), returnsNormally);
+    expect(() => const MyApp(permissionsGranted: false), returnsNormally);
   });
 }
