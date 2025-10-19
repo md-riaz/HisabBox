@@ -2,10 +2,32 @@ name: Android Workflow Validation
 
 on:
   workflow_dispatch:
+  release:
+    types: [published]
 
 jobs:
   analyze:
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run Flutter analyze
+        run: flutter analyze
+
+  build-release:
+    runs-on: ubuntu-latest
+    needs: analyze
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,5 +46,17 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Run Flutter analyze
-        run: flutter analyze
+      - name: Build split APKs
+        run: flutter build apk --release --split-per-abi
+
+      - name: Upload split APKs as workflow artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-split-apks
+          path: build/app/outputs/flutter-apk/*-release.apk
+
+      - name: Upload split APKs to release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: build/app/outputs/flutter-apk/*-release.apk
