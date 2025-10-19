@@ -31,8 +31,16 @@ enum Provider {
   nagad,
   @JsonValue('rocket')
   rocket,
-  @JsonValue('bank')
-  bank,
+  @JsonValue('dutchBanglaBank')
+  dutchBanglaBank,
+  @JsonValue('bracBank')
+  bracBank,
+  @JsonValue('cityBank')
+  cityBank,
+  @JsonValue('bankAsia')
+  bankAsia,
+  @JsonValue('islamiBank')
+  islamiBank,
   @JsonValue('other')
   other,
 }
@@ -94,7 +102,8 @@ class Transaction {
 
   static Transaction fromMap(Map<String, dynamic> map) {
     final timestamp = DateTime.parse(map['timestamp'] as String);
-    final hash = (map['transactionHash'] as String?) ??
+    final hash =
+        (map['transactionHash'] as String?) ??
         Transaction.generateHash(
           counterparty:
               (map['sender'] as String?) ?? (map['recipient'] as String?),
