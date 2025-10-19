@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:hisabbox/controllers/transaction_controller.dart';
 import 'package:hisabbox/controllers/settings_controller.dart';
 import 'package:hisabbox/screens/dashboard_screen.dart';
+import 'package:hisabbox/screens/permission_required_screen.dart';
 import 'package:hisabbox/services/database_service.dart';
 import 'package:hisabbox/services/sms_service.dart';
 import 'package:hisabbox/services/permission_service.dart';
@@ -15,23 +16,31 @@ void main() async {
   await DatabaseService.instance.database;
 
   // Request permissions
-  await PermissionService.requestPermissions();
+  final permissionsGranted = await PermissionService.requestPermissions();
 
-  // Initialize SMS monitoring
+  if (permissionsGranted) {
+    await _initializeServicesAndControllers();
+  }
+
+  runApp(MyApp(permissionsGranted: permissionsGranted));
+}
+
+Future<void> _initializeServicesAndControllers() async {
   await SmsService.instance.initialize();
-
-  // Initialize webhook background dispatcher
   await WebhookService.initialize();
 
-  // Register controllers
-  Get.put(TransactionController());
-  Get.put(SettingsController());
-
-  runApp(const MyApp());
+  if (!Get.isRegistered<TransactionController>()) {
+    Get.put(TransactionController());
+  }
+  if (!Get.isRegistered<SettingsController>()) {
+    Get.put(SettingsController());
+  }
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, required this.permissionsGranted});
+
+  final bool permissionsGranted;
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +60,14 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const DashboardScreen(),
+      home: permissionsGranted
+          ? const DashboardScreen()
+          : PermissionRequiredScreen(
+              onPermissionsGranted: () async {
+                await _initializeServicesAndControllers();
+                Get.offAll(() => const DashboardScreen());
+              },
+            ),
     );
   }
 }
