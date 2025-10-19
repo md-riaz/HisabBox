@@ -4,23 +4,44 @@ import 'package:hisabbox/services/providers/sms_provider.dart';
 
 class BkashProvider extends SmsProvider {
   static final RegExp _sentPattern = RegExp(
-    r'You have sent Tk([\d,]+\.?\d*) to ([\d\s]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
+    r'You have sent Tk\s*([\d,]+(?:\.\d+)?) to ([\d\s]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
     caseSensitive: false,
+    dotAll: true,
   );
 
   static final RegExp _receivedPattern = RegExp(
-    r'You have received Tk([\d,]+\.?\d*) from ([\d\s]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
+    r'You have received(?: .*?)? Tk\s*([\d,]+(?:\.\d+)?) from ([^\.]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
     caseSensitive: false,
+    dotAll: true,
+  );
+
+  static final RegExp _receivedDepositPattern = RegExp(
+    r'You have received deposit from [^\.]+ of Tk\s*([\d,]+(?:\.\d+)?) from ([^\.]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
+    caseSensitive: false,
+    dotAll: true,
   );
 
   static final RegExp _cashoutPattern = RegExp(
-    r'Cash Out Tk([\d,]+\.?\d*) .*?from ([\d\s]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
+    r'Cash Out Tk\s*([\d,]+(?:\.\d+)?) .*?from ([\d\s]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
     caseSensitive: false,
+    dotAll: true,
   );
 
   static final RegExp _paymentPattern = RegExp(
-    r'Payment of Tk([\d,]+\.?\d*) .*?TrxID ([\w\d]+)',
+    r'Payment of Tk\s*([\d,]+(?:\.\d+)?).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
     caseSensitive: false,
+    dotAll: true,
+  );
+
+  static final RegExp _paymentRecipientPattern = RegExp(
+    r'Payment of Tk\s*[\d,]+(?:\.\d+)? to ([^\.]+)',
+    caseSensitive: false,
+  );
+
+  static final RegExp _billPaymentPattern = RegExp(
+    r'Bill successfully paid.*?Biller[:\s]*([^\n]+).*?Amount[:\s]*Tk\s*([\d,]+(?:\.\d+)?).*?Trx[.:\s]*ID[:\s]*([\w\d]+)',
+    caseSensitive: false,
+    dotAll: true,
   );
 
   static const Set<String> _senderIds = {'bkash', '16247'};
@@ -48,6 +69,20 @@ class BkashProvider extends SmsProvider {
         amount: parseAmount(sentMatch.group(1)!),
         recipient: recipient,
         transactionId: sentMatch.group(3)!,
+        timestamp: timestamp,
+        rawMessage: message,
+      );
+    }
+
+    final receivedDepositMatch = _receivedDepositPattern.firstMatch(message);
+    if (receivedDepositMatch != null) {
+      final sender = receivedDepositMatch.group(2)?.trim();
+      return buildTransaction(
+        provider: provider,
+        type: TransactionType.received,
+        amount: parseAmount(receivedDepositMatch.group(1)!),
+        sender: sender,
+        transactionId: receivedDepositMatch.group(3)!,
         timestamp: timestamp,
         rawMessage: message,
       );
@@ -83,11 +118,46 @@ class BkashProvider extends SmsProvider {
 
     final paymentMatch = _paymentPattern.firstMatch(message);
     if (paymentMatch != null) {
+      final recipientMatch = _paymentRecipientPattern.firstMatch(message);
+      final rawRecipient = recipientMatch?.group(1)?.trim();
+      final recipient = rawRecipient
+          ?.replaceAll(
+            RegExp(r'\sis successful$', caseSensitive: false),
+            '',
+          )
+          .replaceAll(
+            RegExp(r'\swas successful$', caseSensitive: false),
+            '',
+          )
+          .replaceAll(
+            RegExp(r'\ssuccessfully$', caseSensitive: false),
+            '',
+          )
+          .replaceAll(
+            RegExp(r'\ssuccessful$', caseSensitive: false),
+            '',
+          )
+          ?.trim();
       return buildTransaction(
         provider: provider,
         type: TransactionType.payment,
         amount: parseAmount(paymentMatch.group(1)!),
+        recipient: recipient?.isEmpty ?? true ? null : recipient,
         transactionId: paymentMatch.group(2)!,
+        timestamp: timestamp,
+        rawMessage: message,
+      );
+    }
+
+    final billPaymentMatch = _billPaymentPattern.firstMatch(message);
+    if (billPaymentMatch != null) {
+      final recipient = billPaymentMatch.group(1)?.trim();
+      return buildTransaction(
+        provider: provider,
+        type: TransactionType.payment,
+        amount: parseAmount(billPaymentMatch.group(2)!),
+        recipient: recipient,
+        transactionId: billPaymentMatch.group(3)!,
         timestamp: timestamp,
         rawMessage: message,
       );

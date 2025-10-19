@@ -88,6 +88,67 @@ void main() {
       expect(transaction.amount, 750.00);
       expect(transaction.transactionId, 'PQR123STU');
     });
+
+    test('parses bKash merchant payment with recipient name', () {
+      const message =
+          'Payment of Tk 54.00 to Grameenphone Ltd-MyGP Direct Charge-RM50518 is successful. Balance Tk 13.91. TrxID CH428D66W2 at 04/08/2025 04:41';
+      final timestamp = DateTime(2025, 8, 4, 4, 41);
+
+      final transaction = SmsParser.parse('bKash', message, timestamp);
+
+      expect(transaction, isNotNull);
+      expect(transaction!.provider, Provider.bkash);
+      expect(transaction.type, TransactionType.payment);
+      expect(transaction.amount, 54.00);
+      expect(transaction.recipient,
+          'Grameenphone Ltd-MyGP Direct Charge-RM50518');
+      expect(transaction.transactionId, 'CH428D66W2');
+    });
+
+    test('parses bKash merchant payment with uppercase recipient', () {
+      const message =
+          'Payment of Tk 1.00 to ALPHANET is successful. Balance Tk 122.01. TrxID CJG1C2P5R5 at 16/10/2025 15:05';
+      final timestamp = DateTime(2025, 10, 16, 15, 5);
+
+      final transaction = SmsParser.parse('bKash', message, timestamp);
+
+      expect(transaction, isNotNull);
+      expect(transaction!.provider, Provider.bkash);
+      expect(transaction.type, TransactionType.payment);
+      expect(transaction.amount, 1.00);
+      expect(transaction.recipient, 'ALPHANET');
+      expect(transaction.transactionId, 'CJG1C2P5R5');
+    });
+
+    test('parses bKash received deposit message', () {
+      const message =
+          'You have received deposit from iBanking of Tk 1,500.00 from BRAC Bank Internet Banking. Fee Tk 0.00. Balance Tk 1,643.01. TrxID CJA161O7R1 at 10/10/2025 15:29';
+      final timestamp = DateTime(2025, 10, 10, 15, 29);
+
+      final transaction = SmsParser.parse('bKash', message, timestamp);
+
+      expect(transaction, isNotNull);
+      expect(transaction!.provider, Provider.bkash);
+      expect(transaction.type, TransactionType.received);
+      expect(transaction.amount, 1500.00);
+      expect(transaction.sender, 'BRAC Bank Internet Banking');
+      expect(transaction.transactionId, 'CJA161O7R1');
+    });
+
+    test('parses bKash bill payment summary', () {
+      const message =
+          'Bill successfully paid.\nBiller: BrothersIT \nMMYYYY/Contact: 072025\nA/C: 1052 \nAmount: Tk 500.00 \nFee: Tk 0.00 \nTrxID: CHA0EEADZY at 10/08/2025 15:29';
+      final timestamp = DateTime(2025, 8, 10, 15, 29);
+
+      final transaction = SmsParser.parse('bKash', message, timestamp);
+
+      expect(transaction, isNotNull);
+      expect(transaction!.provider, Provider.bkash);
+      expect(transaction.type, TransactionType.payment);
+      expect(transaction.amount, 500.00);
+      expect(transaction.recipient, 'BrothersIT');
+      expect(transaction.transactionId, 'CHA0EEADZY');
+    });
   });
 
   group('SmsParser - Nagad', () {
