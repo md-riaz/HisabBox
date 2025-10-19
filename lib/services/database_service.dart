@@ -21,9 +21,8 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 1,
       onCreate: _createDB,
-      onUpgrade: _upgradeDB,
     );
   }
 
@@ -83,46 +82,6 @@ class DatabaseService {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'hisabbox.db');
     await deleteDatabase(path);
-  }
-
-  Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      await db.execute('PRAGMA foreign_keys=off');
-      try {
-        await db.transaction((txn) async {
-          await txn.execute(
-            'ALTER TABLE transactions RENAME TO transactions_old',
-          );
-          await _createDB(txn, newVersion);
-
-          final existing = await txn.query(
-            'transactions_old',
-            orderBy: 'createdAt ASC',
-          );
-          final seenHashes = <String>{};
-
-          for (final row in existing) {
-            final timestamp = DateTime.parse(row['timestamp'] as String);
-            final hash = Transaction.generateHash(
-              counterparty: (row['sender'] as String?) ??
-                  (row['recipient'] as String?),
-              messageBody: row['rawMessage'] as String,
-              timestamp: timestamp,
-            );
-
-            if (seenHashes.add(hash)) {
-              final newRow = Map<String, Object?>.from(row)
-                ..['transactionHash'] = hash;
-              await txn.insert('transactions', newRow);
-            }
-          }
-
-          await txn.execute('DROP TABLE transactions_old');
-        });
-      } finally {
-        await db.execute('PRAGMA foreign_keys=on');
-      }
-    }
   }
 
   Future<List<Transaction>> getTransactions({
