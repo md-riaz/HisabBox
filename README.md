@@ -36,7 +36,7 @@ Enable or disable individual providers from Settings. Disabled senders are ignor
 Choose between **Start Listening Now** for future messages or **Import History** to backfill the last _N_ messages per provider.
 
 ### Persistent Background Operation
-Native BroadcastReceivers insert transactions into Drift instantly, ensuring persistence even when the Flutter runtime is stopped or the device reboots.
+The `telephony` plugin delivers SMS to a Dart background isolate that inserts transactions into Drift instantly, ensuring persistence even when the Flutter runtime is stopped or the device reboots.
 
 ### Webhook Push
 Configure a webhook URL to receive JSON payloads for every new transaction. Failed deliveries retry automatically with exponential backoff until acknowledged.
@@ -67,7 +67,7 @@ The product roadmap is anchored by twelve acceptance criteria:
 ```
 [SMS Provider]
      ↓
-[Android BroadcastReceiver + Foreground Service]
+[Telephony plugin background isolate]
      ↓
 [Parser Engine & Provider Registry]
      ↓
@@ -95,9 +95,9 @@ The product roadmap is anchored by twelve acceptance criteria:
 | State Management | GetX |
 | Persistence | Drift (SQLite) |
 | Settings | SharedPreferences |
-| Background Tasks | WorkManager + native BroadcastReceiver |
+| Background Tasks | WorkManager + telephony background isolate |
 | Networking | Dio |
-| SMS Handling | sms_advanced + Kotlin receiver |
+| SMS Handling | telephony plugin (Dart background callback) |
 | Dependency Injection | GetX service locator |
 | Logging | Local-only logger |
 
