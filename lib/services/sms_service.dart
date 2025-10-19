@@ -1,23 +1,40 @@
 import 'package:another_telephony/telephony.dart';
-import 'package:hisabbox/services/sms_parser.dart';
+import 'package:hisabbox/models/transaction.dart';
+import 'package:hisabbox/services/capture_settings_service.dart';
 import 'package:hisabbox/services/database_service.dart';
 import 'package:hisabbox/services/provider_settings_service.dart';
+import 'package:hisabbox/services/sms_parser.dart';
 import 'package:hisabbox/services/webhook_service.dart';
-import 'package:hisabbox/models/transaction.dart';
 
 class SmsService {
   static final SmsService instance = SmsService._init();
   final Telephony telephony = Telephony.instance;
+  bool _isListening = false;
 
   SmsService._init();
 
   Future<void> initialize() async {
-    // Set up SMS listener for new messages
+    final shouldListen = await CaptureSettingsService.isSmsListeningEnabled();
+    if (shouldListen) {
+      await startListening();
+    }
+  }
+
+  Future<void> startListening() async {
+    if (_isListening) {
+      return;
+    }
+
     telephony.listenIncomingSms(
       onNewMessage: _onNewMessage,
       onBackgroundMessage: _onBackgroundMessage,
       listenInBackground: true,
     );
+    _isListening = true;
+  }
+
+  Future<void> stopListening() async {
+    _isListening = false;
   }
 
   @pragma('vm:entry-point')
@@ -32,6 +49,12 @@ class SmsService {
   }
 
   static Future<void> _processMessage(SmsMessage message) async {
+    final listeningEnabled =
+        await CaptureSettingsService.isSmsListeningEnabled();
+    if (!listeningEnabled) {
+      return;
+    }
+
     final address = message.address ?? '';
     final body = message.body ?? '';
     final timestamp = message.date != null
@@ -43,6 +66,13 @@ class SmsService {
 
     // Save to database if it's a valid transaction
     if (transaction != null) {
+      final typeEnabled = await CaptureSettingsService.isTransactionTypeEnabled(
+        transaction.type,
+      );
+      if (!typeEnabled) {
+        return;
+      }
+
       final isEnabled = await ProviderSettingsService.isProviderEnabled(
         transaction.provider,
       );

@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:hisabbox/models/transaction.dart';
+import 'package:hisabbox/services/capture_settings_service.dart';
 import 'package:hisabbox/services/database_service.dart';
 import 'package:hisabbox/services/webhook_service.dart';
 
@@ -14,7 +15,18 @@ class TransactionController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    loadTransactions();
+    _initialiseFilters();
+  }
+
+  Future<void> _initialiseFilters() async {
+    try {
+      final enabledTypes =
+          await CaptureSettingsService.getEnabledTransactionTypes();
+      selectedTransactionTypes.assignAll(enabledTypes);
+    } catch (_) {
+      selectedTransactionTypes.assignAll(TransactionType.values);
+    }
+    await loadTransactions();
   }
 
   Future<void> loadTransactions({
