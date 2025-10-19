@@ -3,17 +3,17 @@ import 'package:hisabbox/models/transaction.dart';
 class SmsParser {
   // bKash patterns
   static final RegExp _bkashSentPattern = RegExp(
-    r'You have sent Tk([\d,]+\.?\d*) to ([\d\s]+) .*?TrxID ([\w\d]+)',
+    r'You have sent Tk([\d,]+\.?\d*) to ([\d\s]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
     caseSensitive: false,
   );
 
   static final RegExp _bkashReceivedPattern = RegExp(
-    r'You have received Tk([\d,]+\.?\d*) from ([\d\s]+) .*?TrxID ([\w\d]+)',
+    r'You have received Tk([\d,]+\.?\d*) from ([\d\s]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
     caseSensitive: false,
   );
 
   static final RegExp _bkashCashoutPattern = RegExp(
-    r'Cash Out Tk([\d,]+\.?\d*) .*?from ([\d\s]+) .*?TrxID ([\w\d]+)',
+    r'Cash Out Tk([\d,]+\.?\d*) .*?from ([\d\s]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
     caseSensitive: false,
   );
 
@@ -24,12 +24,12 @@ class SmsParser {
 
   // Nagad patterns
   static final RegExp _nagadSentPattern = RegExp(
-    r'Send Money Tk\s?([\d,]+\.?\d*) to ([\d\s]+) .*?Trx[.\s]?ID[:\s]?([\w\d]+)',
+    r'Send Money Tk\s?([\d,]+\.?\d*) to ([\d\s]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
     caseSensitive: false,
   );
 
   static final RegExp _nagadReceivedPattern = RegExp(
-    r'Received Tk\s?([\d,]+\.?\d*) from ([\d\s]+) .*?Trx[.\s]?ID[:\s]?([\w\d]+)',
+    r'Received Tk\s?([\d,]+\.?\d*) from ([\d\s]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
     caseSensitive: false,
   );
 
@@ -40,12 +40,12 @@ class SmsParser {
 
   // Rocket patterns
   static final RegExp _rocketSentPattern = RegExp(
-    r'Tk\s?([\d,]+\.?\d*) sent to ([\d\s]+) .*?TxnID[:\s]?([\w\d]+)',
+    r'Tk\s?([\d,]+\.?\d*) sent to ([\d\s]+).*?TxnID[:\s]*([\w\d]+)',
     caseSensitive: false,
   );
 
   static final RegExp _rocketReceivedPattern = RegExp(
-    r'Tk\s?([\d,]+\.?\d*) received from ([\d\s]+) .*?TxnID[:\s]?([\w\d]+)',
+    r'Tk\s?([\d,]+\.?\d*) received from ([\d\s]+).*?TxnID[:\s]*([\w\d]+)',
     caseSensitive: false,
   );
 
@@ -74,7 +74,8 @@ class SmsParser {
     'dbbl',
   };
 
-  static Transaction? parse(String address, String message, DateTime timestamp) {
+  static Transaction? parse(
+      String address, String message, DateTime timestamp) {
     final lowercaseAddress = address.toLowerCase();
 
     // Check for bKash
@@ -275,7 +276,7 @@ class SmsParser {
         amount: _parseAmount(match.group(1)!),
         transactionId: match.group(2)!,
         transactionHash: Transaction.generateHash(
-          sender: null,
+          counterparty: null,
           messageBody: message,
           timestamp: timestamp,
         ),
@@ -303,7 +304,7 @@ class SmsParser {
         recipient: recipient,
         transactionId: match.group(3)!,
         transactionHash: Transaction.generateHash(
-          sender: recipient,
+          counterparty: recipient,
           messageBody: message,
           timestamp: timestamp,
         ),
@@ -371,7 +372,7 @@ class SmsParser {
         amount: _parseAmount(match.group(1)!),
         transactionId: id,
         transactionHash: Transaction.generateHash(
-          sender: null,
+          counterparty: null,
           messageBody: message,
           timestamp: timestamp,
         ),
@@ -391,7 +392,7 @@ class SmsParser {
         amount: _parseAmount(match.group(1)!),
         transactionId: id,
         transactionHash: Transaction.generateHash(
-          sender: null,
+          counterparty: null,
           messageBody: message,
           timestamp: timestamp,
         ),

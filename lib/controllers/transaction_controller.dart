@@ -7,6 +7,8 @@ class TransactionController extends GetxController {
   final RxList<Transaction> transactions = <Transaction>[].obs;
   final RxBool isLoading = false.obs;
   final RxList<Provider> activeProviders = Provider.values.obs;
+  final RxList<TransactionType> selectedTransactionTypes =
+      List<TransactionType>.from(TransactionType.values).obs;
 
   @override
   void onInit() {
@@ -24,6 +26,7 @@ class TransactionController extends GetxController {
     try {
       final result = await DatabaseService.instance.getTransactions(
         providers: activeProviders.toList(growable: false),
+        types: selectedTransactionTypes.toList(growable: false),
         startDate: startDate,
         endDate: endDate,
         limit: limit,
@@ -60,6 +63,13 @@ class TransactionController extends GetxController {
 
   Future<void> setActiveProviders(List<Provider> providers) async {
     activeProviders.assignAll(providers);
+    await loadTransactions();
+  }
+
+  Future<void> setSelectedTransactionTypes(
+    List<TransactionType> transactionTypes,
+  ) async {
+    selectedTransactionTypes.assignAll(transactionTypes);
     await loadTransactions();
   }
 

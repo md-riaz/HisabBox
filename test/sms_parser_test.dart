@@ -5,15 +5,15 @@ import 'package:hisabbox/services/database_service.dart';
 import 'package:hisabbox/services/sms_parser.dart';
 import 'package:hisabbox/services/webhook_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqflite/sqflite.dart' as sqflite;
+import 'package:sqflite_common_ffi/sqflite_ffi.dart' as sqflite_ffi;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUpAll(() {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
+    sqflite_ffi.sqfliteFfiInit();
+    sqflite.databaseFactory = sqflite_ffi.databaseFactoryFfi;
   });
 
   setUp(() async {
@@ -32,11 +32,12 @@ void main() {
 
   group('SmsParser - bKash', () {
     test('parses bKash sent transaction', () {
-      const message = 'You have sent Tk1,500.00 to 01712345678 successfully. Fee Tk25.00. TrxID ABC123XYZ at 2024-01-01 12:00:00';
+      const message =
+          'You have sent Tk1,500.00 to 01712345678 successfully. Fee Tk25.00. TrxID ABC123XYZ at 2024-01-01 12:00:00';
       final timestamp = DateTime(2024, 1, 1, 12, 0, 0);
-      
+
       final transaction = SmsParser.parse('bKash', message, timestamp);
-      
+
       expect(transaction, isNotNull);
       expect(transaction!.provider, Provider.bkash);
       expect(transaction.type, TransactionType.sent);
@@ -46,11 +47,12 @@ void main() {
     });
 
     test('parses bKash received transaction', () {
-      const message = 'You have received Tk2,000.00 from 01798765432. TrxID DEF456GHI at 2024-01-02 14:30:00';
+      const message =
+          'You have received Tk2,000.00 from 01798765432. TrxID DEF456GHI at 2024-01-02 14:30:00';
       final timestamp = DateTime(2024, 1, 2, 14, 30, 0);
-      
+
       final transaction = SmsParser.parse('bKash', message, timestamp);
-      
+
       expect(transaction, isNotNull);
       expect(transaction!.provider, Provider.bkash);
       expect(transaction.type, TransactionType.received);
@@ -60,11 +62,12 @@ void main() {
     });
 
     test('parses bKash cash out transaction', () {
-      const message = 'Cash Out Tk500.00 successful from 01612345678. Fee Tk10.00. TrxID JKL789MNO at 2024-01-03 10:15:00';
+      const message =
+          'Cash Out Tk500.00 successful from 01612345678. Fee Tk10.00. TrxID JKL789MNO at 2024-01-03 10:15:00';
       final timestamp = DateTime(2024, 1, 3, 10, 15, 0);
-      
+
       final transaction = SmsParser.parse('bKash', message, timestamp);
-      
+
       expect(transaction, isNotNull);
       expect(transaction!.provider, Provider.bkash);
       expect(transaction.type, TransactionType.cashout);
@@ -73,11 +76,12 @@ void main() {
     });
 
     test('parses bKash payment transaction', () {
-      const message = 'Payment of Tk750.00 to Merchant successful. TrxID PQR123STU at 2024-01-04 16:45:00';
+      const message =
+          'Payment of Tk750.00 to Merchant successful. TrxID PQR123STU at 2024-01-04 16:45:00';
       final timestamp = DateTime(2024, 1, 4, 16, 45, 0);
-      
+
       final transaction = SmsParser.parse('bKash', message, timestamp);
-      
+
       expect(transaction, isNotNull);
       expect(transaction!.provider, Provider.bkash);
       expect(transaction.type, TransactionType.payment);
@@ -88,11 +92,12 @@ void main() {
 
   group('SmsParser - Nagad', () {
     test('parses Nagad sent transaction', () {
-      const message = 'Send Money Tk 1,200.00 to 01812345678 successful. Trx ID: VWX456YZA';
+      const message =
+          'Send Money Tk 1,200.00 to 01812345678 successful. Trx ID: VWX456YZA';
       final timestamp = DateTime(2024, 1, 5, 9, 0, 0);
-      
+
       final transaction = SmsParser.parse('Nagad', message, timestamp);
-      
+
       expect(transaction, isNotNull);
       expect(transaction!.provider, Provider.nagad);
       expect(transaction.type, TransactionType.sent);
@@ -102,11 +107,12 @@ void main() {
     });
 
     test('parses Nagad received transaction', () {
-      const message = 'Received Tk 3,500.00 from 01998765432. Trx.ID: BCD789EFG';
+      const message =
+          'Received Tk 3,500.00 from 01998765432. Trx.ID: BCD789EFG';
       final timestamp = DateTime(2024, 1, 6, 11, 30, 0);
-      
+
       final transaction = SmsParser.parse('Nagad', message, timestamp);
-      
+
       expect(transaction, isNotNull);
       expect(transaction!.provider, Provider.nagad);
       expect(transaction.type, TransactionType.received);
@@ -118,11 +124,12 @@ void main() {
 
   group('SmsParser - Rocket', () {
     test('parses Rocket sent transaction', () {
-      const message = 'Tk 800.00 sent to 01712345678 successfully. TxnID: HIJ012KLM';
+      const message =
+          'Tk 800.00 sent to 01712345678 successfully. TxnID: HIJ012KLM';
       final timestamp = DateTime(2024, 1, 7, 13, 0, 0);
-      
+
       final transaction = SmsParser.parse('Rocket', message, timestamp);
-      
+
       expect(transaction, isNotNull);
       expect(transaction!.provider, Provider.rocket);
       expect(transaction.type, TransactionType.sent);
@@ -134,9 +141,9 @@ void main() {
     test('parses Rocket received transaction', () {
       const message = 'Tk 2,500.00 received from 01898765432. TxnID: NOP345QRS';
       final timestamp = DateTime(2024, 1, 8, 15, 30, 0);
-      
+
       final transaction = SmsParser.parse('Rocket', message, timestamp);
-      
+
       expect(transaction, isNotNull);
       expect(transaction!.provider, Provider.rocket);
       expect(transaction.type, TransactionType.received);
@@ -148,11 +155,12 @@ void main() {
 
   group('SmsParser - Bank', () {
     test('parses bank debit transaction', () {
-      const message = 'Your A/C debited by BDT 5,000.00 on 01-Jan-2024. Balance: 15,000.00';
+      const message =
+          'Your A/C debited by BDT 5,000.00 on 01-Jan-2024. Balance: 15,000.00';
       final timestamp = DateTime(2024, 1, 9, 10, 0, 0);
-      
+
       final transaction = SmsParser.parse('BankSMS', message, timestamp);
-      
+
       expect(transaction, isNotNull);
       expect(transaction!.provider, Provider.bank);
       expect(transaction.type, TransactionType.sent);
@@ -160,11 +168,12 @@ void main() {
     });
 
     test('parses bank credit transaction', () {
-      const message = 'Your A/C credited with Tk 10,000.00 on 02-Jan-2024. Balance: 25,000.00';
+      const message =
+          'Your A/C credited with Tk 10,000.00 on 02-Jan-2024. Balance: 25,000.00';
       final timestamp = DateTime(2024, 1, 10, 12, 0, 0);
-      
+
       final transaction = SmsParser.parse('BankSMS', message, timestamp);
-      
+
       expect(transaction, isNotNull);
       expect(transaction!.provider, Provider.bank);
       expect(transaction.type, TransactionType.received);
