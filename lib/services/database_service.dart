@@ -2,12 +2,47 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:hisabbox/models/transaction.dart';
 
-class DatabaseService {
-  static final DatabaseService instance = DatabaseService._init();
+abstract class DatabaseServiceBase {
+  Future<Database> get database;
+
+  Future<String> insertTransaction(Transaction transaction);
+
+  Future<List<Transaction>> getTransactions({
+    List<Provider>? providers,
+    List<TransactionType>? transactionTypes,
+    DateTime? startDate,
+    DateTime? endDate,
+    int? limit,
+    int? offset,
+  });
+
+  Future<Transaction?> getTransactionById(String id);
+
+  Future<List<Transaction>> getUnsyncedTransactions();
+
+  Future<int> updateTransaction(Transaction transaction);
+
+  Future<int> markAsSynced(String id);
+
+  Future<int> deleteTransaction(String id);
+
+  Future<int> getTransactionCount({List<Provider>? providers});
+
+  Future<double> getTotalAmount({
+    List<Provider>? providers,
+    TransactionType? type,
+  });
+
+  Future<void> close();
+}
+
+class DatabaseService implements DatabaseServiceBase {
+  static DatabaseServiceBase instance = DatabaseService._init();
   static Database? _database;
 
   DatabaseService._init();
 
+  @override
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDB('hisabbox.db');
@@ -18,11 +53,7 @@ class DatabaseService {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: _createDB,
-    );
+    return await openDatabase(path, version: 1, onCreate: _createDB);
   }
 
   Future<void> _createDB(Database db, int version) async {
@@ -56,6 +87,7 @@ class DatabaseService {
     ''');
   }
 
+  @override
   Future<String> insertTransaction(Transaction transaction) async {
     final db = await instance.database;
     await db.insert(
@@ -66,21 +98,28 @@ class DatabaseService {
     return transaction.id;
   }
 
+  @override
   Future<List<Transaction>> getTransactions({
     List<Provider>? providers,
+    List<TransactionType>? transactionTypes,
     DateTime? startDate,
     DateTime? endDate,
     int? limit,
     int? offset,
   }) async {
     final db = await instance.database;
-    
+
     String whereClause = '1=1';
     List<dynamic> whereArgs = [];
 
     if (providers != null && providers.isNotEmpty) {
       final providerNames = providers.map((p) => "'${p.name}'").join(',');
       whereClause += ' AND provider IN ($providerNames)';
+    }
+
+    if (transactionTypes != null && transactionTypes.isNotEmpty) {
+      final typeNames = transactionTypes.map((t) => "'${t.name}'").join(',');
+      whereClause += ' AND type IN ($typeNames)';
     }
 
     if (startDate != null) {
@@ -105,6 +144,7 @@ class DatabaseService {
     return result.map((map) => Transaction.fromMap(map)).toList();
   }
 
+  @override
   Future<Transaction?> getTransactionById(String id) async {
     final db = await instance.database;
     final result = await db.query(
@@ -118,6 +158,7 @@ class DatabaseService {
     return Transaction.fromMap(result.first);
   }
 
+  @override
   Future<List<Transaction>> getUnsyncedTransactions() async {
     final db = await instance.database;
     final result = await db.query(
@@ -130,6 +171,7 @@ class DatabaseService {
     return result.map((map) => Transaction.fromMap(map)).toList();
   }
 
+  @override
   Future<int> updateTransaction(Transaction transaction) async {
     final db = await instance.database;
     return await db.update(
@@ -140,6 +182,7 @@ class DatabaseService {
     );
   }
 
+  @override
   Future<int> markAsSynced(String id) async {
     final db = await instance.database;
     return await db.update(
@@ -150,18 +193,16 @@ class DatabaseService {
     );
   }
 
+  @override
   Future<int> deleteTransaction(String id) async {
     final db = await instance.database;
-    return await db.delete(
-      'transactions',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.delete('transactions', where: 'id = ?', whereArgs: [id]);
   }
 
+  @override
   Future<int> getTransactionCount({List<Provider>? providers}) async {
     final db = await instance.database;
-    
+
     String whereClause = '1=1';
     if (providers != null && providers.isNotEmpty) {
       final providerNames = providers.map((p) => "'${p.name}'").join(',');
@@ -171,16 +212,17 @@ class DatabaseService {
     final result = await db.rawQuery(
       'SELECT COUNT(*) as count FROM transactions WHERE $whereClause',
     );
-    
+
     return Sqflite.firstIntValue(result) ?? 0;
   }
 
+  @override
   Future<double> getTotalAmount({
     List<Provider>? providers,
     TransactionType? type,
   }) async {
     final db = await instance.database;
-    
+
     String whereClause = '1=1';
     List<dynamic> whereArgs = [];
 
@@ -198,10 +240,11 @@ class DatabaseService {
       'SELECT SUM(amount) as total FROM transactions WHERE $whereClause',
       whereArgs.isEmpty ? null : whereArgs,
     );
-    
+
     return (result.first['total'] as num?)?.toDouble() ?? 0.0;
   }
 
+  @override
   Future<void> close() async {
     final db = await instance.database;
     await db.close();

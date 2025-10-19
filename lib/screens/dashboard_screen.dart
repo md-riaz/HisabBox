@@ -7,6 +7,7 @@ import 'package:hisabbox/screens/import_screen.dart';
 import 'package:hisabbox/widgets/transaction_card.dart';
 import 'package:hisabbox/widgets/provider_filter.dart';
 import 'package:hisabbox/widgets/summary_card.dart';
+import 'package:hisabbox/widgets/transaction_type_filter.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -101,6 +102,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       const SizedBox(height: 16),
                       const ProviderFilter(),
+                      const SizedBox(height: 16),
+                      const TransactionTypeFilter(),
                       const SizedBox(height: 16),
                       Text(
                         'Recent Transactions',
