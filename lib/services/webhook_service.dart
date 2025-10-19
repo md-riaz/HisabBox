@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
@@ -32,7 +31,6 @@ class WebhookService {
   static Future<void> initialize() async {
     await Workmanager().initialize(
       webhookCallbackDispatcher,
-      isInDebugMode: false,
     );
   }
 

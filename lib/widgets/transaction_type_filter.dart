@@ -44,7 +44,7 @@ class TransactionTypeFilter extends StatelessWidget {
                       }
                       controller.setSelectedTransactionTypes(updatedTypes);
                     },
-                    selectedColor: typeValue.accentColor.withOpacity(0.3),
+                    selectedColor: typeValue.accentColor.withValues(alpha: 0.3),
                     checkmarkColor: typeValue.accentColor,
                     avatar: isActive
                         ? null

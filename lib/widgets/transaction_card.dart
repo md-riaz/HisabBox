@@ -86,7 +86,7 @@ class TransactionCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: _getColor().withOpacity(0.1),
+          backgroundColor: _getColor().withValues(alpha: 0.1),
           child: Icon(_getIcon(), color: _getColor()),
         ),
         title: Row(
@@ -103,7 +103,7 @@ class TransactionCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: _getProviderColor().withOpacity(0.1),
+                color: _getProviderColor().withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
@@ -123,8 +123,7 @@ class TransactionCard extends StatelessWidget {
             const SizedBox(height: 4),
             if (transaction.recipient != null)
               Text('To: ${transaction.recipient}'),
-            if (transaction.sender != null)
-              Text('From: ${transaction.sender}'),
+            if (transaction.sender != null) Text('From: ${transaction.sender}'),
             Text('TrxID: ${transaction.transactionId}'),
             Text(
               dateFormat.format(transaction.timestamp),
@@ -136,7 +135,8 @@ class TransactionCard extends StatelessWidget {
             if (transaction.synced)
               Row(
                 children: [
-                  Icon(Icons.cloud_done, size: 14, color: Colors.green.shade600),
+                  Icon(Icons.cloud_done,
+                      size: 14, color: Colors.green.shade600),
                   const SizedBox(width: 4),
                   Text(
                     'Synced',

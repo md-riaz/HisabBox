@@ -46,7 +46,8 @@ class ProviderFilter extends StatelessWidget {
                         controller.setActiveProviders(updatedProviders);
                       }
                     },
-                    selectedColor: providerValue.accentColor.withOpacity(0.3),
+                    selectedColor:
+                        providerValue.accentColor.withValues(alpha: 0.3),
                     checkmarkColor: providerValue.accentColor,
                     avatar: isActive
                         ? null

@@ -4,7 +4,7 @@ class PermissionService {
   static Future<bool> requestPermissions() async {
     // Request SMS permissions
     final smsStatus = await Permission.sms.request();
-    
+
     // Request notification permissions (for background service)
     final notificationStatus = await Permission.notification.request();
 

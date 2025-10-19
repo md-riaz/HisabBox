@@ -49,5 +49,6 @@ class ProviderSettingsService {
         .toList(growable: false);
   }
 
-  static String _keyFor(Provider provider) => '$_providerPrefix${provider.name}';
+  static String _keyFor(Provider provider) =>
+      '$_providerPrefix${provider.name}';
 }
