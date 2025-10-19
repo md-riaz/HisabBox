@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:hisabbox/models/transaction.dart';
@@ -20,8 +21,9 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDB,
+      onUpgrade: _upgradeDB,
     );
   }
 
@@ -35,6 +37,7 @@ class DatabaseService {
         recipient TEXT,
         sender TEXT,
         transactionId TEXT NOT NULL,
+        transactionHash TEXT NOT NULL,
         timestamp TEXT NOT NULL,
         note TEXT,
         rawMessage TEXT NOT NULL,
@@ -54,6 +57,10 @@ class DatabaseService {
     await db.execute('''
       CREATE INDEX idx_synced ON transactions(synced)
     ''');
+
+    await db.execute('''
+      CREATE UNIQUE INDEX idx_transaction_hash ON transactions(transactionHash)
+    ''');
   }
 
   Future<String> insertTransaction(Transaction transaction) async {
@@ -61,9 +68,74 @@ class DatabaseService {
     await db.insert(
       'transactions',
       transaction.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
+      conflictAlgorithm: ConflictAlgorithm.ignore,
     );
     return transaction.id;
+  }
+
+  @visibleForTesting
+  Future<void> resetForTesting() async {
+    final db = _database;
+    if (db != null) {
+      await db.close();
+      _database = null;
+    }
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, 'hisabbox.db');
+    await deleteDatabase(path);
+  }
+
+  Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute(
+          "ALTER TABLE transactions ADD COLUMN transactionHash TEXT");
+
+      final existing = await db.query('transactions');
+      final batch = db.batch();
+      for (final row in existing) {
+        final timestamp = DateTime.parse(row['timestamp'] as String);
+        final hash = Transaction.generateHash(
+          sender: row['sender'] as String?,
+          messageBody: row['rawMessage'] as String,
+          timestamp: timestamp,
+        );
+        batch.update(
+          'transactions',
+          {'transactionHash': hash},
+          where: 'id = ?',
+          whereArgs: [row['id'] as String],
+        );
+      }
+      await batch.commit(noResult: true);
+
+      final rows = await db.query(
+        'transactions',
+        columns: ['id', 'transactionHash'],
+        orderBy: 'createdAt ASC',
+      );
+      final seen = <String>{};
+      for (final row in rows) {
+        final hash = row['transactionHash'] as String?;
+        final id = row['id'] as String;
+        if (hash == null || hash.isEmpty) {
+          continue;
+        }
+        if (seen.contains(hash)) {
+          await db.delete(
+            'transactions',
+            where: 'id = ?',
+            whereArgs: [id],
+          );
+        } else {
+          seen.add(hash);
+        }
+      }
+
+      await db.execute('''
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_transaction_hash
+        ON transactions(transactionHash)
+      ''');
+    }
   }
 
   Future<List<Transaction>> getTransactions({

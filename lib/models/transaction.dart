@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'transaction.g.dart';
@@ -43,6 +46,7 @@ class Transaction {
   final String? recipient;
   final String? sender;
   final String transactionId;
+  final String transactionHash;
   final DateTime timestamp;
   final String? note;
   final String rawMessage;
@@ -57,6 +61,7 @@ class Transaction {
     this.recipient,
     this.sender,
     required this.transactionId,
+    required this.transactionHash,
     required this.timestamp,
     this.note,
     required this.rawMessage,
@@ -78,6 +83,7 @@ class Transaction {
       'recipient': recipient,
       'sender': sender,
       'transactionId': transactionId,
+      'transactionHash': transactionHash,
       'timestamp': timestamp.toIso8601String(),
       'note': note,
       'rawMessage': rawMessage,
@@ -87,6 +93,14 @@ class Transaction {
   }
 
   static Transaction fromMap(Map<String, dynamic> map) {
+    final timestamp = DateTime.parse(map['timestamp'] as String);
+    final hash = (map['transactionHash'] as String?) ??
+        Transaction.generateHash(
+          sender: map['sender'] as String?,
+          messageBody: map['rawMessage'] as String,
+          timestamp: timestamp,
+        );
+
     return Transaction(
       id: map['id'] as String,
       provider: Provider.values.firstWhere(
@@ -101,7 +115,8 @@ class Transaction {
       recipient: map['recipient'] as String?,
       sender: map['sender'] as String?,
       transactionId: map['transactionId'] as String,
-      timestamp: DateTime.parse(map['timestamp'] as String),
+      transactionHash: hash,
+      timestamp: timestamp,
       note: map['note'] as String?,
       rawMessage: map['rawMessage'] as String,
       synced: (map['synced'] as int) == 1,
@@ -117,6 +132,7 @@ class Transaction {
     String? recipient,
     String? sender,
     String? transactionId,
+    String? transactionHash,
     DateTime? timestamp,
     String? note,
     String? rawMessage,
@@ -131,11 +147,27 @@ class Transaction {
       recipient: recipient ?? this.recipient,
       sender: sender ?? this.sender,
       transactionId: transactionId ?? this.transactionId,
+      transactionHash: transactionHash ?? this.transactionHash,
       timestamp: timestamp ?? this.timestamp,
       note: note ?? this.note,
       rawMessage: rawMessage ?? this.rawMessage,
       synced: synced ?? this.synced,
       createdAt: createdAt ?? this.createdAt,
     );
+  }
+
+  static String generateHash({
+    String? sender,
+    required String messageBody,
+    required DateTime timestamp,
+  }) {
+    final buffer = StringBuffer()
+      ..write(sender ?? '')
+      ..write('|')
+      ..write(messageBody)
+      ..write('|')
+      ..write(timestamp.toIso8601String());
+    final bytes = utf8.encode(buffer.toString());
+    return md5.convert(bytes).toString();
   }
 }
