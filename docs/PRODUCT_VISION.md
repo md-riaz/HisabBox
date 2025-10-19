@@ -41,7 +41,7 @@ HisabBox persistently ingests mobile financial service (MFS) and bank SMS alerts
 - **Import History:** Backfill older messages per provider using trusted sender patterns.
 
 ### D. Persistent Background Operation
-- Use the `telephony` plugin's background callback to insert transactions into the local Drift database even after app termination or device reboot.
+- Use the `telephony` plugin's background isolate to insert transactions into the local Drift database even after app termination or device reboot.
 - Resume syncing when connectivity is restored.
 
 ### E. Webhook Push (Automation Setup)
