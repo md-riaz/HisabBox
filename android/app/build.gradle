@@ -43,7 +43,7 @@ android {
     defaultConfig {
         applicationId "com.hisabbox.app"
         minSdkVersion flutter.minSdkVersion
-        targetSdk 34
+        targetSdk 36
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
