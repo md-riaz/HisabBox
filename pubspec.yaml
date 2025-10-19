@@ -23,7 +23,7 @@ dependencies:
   shared_preferences: ^2.2.2
   
   # SMS Reading
-  another_telephony: ^1.0.0
+  another_telephony: ^0.4.1
   
   # HTTP for webhook
   dio: ^5.4.3+1
