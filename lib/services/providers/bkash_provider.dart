@@ -9,8 +9,15 @@ class BkashProvider extends SmsProvider {
   );
 
   static final RegExp _receivedPattern = RegExp(
-    r'You have received Tk([\d,]+\.?\d*) from ([\d\s]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
+    r'You have received(?: [^T]+)? Tk([\d,]+\.?\d*) from ([^\.]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
     caseSensitive: false,
+    dotAll: true,
+  );
+
+  static final RegExp _receivedDepositPattern = RegExp(
+    r'You have received deposit from [^\.]+ of Tk([\d,]+\.?\d*) from ([^\.]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
+    caseSensitive: false,
+    dotAll: true,
   );
 
   static final RegExp _cashoutPattern = RegExp(
@@ -19,8 +26,15 @@ class BkashProvider extends SmsProvider {
   );
 
   static final RegExp _paymentPattern = RegExp(
-    r'Payment of Tk([\d,]+\.?\d*) .*?TrxID ([\w\d]+)',
+    r'Payment of Tk([\d,]+\.?\d*)(?: to ([^\.]+?))?.*?Trx[.\s]*ID[:\s]*([\w\d]+)',
     caseSensitive: false,
+    dotAll: true,
+  );
+
+  static final RegExp _billPaymentPattern = RegExp(
+    r'Bill successfully paid.*?Biller[:\s]*([^\n]+).*?Amount[:\s]*Tk\s*([\d,]+\.?\d*).*?Trx[.:\s]*ID[:\s]*([\w\d]+)',
+    caseSensitive: false,
+    dotAll: true,
   );
 
   static const Set<String> _senderIds = {'bkash', '16247'};
@@ -67,6 +81,20 @@ class BkashProvider extends SmsProvider {
       );
     }
 
+    final receivedDepositMatch = _receivedDepositPattern.firstMatch(message);
+    if (receivedDepositMatch != null) {
+      final sender = receivedDepositMatch.group(2)?.trim();
+      return buildTransaction(
+        provider: provider,
+        type: TransactionType.received,
+        amount: parseAmount(receivedDepositMatch.group(1)!),
+        sender: sender,
+        transactionId: receivedDepositMatch.group(3)!,
+        timestamp: timestamp,
+        rawMessage: message,
+      );
+    }
+
     final cashoutMatch = _cashoutPattern.firstMatch(message);
     if (cashoutMatch != null) {
       final recipient = cashoutMatch.group(2)?.trim();
@@ -83,11 +111,30 @@ class BkashProvider extends SmsProvider {
 
     final paymentMatch = _paymentPattern.firstMatch(message);
     if (paymentMatch != null) {
+      final rawRecipient = paymentMatch.group(2)?.trim();
+      final recipient = rawRecipient
+          ?.replaceAll(RegExp(r'(?:is|was) successful', caseSensitive: false), '')
+          .trim();
       return buildTransaction(
         provider: provider,
         type: TransactionType.payment,
         amount: parseAmount(paymentMatch.group(1)!),
-        transactionId: paymentMatch.group(2)!,
+        recipient: recipient?.isEmpty ?? true ? null : recipient,
+        transactionId: paymentMatch.group(3)!,
+        timestamp: timestamp,
+        rawMessage: message,
+      );
+    }
+
+    final billPaymentMatch = _billPaymentPattern.firstMatch(message);
+    if (billPaymentMatch != null) {
+      final recipient = billPaymentMatch.group(1)?.trim();
+      return buildTransaction(
+        provider: provider,
+        type: TransactionType.payment,
+        amount: parseAmount(billPaymentMatch.group(2)!),
+        recipient: recipient,
+        transactionId: billPaymentMatch.group(3)!,
         timestamp: timestamp,
         rawMessage: message,
       );
