@@ -12,13 +12,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Read version from pubspec
+      - name: Derive version from tag
         id: version
         run: |
-          version=$(grep '^version:' pubspec.yaml | head -n1 | cut -d' ' -f2)
-          version_no_build=${version%%+*}
-          echo "version=$version_no_build" >> "$GITHUB_OUTPUT"
-          echo "Detected pubspec version: $version_no_build"
+          tag_name="$GITHUB_REF_NAME"
+          version="${tag_name#v}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Derived version $version from tag $tag_name"
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
