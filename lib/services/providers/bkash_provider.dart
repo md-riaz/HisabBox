@@ -10,7 +10,7 @@ class BkashProvider extends SmsProvider {
   );
 
   static final RegExp _receivedPattern = RegExp(
-    r'You have received(?: [^T]+)? Tk\s*([\d,]+(?:\.\d+)?) from ([^\.]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
+    r'You have received(?: .*?)? Tk\s*([\d,]+(?:\.\d+)?) from ([^\.]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
     caseSensitive: false,
     dotAll: true,
   );
@@ -74,20 +74,6 @@ class BkashProvider extends SmsProvider {
       );
     }
 
-    final receivedMatch = _receivedPattern.firstMatch(message);
-    if (receivedMatch != null) {
-      final sender = receivedMatch.group(2)?.trim();
-      return buildTransaction(
-        provider: provider,
-        type: TransactionType.received,
-        amount: parseAmount(receivedMatch.group(1)!),
-        sender: sender,
-        transactionId: receivedMatch.group(3)!,
-        timestamp: timestamp,
-        rawMessage: message,
-      );
-    }
-
     final receivedDepositMatch = _receivedDepositPattern.firstMatch(message);
     if (receivedDepositMatch != null) {
       final sender = receivedDepositMatch.group(2)?.trim();
@@ -97,6 +83,20 @@ class BkashProvider extends SmsProvider {
         amount: parseAmount(receivedDepositMatch.group(1)!),
         sender: sender,
         transactionId: receivedDepositMatch.group(3)!,
+        timestamp: timestamp,
+        rawMessage: message,
+      );
+    }
+
+    final receivedMatch = _receivedPattern.firstMatch(message);
+    if (receivedMatch != null) {
+      final sender = receivedMatch.group(2)?.trim();
+      return buildTransaction(
+        provider: provider,
+        type: TransactionType.received,
+        amount: parseAmount(receivedMatch.group(1)!),
+        sender: sender,
+        transactionId: receivedMatch.group(3)!,
         timestamp: timestamp,
         rawMessage: message,
       );
@@ -137,7 +137,7 @@ class BkashProvider extends SmsProvider {
             RegExp(r'\ssuccessful$', caseSensitive: false),
             '',
           )
-          .trim();
+          ?.trim();
       return buildTransaction(
         provider: provider,
         type: TransactionType.payment,
