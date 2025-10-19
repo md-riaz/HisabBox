@@ -42,9 +42,7 @@ class TransactionTypeFilter extends StatelessWidget {
                       } else {
                         updatedTypes.remove(typeValue);
                       }
-                      if (updatedTypes.isNotEmpty) {
-                        controller.setSelectedTransactionTypes(updatedTypes);
-                      }
+                      controller.setSelectedTransactionTypes(updatedTypes);
                     },
                     selectedColor: typeValue.accentColor.withOpacity(0.3),
                     checkmarkColor: typeValue.accentColor,

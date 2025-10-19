@@ -94,8 +94,9 @@ class DatabaseService {
     List<dynamic> whereArgs = [];
 
     if (providers != null && providers.isNotEmpty) {
-      final providerNames = providers.map((p) => "'${p.name}'").join(',');
-      whereClause += ' AND provider IN ($providerNames)';
+      final placeholders = List.filled(providers.length, '?').join(',');
+      whereClause += ' AND provider IN ($placeholders)';
+      whereArgs.addAll(providers.map((provider) => provider.name));
     }
 
     if (types != null && types.isNotEmpty) {
@@ -180,13 +181,16 @@ class DatabaseService {
     final db = await instance.database;
 
     String whereClause = '1=1';
+    List<dynamic> whereArgs = [];
     if (providers != null && providers.isNotEmpty) {
-      final providerNames = providers.map((p) => "'${p.name}'").join(',');
-      whereClause += ' AND provider IN ($providerNames)';
+      final placeholders = List.filled(providers.length, '?').join(',');
+      whereClause += ' AND provider IN ($placeholders)';
+      whereArgs.addAll(providers.map((provider) => provider.name));
     }
 
     final result = await db.rawQuery(
       'SELECT COUNT(*) as count FROM transactions WHERE $whereClause',
+      whereArgs.isEmpty ? null : whereArgs,
     );
 
     return sqflite.Sqflite.firstIntValue(result) ?? 0;
@@ -202,8 +206,9 @@ class DatabaseService {
     List<dynamic> whereArgs = [];
 
     if (providers != null && providers.isNotEmpty) {
-      final providerNames = providers.map((p) => "'${p.name}'").join(',');
-      whereClause += ' AND provider IN ($providerNames)';
+      final placeholders = List.filled(providers.length, '?').join(',');
+      whereClause += ' AND provider IN ($placeholders)';
+      whereArgs.addAll(providers.map((provider) => provider.name));
     }
 
     if (type != null) {
