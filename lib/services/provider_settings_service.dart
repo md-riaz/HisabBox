@@ -1,6 +1,5 @@
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:hisabbox/models/transaction.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Manages the enabled/disabled state of SMS providers.
 ///
@@ -16,7 +15,8 @@ class ProviderSettingsService {
   /// state without requiring additional migrations.
   static Future<bool> isProviderEnabled(Provider provider) async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_keyFor(provider)) ?? true;
+    final storedPreference = prefs.getBool(_keyFor(provider));
+    return storedPreference ?? true;
   }
 
   /// Persists the enabled/disabled flag for [provider].
@@ -51,4 +51,5 @@ class ProviderSettingsService {
 
   static String _keyFor(Provider provider) =>
       '$_providerPrefix${provider.name}';
+
 }

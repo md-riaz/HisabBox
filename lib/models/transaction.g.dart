@@ -7,20 +7,20 @@ part of 'transaction.dart';
 // **************************************************************************
 
 Transaction _$TransactionFromJson(Map<String, dynamic> json) => Transaction(
-      id: json['id'] as String,
-      provider: $enumDecode(_$ProviderEnumMap, json['provider']),
-      type: $enumDecode(_$TransactionTypeEnumMap, json['type']),
-      amount: (json['amount'] as num).toDouble(),
-      recipient: json['recipient'] as String?,
-      sender: json['sender'] as String?,
-      transactionId: json['transactionId'] as String,
-      transactionHash: json['transactionHash'] as String,
-      timestamp: DateTime.parse(json['timestamp'] as String),
-      note: json['note'] as String?,
-      rawMessage: json['rawMessage'] as String,
-      synced: json['synced'] as bool? ?? false,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-    );
+  id: json['id'] as String,
+  provider: $enumDecode(_$ProviderEnumMap, json['provider']),
+  type: $enumDecode(_$TransactionTypeEnumMap, json['type']),
+  amount: (json['amount'] as num).toDouble(),
+  recipient: json['recipient'] as String?,
+  sender: json['sender'] as String?,
+  transactionId: json['transactionId'] as String,
+  transactionHash: json['transactionHash'] as String,
+  timestamp: DateTime.parse(json['timestamp'] as String),
+  note: json['note'] as String?,
+  rawMessage: json['rawMessage'] as String,
+  synced: json['synced'] as bool? ?? false,
+  createdAt: DateTime.parse(json['createdAt'] as String),
+);
 
 Map<String, dynamic> _$TransactionToJson(Transaction instance) =>
     <String, dynamic>{
@@ -43,7 +43,11 @@ const _$ProviderEnumMap = {
   Provider.bkash: 'bkash',
   Provider.nagad: 'nagad',
   Provider.rocket: 'rocket',
-  Provider.bank: 'bank',
+  Provider.dutchBanglaBank: 'dutchBanglaBank',
+  Provider.bracBank: 'bracBank',
+  Provider.cityBank: 'cityBank',
+  Provider.bankAsia: 'bankAsia',
+  Provider.islamiBank: 'islamiBank',
   Provider.other: 'other',
 };
 

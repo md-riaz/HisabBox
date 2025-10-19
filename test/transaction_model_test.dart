@@ -112,7 +112,7 @@ void main() {
     test('toJson serializes correctly', () {
       final transaction = Transaction(
         id: '123',
-        provider: Provider.bank,
+        provider: Provider.dutchBanglaBank,
         type: TransactionType.payment,
         amount: 750.0,
         transactionId: 'TRX999',
@@ -129,7 +129,7 @@ void main() {
       final json = transaction.toJson();
 
       expect(json['id'], '123');
-      expect(json['provider'], 'bank');
+      expect(json['provider'], 'dutchBanglaBank');
       expect(json['type'], 'payment');
       expect(json['amount'], 750.0);
     });

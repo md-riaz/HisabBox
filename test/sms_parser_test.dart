@@ -154,28 +154,28 @@ void main() {
   });
 
   group('SmsParser - Bank', () {
-    test('parses bank debit transaction', () {
+    test('parses BRAC Bank debit transaction', () {
       const message =
-          'Your A/C debited by BDT 5,000.00 on 01-Jan-2024. Balance: 15,000.00';
+          'BRAC Bank: Your A/C debited by BDT 5,000.00 on 01-Jan-2024.';
       final timestamp = DateTime(2024, 1, 9, 10, 0, 0);
 
-      final transaction = SmsParser.parse('BankSMS', message, timestamp);
+      final transaction = SmsParser.parse('BRACBANK', message, timestamp);
 
       expect(transaction, isNotNull);
-      expect(transaction!.provider, Provider.bank);
+      expect(transaction!.provider, Provider.bracBank);
       expect(transaction.type, TransactionType.sent);
       expect(transaction.amount, 5000.00);
     });
 
-    test('parses bank credit transaction', () {
+    test('parses Dutch-Bangla Bank credit transaction', () {
       const message =
-          'Your A/C credited with Tk 10,000.00 on 02-Jan-2024. Balance: 25,000.00';
+          'Dutch-Bangla Bank: Your A/C credited with Tk 10,000.00 on 02-Jan-2024.';
       final timestamp = DateTime(2024, 1, 10, 12, 0, 0);
 
-      final transaction = SmsParser.parse('BankSMS', message, timestamp);
+      final transaction = SmsParser.parse('DBBL', message, timestamp);
 
       expect(transaction, isNotNull);
-      expect(transaction!.provider, Provider.bank);
+      expect(transaction!.provider, Provider.dutchBanglaBank);
       expect(transaction.type, TransactionType.received);
       expect(transaction.amount, 10000.00);
     });
@@ -254,11 +254,7 @@ void main() {
               onRequest: (options, handler) {
                 callCount++;
                 handler.resolve(
-                  Response(
-                    requestOptions: options,
-                    statusCode: 200,
-                    data: {},
-                  ),
+                  Response(requestOptions: options, statusCode: 200, data: {}),
                 );
               },
             ),

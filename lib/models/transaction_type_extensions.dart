@@ -5,7 +5,7 @@ extension TransactionTypeUiMetadata on TransactionType {
   String get displayName {
     switch (this) {
       case TransactionType.sent:
-        return 'Sent';
+        return 'Send Money';
       case TransactionType.received:
         return 'Received';
       case TransactionType.cashout:
@@ -17,51 +17,46 @@ extension TransactionTypeUiMetadata on TransactionType {
       case TransactionType.refund:
         return 'Refund';
       case TransactionType.fee:
-        return 'Fee';
+        return 'Service Fee';
       case TransactionType.other:
         return 'Other';
-    }
-  }
-
-  Color get accentColor {
-    switch (this) {
-      case TransactionType.sent:
-        return Colors.redAccent;
-      case TransactionType.received:
-        return Colors.green;
-      case TransactionType.cashout:
-        return Colors.deepOrange;
-      case TransactionType.cashin:
-        return Colors.blue;
-      case TransactionType.payment:
-        return Colors.indigo;
-      case TransactionType.refund:
-        return Colors.teal;
-      case TransactionType.fee:
-        return Colors.brown;
-      case TransactionType.other:
-        return Colors.grey;
     }
   }
 
   IconData get glyph {
     switch (this) {
       case TransactionType.sent:
-        return Icons.call_made;
+        return Icons.arrow_upward;
       case TransactionType.received:
-        return Icons.call_received;
+        return Icons.arrow_downward;
       case TransactionType.cashout:
-        return Icons.arrow_circle_up;
+        return Icons.money_off;
       case TransactionType.cashin:
-        return Icons.arrow_circle_down;
+        return Icons.attach_money;
       case TransactionType.payment:
-        return Icons.payments;
+        return Icons.payment;
       case TransactionType.refund:
-        return Icons.undo;
+        return Icons.refresh;
       case TransactionType.fee:
-        return Icons.request_quote;
+        return Icons.receipt;
       case TransactionType.other:
-        return Icons.category;
+        return Icons.help_outline;
+    }
+  }
+
+  Color get accentColor {
+    switch (this) {
+      case TransactionType.sent:
+      case TransactionType.cashout:
+      case TransactionType.payment:
+      case TransactionType.fee:
+        return Colors.red;
+      case TransactionType.received:
+      case TransactionType.cashin:
+      case TransactionType.refund:
+        return Colors.green;
+      case TransactionType.other:
+        return Colors.grey;
     }
   }
 }
