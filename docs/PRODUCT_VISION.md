@@ -41,7 +41,7 @@ HisabBox persistently ingests mobile financial service (MFS) and bank SMS alerts
 - **Import History:** Backfill older messages per provider using trusted sender patterns.
 
 ### D. Persistent Background Operation
-- Use native BroadcastReceivers and a foreground service to insert transactions into the local Drift database even after app termination or device reboot.
+- Use the `telephony` plugin's background isolate to insert transactions into the local Drift database even after app termination or device reboot.
 - Resume syncing when connectivity is restored.
 
 ### E. Webhook Push (Automation Setup)
@@ -62,17 +62,17 @@ HisabBox persistently ingests mobile financial service (MFS) and bank SMS alerts
 ## 5. Data Flow
 
 ```
-SMS Provider → Android BroadcastReceiver → Parser Service → Drift SQLite
+SMS Provider → Telephony plugin background isolate → Parser Service → Drift SQLite
             → Dashboard UI / Settings ↔ WorkManager Sync → User Webhook
 ```
 
-Persistence guarantees: every SMS is captured natively, committed to storage, and queued for webhook delivery even if Flutter is killed or the device restarts.
+Persistence guarantees: every SMS is captured through the telephony plugin background isolate, committed to storage, and queued for webhook delivery even if Flutter is killed or the device restarts.
 
 ## 6. Architecture Overview
 
 | Layer | Responsibility | Key Components |
 | --- | --- | --- |
-| Data Capture | Receive SMS and insert into DB | Android BroadcastReceiver, native Kotlin service |
+| Data Capture | Receive SMS and insert into DB | Telephony plugin background isolate |
 | Persistence | Store parsed transactions | Drift (SQLite ORM) |
 | Logic | Parse, deduplicate, classify | Regex parser engine, provider registry |
 | Sync | Push to webhook | Dio HTTP client, WorkManager |
@@ -87,8 +87,8 @@ Persistence guarantees: every SMS is captured natively, committed to storage, an
 | State Management | GetX or Riverpod (Provider-compatible) |
 | Local Storage | Drift (SQLite) |
 | Settings | SharedPreferences |
-| Background Tasks | WorkManager + BroadcastReceiver |
-| SMS Handling | sms_advanced + native Kotlin receiver |
+| Background Tasks | WorkManager + telephony background isolate |
+| SMS Handling | telephony plugin (Dart background callback) |
 | Networking | Dio |
 | Dependency Injection | GetIt / Riverpod |
 | Logging | Local-only logger |
