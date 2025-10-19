@@ -12,43 +12,43 @@ dependencies:
   
   # UI
   material_color_utilities: ^0.11.1
-  cupertino_icons: ^1.0.6
+  cupertino_icons: ^1.0.8
   
   # State Management
-  get: ^4.6.6
+  get: ^4.7.2
   
   # Local Storage
-  sqflite: ^2.3.0
-  path_provider: ^2.1.1
+  sqflite: ^2.4.2
+  path_provider: ^2.1.5
   path: ^1.9.1
-  shared_preferences: ^2.2.2
+  shared_preferences: ^2.5.3
   
   # SMS Reading
   another_telephony: ^0.4.1
   
   # HTTP for webhook
-  dio: ^5.4.3+1
+  dio: ^5.9.0
   
   # Permissions
-  permission_handler: ^11.1.0
+  permission_handler: ^12.0.1
   
   # Background Processing
   workmanager: ^0.9.0+3
   
   # JSON
-  json_annotation: ^4.8.1
+  json_annotation: ^4.9.0
   
   # Utilities
-  intl: ^0.18.1
-  crypto: ^3.0.3
+  intl: ^0.20.2
+  crypto: ^3.0.6
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.0
-  build_runner: ^2.4.6
-  json_serializable: ^6.7.1
-  sqflite_common_ffi: ^2.3.3
+  flutter_lints: ^6.0.0
+  build_runner: ^2.9.0
+  json_serializable: ^6.11.1
+  sqflite_common_ffi: ^2.3.6
 
 flutter:
   uses-material-design: true
