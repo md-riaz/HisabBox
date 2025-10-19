@@ -15,8 +15,8 @@ void main() async {
   // Initialize database
   await DatabaseService.instance.database;
 
-  // Request permissions
-  final permissionsGranted = await PermissionService.requestPermissions();
+  // Check current permissions before initializing services
+  final permissionsGranted = await PermissionService.checkPermissions();
 
   if (permissionsGranted) {
     await _initializeServicesAndControllers();

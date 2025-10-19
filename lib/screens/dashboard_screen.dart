@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hisabbox/controllers/transaction_controller.dart';
 import 'package:hisabbox/controllers/settings_controller.dart';
+import 'package:hisabbox/screens/all_transactions_screen.dart';
 import 'package:hisabbox/screens/settings_screen.dart';
 import 'package:hisabbox/screens/import_screen.dart';
 import 'package:hisabbox/widgets/transaction_card.dart';
@@ -31,7 +32,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _loadData() async {
     await Future.wait([
-      _transactionController.loadTransactions(),
+      _transactionController.loadTransactions(limit: 30, updateLimit: true),
       _settingsController.loadSettings(),
     ]);
   }
@@ -81,11 +82,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: RefreshIndicator(
         onRefresh: _loadData,
         child: Obx(() {
-          if (_transactionController.isLoading.value) {
+          final transactions = _transactionController.transactions.toList();
+          final isLoading = _transactionController.isLoading.value;
+
+          if (isLoading && transactions.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final transactions = _transactionController.transactions;
+          final previewTransactions =
+              transactions.length > 5 ? transactions.take(5).toList() : transactions;
+
           return CustomScrollView(
             slivers: [
               SliverToBoxAdapter(
@@ -102,9 +108,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       const SizedBox(height: 16),
                       const ProviderFilter(),
                       const SizedBox(height: 16),
-                      Text(
-                        'Recent Transactions',
-                        style: Theme.of(context).textTheme.titleLarge,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Recent transactions',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          if (transactions.isNotEmpty)
+                            TextButton.icon(
+                              onPressed: () async {
+                                await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const AllTransactionsScreen(),
+                                  ),
+                                );
+                                if (!mounted) return;
+                                await _transactionController.loadTransactions(
+                                  limit: 30,
+                                  updateLimit: true,
+                                );
+                              },
+                              icon: const Icon(Icons.arrow_forward_rounded),
+                              label: const Text('View all'),
+                            ),
+                        ],
                       ),
                     ],
                   ),
@@ -134,11 +163,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 SliverPadding(
                   padding: const EdgeInsets.all(16.0),
                   sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate((context, index) {
-                      final transaction = transactions[index];
-                      return TransactionCard(transaction: transaction);
-                    }, childCount: transactions.length),
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final transaction = previewTransactions[index];
+                        return TransactionCard(transaction: transaction);
+                      },
+                      childCount: previewTransactions.length,
+                    ),
                   ),
+                ),
+              if (transactions.length > previewTransactions.length)
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: 16),
                 ),
             ],
           );

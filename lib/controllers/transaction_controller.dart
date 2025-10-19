@@ -9,6 +9,7 @@ class TransactionController extends GetxController {
   final RxList<Provider> activeProviders = Provider.values.obs;
   final RxList<TransactionType> selectedTransactionTypes =
       List<TransactionType>.from(TransactionType.values).obs;
+  int? _currentLimit = 30;
 
   @override
   void onInit() {
@@ -19,9 +20,15 @@ class TransactionController extends GetxController {
   Future<void> loadTransactions({
     DateTime? startDate,
     DateTime? endDate,
-    int limit = 30,
+    int? limit,
+    bool updateLimit = false,
   }) async {
     isLoading.value = true;
+
+    final effectiveLimit = updateLimit ? limit : (limit ?? _currentLimit);
+    if (updateLimit) {
+      _currentLimit = effectiveLimit;
+    }
 
     try {
       final result = await DatabaseService.instance.getTransactions(
@@ -29,7 +36,7 @@ class TransactionController extends GetxController {
         types: selectedTransactionTypes.toList(growable: false),
         startDate: startDate,
         endDate: endDate,
-        limit: limit,
+        limit: effectiveLimit,
       );
       transactions.assignAll(result);
     } catch (e) {
