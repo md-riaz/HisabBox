@@ -4,6 +4,7 @@ import 'package:hisabbox/controllers/settings_controller.dart';
 import 'package:hisabbox/controllers/transaction_controller.dart';
 import 'package:hisabbox/models/provider_extensions.dart';
 import 'package:hisabbox/models/transaction.dart';
+import 'package:hisabbox/models/transaction_type_extensions.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -70,9 +71,108 @@ class _SettingsScreenState extends State<SettingsScreen> {
       appBar: AppBar(title: const Text('Settings')),
       body: Obx(() {
         final providerSettings = _settingsController.providerSettings;
+        final smsListeningEnabled =
+            _settingsController.smsListeningEnabled.value;
+        final transactionTypeSettings =
+            _settingsController.transactionTypeSettings;
         return ListView(
           padding: const EdgeInsets.all(16.0),
           children: [
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'SMS Capture',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 16),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Listen for new SMS'),
+                      subtitle: const Text(
+                        'Automatically import supported transaction messages as they arrive.',
+                      ),
+                      value: smsListeningEnabled,
+                      onChanged: (value) async {
+                        final messenger = ScaffoldMessenger.of(context);
+                        await _settingsController.setSmsListeningEnabled(value);
+                        if (!mounted) return;
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              value
+                                  ? 'SMS listening enabled'
+                                  : 'SMS listening paused',
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Import transaction types',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Choose which categories should be recorded when messages are processed.',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: transactionTypeSettings.entries.map((entry) {
+                        final type = entry.key;
+                        final isEnabled = entry.value;
+                        return FilterChip(
+                          label: Text(type.displayName),
+                          selected: isEnabled,
+                          avatar: isEnabled
+                              ? null
+                              : Icon(
+                                  type.glyph,
+                                  size: 18,
+                                  color: type.accentColor,
+                                ),
+                          selectedColor: type.accentColor.withValues(
+                            alpha: 0.25,
+                          ),
+                          checkmarkColor: type.accentColor,
+                          onSelected: (selected) async {
+                            final success = await _settingsController
+                                .setTransactionTypeEnabled(type, selected);
+                            if (!success) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'At least one transaction type must remain enabled.',
+                                    ),
+                                  ),
+                                );
+                              }
+                              return;
+                            }
+
+                            final activeTypes = transactionTypeSettings.entries
+                                .where((entry) => entry.value)
+                                .map((entry) => entry.key)
+                                .toList(growable: false);
+                            await _transactionController
+                                .setSelectedTransactionTypes(activeTypes);
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),

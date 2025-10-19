@@ -12,7 +12,6 @@ class PermissionRequiredScreen extends StatefulWidget {
 
 class _PermissionRequiredScreenState extends State<PermissionRequiredScreen>
     with WidgetsBindingObserver {
-  bool _isRequesting = false;
   bool _isHandlingGranted = false;
 
   @override
@@ -39,32 +38,6 @@ class _PermissionRequiredScreenState extends State<PermissionRequiredScreen>
     final granted = await PermissionService.checkPermissions();
     if (granted) {
       await _handlePermissionsGranted();
-    }
-  }
-
-  Future<void> _requestPermissions() async {
-    setState(() {
-      _isRequesting = true;
-    });
-
-    final granted = await PermissionService.requestPermissions();
-
-    if (!mounted) {
-      return;
-    }
-
-    setState(() {
-      _isRequesting = false;
-    });
-
-    if (granted) {
-      await _handlePermissionsGranted();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('SMS and notification permissions are required to continue.'),
-        ),
-      );
     }
   }
 
@@ -107,27 +80,27 @@ class _PermissionRequiredScreenState extends State<PermissionRequiredScreen>
             ),
             const SizedBox(height: 12),
             Text(
-              'HisabBox requires SMS and notification permissions to automatically read and process your transaction messages. Without these permissions, the app cannot keep your records up to date.',
+              'HisabBox requires SMS and notification permissions to automatically read and process your transaction messages. Because Android blocks automated permission prompts for SMS access, you need to enable it manually from system settings.',
               style: theme.textTheme.bodyMedium,
             ),
-            const SizedBox(height: 32),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _isRequesting ? null : _requestPermissions,
-                    child: _isRequesting
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Retry permission request'),
-                  ),
-                ),
-              ],
+            const SizedBox(height: 24),
+            Text(
+              'Follow these steps to continue:',
+              style: theme.textTheme.titleSmall,
             ),
             const SizedBox(height: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                _InstructionStep(text: 'Open the app settings using the button below.'),
+                _InstructionStep(
+                  text: 'Tap the three dots in the top-right corner and choose "Allow restricted settings".',
+                ),
+                _InstructionStep(text: 'Select Permissions → SMS and change it to "Allow".'),
+                _InstructionStep(text: 'Return to HisabBox to continue.'),
+              ],
+            ),
+            const SizedBox(height: 24),
             Row(
               children: [
                 Expanded(
@@ -140,6 +113,37 @@ class _PermissionRequiredScreenState extends State<PermissionRequiredScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _InstructionStep extends StatelessWidget {
+  const _InstructionStep({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.check_circle_outline,
+            size: 20,
+            color: theme.colorScheme.primary,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              text,
+              style: theme.textTheme.bodyMedium,
+            ),
+          ),
+        ],
       ),
     );
   }
