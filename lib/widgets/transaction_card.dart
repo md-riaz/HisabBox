@@ -86,7 +86,7 @@ class TransactionCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: _getColor().withOpacity(0.1),
+          backgroundColor: _getColor().withValues(alpha: 0.1),
           child: Icon(_getIcon(), color: _getColor()),
         ),
         title: Row(
@@ -103,7 +103,7 @@ class TransactionCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: _getProviderColor().withOpacity(0.1),
+                color: _getProviderColor().withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
