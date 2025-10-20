@@ -79,7 +79,7 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
                 ),
               ),
               if (transactions.isEmpty)
-                const SliverFillRemaining(
+                SliverFillRemaining(
                   child: Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -92,7 +92,9 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
                         const SizedBox(height: 16),
                         Text(
                           'No transactions found',
-                          style: TextStyle(fontSize: 16, color: theme.colorScheme.onSurfaceVariant),
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ],
                     ),
