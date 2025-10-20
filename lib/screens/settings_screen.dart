@@ -70,6 +70,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (dialogContext) {
         final textTheme = Theme.of(dialogContext).textTheme;
+        const payloadFields = [
+          'id — Stable unique identifier for the transaction',
+          'provider — Source of the SMS (e.g., bkash, nagad)',
+          'type — Transaction category (sent, received, etc.)',
+          'amount — Transaction amount as a decimal number',
+          'recipient — Optional recipient account or phone',
+          'sender — Optional sender account or phone',
+          'transactionId — Provider reference / TRX ID',
+          'transactionHash — SHA-256 hash used for deduping',
+          'timestamp — ISO 8601 timestamp of the transaction',
+          'note — Optional memo parsed from the SMS',
+          'rawMessage — Original SMS body',
+          'synced — true after the record has been delivered',
+          'createdAt — When HisabBox stored the SMS locally',
+        ];
         return AlertDialog(
           title: const Text('Webhook payload guide'),
           content: SingleChildScrollView(
@@ -87,34 +102,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   style: textTheme.titleMedium,
                 ),
                 const SizedBox(height: 8),
-                const Text('• Content-Type: application/json'),
+                Text(
+                  '• Content-Type: application/json',
+                  style: textTheme.bodyMedium,
+                ),
                 const SizedBox(height: 12),
                 Text(
                   'Payload fields',
                   style: textTheme.titleMedium,
                 ),
                 const SizedBox(height: 8),
-                const Text('• id — Stable unique identifier for the transaction'),
-                const Text('• provider — Source of the SMS (e.g., bkash, nagad)'),
-                const Text('• type — Transaction category (sent, received, etc.)'),
-                const Text('• amount — Transaction amount as a decimal number'),
-                const Text('• recipient — Optional recipient account or phone'),
-                const Text('• sender — Optional sender account or phone'),
-                const Text('• transactionId — Provider reference / TRX ID'),
-                const Text('• transactionHash — SHA-256 hash used for deduping'),
-                const Text('• timestamp — ISO 8601 timestamp of the transaction'),
-                const Text('• note — Optional memo parsed from the SMS'),
-                const Text('• rawMessage — Original SMS body'),
-                const Text('• synced — true after the record has been delivered'),
-                const Text('• createdAt — When HisabBox stored the SMS locally'),
+                for (final field in payloadFields)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 2.0),
+                    child: Text('• $field', style: textTheme.bodyMedium),
+                  ),
                 const SizedBox(height: 12),
                 Text(
                   'Success criteria',
                   style: textTheme.titleMedium,
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   'Your server should reply with an HTTP 2xx status code. Any other response or network error will make HisabBox retry automatically with exponential backoff until delivery succeeds.',
+                  style: textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -122,8 +133,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   style: textTheme.titleMedium,
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   'The "Test Webhook" button sends {"test": true, "timestamp": "..."} so you can verify connectivity without storing a transaction.',
+                  style: textTheme.bodyMedium,
                 ),
               ],
             ),
