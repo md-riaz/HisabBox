@@ -7,9 +7,9 @@ import 'package:hisabbox/services/webhook_service.dart';
 class TransactionController extends GetxController {
   final RxList<Transaction> transactions = <Transaction>[].obs;
   final RxBool isLoading = false.obs;
-  final RxList<Provider> activeProviders = Provider.values.obs;
+  final RxList<Provider> activeProviders = <Provider>[Provider.bkash].obs;
   final RxList<TransactionType> selectedTransactionTypes =
-      List<TransactionType>.from(TransactionType.values).obs;
+      <TransactionType>[TransactionType.received].obs;
   int? _currentLimit = 30;
 
   @override
@@ -24,7 +24,8 @@ class TransactionController extends GetxController {
           await CaptureSettingsService.getEnabledTransactionTypes();
       selectedTransactionTypes.assignAll(enabledTypes);
     } catch (_) {
-      selectedTransactionTypes.assignAll(TransactionType.values);
+      selectedTransactionTypes
+          .assignAll(<TransactionType>[TransactionType.received]);
     }
     await loadTransactions();
   }

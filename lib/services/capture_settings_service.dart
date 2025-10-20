@@ -28,7 +28,7 @@ class CaptureSettingsService {
     final stored = prefs.getStringList(_enabledTransactionTypesKey);
 
     if (stored == null || stored.isEmpty) {
-      return TransactionType.values.toSet();
+      return _defaultEnabledTypes;
     }
 
     final enabledTypes = <TransactionType>{};
@@ -40,7 +40,7 @@ class CaptureSettingsService {
     }
 
     if (enabledTypes.isEmpty) {
-      return TransactionType.values.toSet();
+      return _defaultEnabledTypes;
     }
 
     return enabledTypes;
@@ -79,4 +79,8 @@ class CaptureSettingsService {
     }
     return null;
   }
+
+  static final Set<TransactionType> _defaultEnabledTypes = {
+    TransactionType.received
+  };
 }
