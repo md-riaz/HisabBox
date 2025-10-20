@@ -3,16 +3,20 @@ import 'package:hisabbox/services/providers/provider_utils.dart';
 import 'package:hisabbox/services/providers/sms_provider.dart';
 
 class RocketProvider extends SmsProvider {
+  /// Matches outgoing Rocket transfers like
+  /// "Tk 800.00 sent to 017XXXXXXXX. TxnID ABC123".
   static final RegExp _sentPattern = RegExp(
     r'Tk\s?([\d,]+\.?\d*) sent to ([\d\s]+).*?TxnID[:\s]*([\w\d]+)',
     caseSensitive: false,
   );
 
+  /// Captures incoming Rocket transfers indicating the sender number.
   static final RegExp _receivedPattern = RegExp(
     r'Tk\s?([\d,]+\.?\d*) received from ([\d\s]+).*?TxnID[:\s]*([\w\d]+)',
     caseSensitive: false,
   );
 
+  /// Identifies cash-out confirmations where only amount and transaction ID are reliable.
   static final RegExp _cashoutPattern = RegExp(
     r'Cash Out Tk\s?([\d,]+\.?\d*) .*?TxnID[:\s]?([\w\d]+)',
     caseSensitive: false,
