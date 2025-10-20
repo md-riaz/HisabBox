@@ -134,7 +134,7 @@ Flutter SDK >=3.0.0
 
 ### What's the minimum Android version?
 
-Android 5.0 (API 21) or higher.
+Android 6.0 (API 23) or higher.
 
 ### How big is the app?
 

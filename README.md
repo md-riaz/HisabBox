@@ -105,7 +105,7 @@ The product roadmap is anchored by twelve acceptance criteria:
 
 ### Prerequisites
 - Flutter SDK (>=3.0.0)
-- Android SDK (minSdk 21, targetSdk 34)
+- Android SDK (minSdk 23, targetSdk 36)
 - Android device or emulator
 
 ### Installation

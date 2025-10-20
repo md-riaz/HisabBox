@@ -412,7 +412,7 @@ flutter build appbundle --release
 ### Requirements
 
 - Flutter SDK >=3.0.0
-- Android SDK (API 21-34)
+- Android SDK (API 23-36)
 - Kotlin 1.9.10
 - Gradle 8.1.0
 
