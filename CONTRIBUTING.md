@@ -58,10 +58,10 @@ flutter analyze
 
 To add support for a new SMS provider:
 
-1. Add patterns to `lib/services/sms_parser.dart`
+1. Create a new provider class in `lib/services/providers/` with SMS patterns
 2. Implement parser logic for the new provider
 3. Add detection logic in the main parse method
-4. Add comprehensive tests in `test/sms_parser_test.dart`
+4. Add comprehensive tests in `test/base_sms_provider_test.dart`
 
 ### Commit Messages
 

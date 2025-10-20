@@ -218,7 +218,7 @@ UI Rebuilds
 
 ### Unit Tests
 
-**SMS Parser Tests** (test/sms_parser_test.dart)
+**Base SMS Provider Tests** (test/base_sms_provider_test.dart)
 - bKash sent/received/cashout/payment parsing
 - Nagad sent/received/cashout parsing
 - Rocket sent/received/cashout parsing

@@ -3,7 +3,7 @@ import 'package:hisabbox/models/transaction.dart';
 import 'package:hisabbox/services/capture_settings_service.dart';
 import 'package:hisabbox/services/database_service.dart';
 import 'package:hisabbox/services/provider_settings_service.dart';
-import 'package:hisabbox/services/sms_parser.dart';
+import 'package:hisabbox/services/providers/base_sms_provider.dart';
 import 'package:hisabbox/services/webhook_service.dart';
 
 class SmsService {
@@ -62,7 +62,8 @@ class SmsService {
         : DateTime.now();
 
     // Parse the SMS
-    final Transaction? transaction = SmsParser.parse(address, body, timestamp);
+    final Transaction? transaction =
+        BaseSmsProvider.parse(address, body, timestamp);
 
     // Save to database if it's a valid transaction
     if (transaction != null) {
