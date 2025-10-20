@@ -3,41 +3,50 @@ import 'package:hisabbox/services/providers/provider_utils.dart';
 import 'package:hisabbox/services/providers/sms_provider.dart';
 
 class BkashProvider extends SmsProvider {
+  /// Matches customer-to-customer transfers such as
+  /// "You have sent Tk 1,500.00 to 017XXXXXXXX. TrxID ABC123".
   static final RegExp _sentPattern = RegExp(
     r'You have sent Tk\s*([\d,]+(?:\.\d+)?) to ([\d\s]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
     caseSensitive: false,
     dotAll: true,
   );
 
+  /// Captures standard incoming transfers like
+  /// "You have received Tk 2,000.00 from 017XXXXXXXX. TrxID DEF456".
   static final RegExp _receivedPattern = RegExp(
     r'You have received(?: .*?)? Tk\s*([\d,]+(?:\.\d+)?) from ([^\.]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
     caseSensitive: false,
     dotAll: true,
   );
 
+  /// Identifies bank-to-bKash transfers that mention "received deposit".
   static final RegExp _receivedDepositPattern = RegExp(
     r'You have received deposit from [^\.]+ of Tk\s*([\d,]+(?:\.\d+)?) from ([^\.]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
     caseSensitive: false,
     dotAll: true,
   );
 
+  /// Matches agent cash-out confirmations listing the agent MSISDN.
   static final RegExp _cashoutPattern = RegExp(
     r'Cash Out Tk\s*([\d,]+(?:\.\d+)?) .*?from ([\d\s]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
     caseSensitive: false,
     dotAll: true,
   );
 
+  /// Handles merchant payments where only the amount and transaction ID are guaranteed.
   static final RegExp _paymentPattern = RegExp(
     r'Payment of Tk\s*([\d,]+(?:\.\d+)?).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
     caseSensitive: false,
     dotAll: true,
   );
 
+  /// Extracts the optional merchant name from payment confirmations.
   static final RegExp _paymentRecipientPattern = RegExp(
     r'Payment of Tk\s*[\d,]+(?:\.\d+)? to ([^\.]+)',
     caseSensitive: false,
   );
 
+  /// Covers multiline bill payment receipts that explicitly list the biller.
   static final RegExp _billPaymentPattern = RegExp(
     r'Bill successfully paid.*?Biller[:\s]*([^\n]+).*?Amount[:\s]*Tk\s*([\d,]+(?:\.\d+)?).*?Trx[.:\s]*ID[:\s]*([\w\d]+)',
     caseSensitive: false,

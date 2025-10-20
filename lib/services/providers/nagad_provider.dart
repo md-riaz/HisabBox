@@ -3,16 +3,20 @@ import 'package:hisabbox/services/providers/provider_utils.dart';
 import 'package:hisabbox/services/providers/sms_provider.dart';
 
 class NagadProvider extends SmsProvider {
+  /// Matches customer transfers such as
+  /// "Send Money Tk 1,200.00 to 018XXXXXXXX. Trx ID ABC123".
   static final RegExp _sentPattern = RegExp(
     r'Send Money Tk\s?([\d,]+\.?\d*) to ([\d\s]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
     caseSensitive: false,
   );
 
+  /// Captures incoming Nagad transfers from another number.
   static final RegExp _receivedPattern = RegExp(
     r'Received Tk\s?([\d,]+\.?\d*) from ([\d\s]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
     caseSensitive: false,
   );
 
+  /// Identifies cash-out confirmations where the agent number is optional.
   static final RegExp _cashoutPattern = RegExp(
     r'Cash Out Tk\s?([\d,]+\.?\d*) .*?Trx[.\s]?ID[:\s]?([\w\d]+)',
     caseSensitive: false,
