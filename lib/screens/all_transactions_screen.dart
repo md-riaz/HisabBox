@@ -92,8 +92,7 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
                         const SizedBox(height: 16),
                         Text(
                           'No transactions found',
-                          style: TextStyle(
-                            fontSize: 16,
+                          style: theme.textTheme.bodyLarge?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
