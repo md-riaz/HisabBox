@@ -89,6 +89,7 @@ class SmsService {
   Future<void> importHistoricalSms({
     DateTime? startDate,
     DateTime? endDate,
+    bool syncImported = false,
   }) async {
     final messages = await telephony.getInboxSms(
       columns: [SmsColumn.ADDRESS, SmsColumn.BODY, SmsColumn.DATE],
@@ -105,6 +106,13 @@ class SmsService {
 
     for (final message in messages) {
       await _processMessage(message);
+      if (syncImported) {
+        try {
+          await WebhookService.syncTransactionsForce();
+        } catch (_) {
+          // ignore; scheduling/retry will be handled by WebhookService if needed
+        }
+      }
     }
   }
 

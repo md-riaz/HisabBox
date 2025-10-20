@@ -5,7 +5,9 @@ import 'package:hisabbox/models/provider_extensions.dart';
 import 'package:hisabbox/models/transaction.dart';
 
 class ProviderFilter extends StatelessWidget {
-  const ProviderFilter({super.key});
+  const ProviderFilter({super.key, this.compact = false});
+
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -45,13 +47,14 @@ class ProviderFilter extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               Wrap(
-                spacing: 12,
-                runSpacing: 12,
+                spacing: compact ? 8 : 12,
+                runSpacing: compact ? 8 : 12,
                 children: Provider.values.map((providerValue) {
                   final isActive = activeProviders.contains(providerValue);
                   return _ProviderFilterPill(
                     provider: providerValue,
                     isActive: isActive,
+                    compact: compact,
                     onTap: () {
                       final updatedProviders =
                           List<Provider>.from(activeProviders);
@@ -80,11 +83,13 @@ class _ProviderFilterPill extends StatelessWidget {
   const _ProviderFilterPill({
     required this.provider,
     required this.isActive,
+    this.compact = false,
     required this.onTap,
   });
 
   final Provider provider;
   final bool isActive;
+  final bool compact;
   final VoidCallback onTap;
 
   @override
@@ -98,6 +103,10 @@ class _ProviderFilterPill extends StatelessWidget {
         : theme.colorScheme.outlineVariant.withValues(alpha: 0.4);
     final textColor = isActive ? accent : theme.colorScheme.onSurface;
 
+    final padding = compact
+        ? const EdgeInsets.symmetric(horizontal: 10, vertical: 8)
+        : const EdgeInsets.symmetric(horizontal: 16, vertical: 14);
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -105,7 +114,7 @@ class _ProviderFilterPill extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          padding: padding,
           decoration: BoxDecoration(
             color: background,
             borderRadius: BorderRadius.circular(20),
@@ -113,9 +122,9 @@ class _ProviderFilterPill extends StatelessWidget {
             boxShadow: isActive
                 ? [
                     BoxShadow(
-                      color: accent.withValues(alpha: 0.15),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
+                      color: accent.withValues(alpha: 0.12),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
                     ),
                   ]
                 : [],
@@ -124,15 +133,15 @@ class _ProviderFilterPill extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               CircleAvatar(
-                radius: 16,
-                backgroundColor: accent.withValues(alpha: 0.15),
+                radius: compact ? 12 : 16,
+                backgroundColor: accent.withValues(alpha: 0.12),
                 child: Icon(
                   provider.glyph,
-                  size: 18,
+                  size: compact ? 14 : 18,
                   color: accent,
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: compact ? 8 : 12),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
@@ -142,25 +151,27 @@ class _ProviderFilterPill extends StatelessWidget {
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: textColor,
+                      fontSize: compact ? 12 : null,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    isActive ? 'Visible in feed' : 'Hidden from feed',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: textColor.withValues(alpha: 0.7),
+                  if (!compact) const SizedBox(height: 4),
+                  if (!compact)
+                    Text(
+                      isActive ? 'Visible in feed' : 'Hidden from feed',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: textColor.withValues(alpha: 0.7),
+                      ),
                     ),
-                  ),
                 ],
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: compact ? 6 : 12),
               AnimatedOpacity(
                 opacity: isActive ? 1 : 0,
                 duration: const Duration(milliseconds: 200),
                 child: Icon(
                   Icons.check_circle,
                   color: accent,
-                  size: 20,
+                  size: compact ? 16 : 20,
                 ),
               ),
             ],

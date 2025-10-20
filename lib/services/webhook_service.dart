@@ -3,10 +3,10 @@ import 'dart:math';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:workmanager/workmanager.dart';
 import 'package:hisabbox/models/transaction.dart';
 import 'package:hisabbox/services/database_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:workmanager/workmanager.dart';
 
 class WebhookService {
   static const String _webhookUrlKey = 'webhook_url';
@@ -103,6 +103,35 @@ class WebhookService {
     if (unsyncedTransactions.isEmpty) {
       return true;
     }
+
+    for (final transaction in unsyncedTransactions) {
+      try {
+        await _sendTransaction(url, transaction);
+        await DatabaseService.instance.markAsSynced(transaction.id);
+      } catch (e) {
+        // ignore: avoid_print
+        print('Error syncing transaction ${transaction.id}: $e');
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /// Force a sync attempt for imports or manual requests.
+  /// This will ignore the auto-sync preference and attempt to send unsynced
+  /// transactions if the webhook is enabled and configured.
+  static Future<bool> syncTransactionsForce() async {
+    final enabled = await isWebhookEnabled();
+    if (!enabled) return true;
+
+    final url = await getWebhookUrl();
+    if (url == null || url.isEmpty) return true;
+
+    final unsyncedTransactions =
+        await DatabaseService.instance.getUnsyncedTransactions();
+
+    if (unsyncedTransactions.isEmpty) return true;
 
     for (final transaction in unsyncedTransactions) {
       try {

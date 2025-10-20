@@ -12,6 +12,7 @@ class ImportScreen extends StatefulWidget {
 
 class _ImportScreenState extends State<ImportScreen> {
   bool _isImporting = false;
+  bool _syncToWebhook = false;
   DateTime? _startDate;
   DateTime? _endDate;
   final TransactionController _transactionController =
@@ -57,6 +58,7 @@ class _ImportScreenState extends State<ImportScreen> {
       await SmsService.instance.importHistoricalSms(
         startDate: _startDate,
         endDate: _endDate,
+        syncImported: _syncToWebhook,
       );
 
       await _transactionController.loadTransactions();
@@ -129,6 +131,14 @@ class _ImportScreenState extends State<ImportScreen> {
                       onTap: _selectEndDate,
                     ),
                     const SizedBox(height: 24),
+                    SwitchListTile.adaptive(
+                      value: _syncToWebhook,
+                      onChanged: (v) => setState(() => _syncToWebhook = v),
+                      title: const Text('Sync imported SMS to webhook'),
+                      subtitle: const Text(
+                          'If enabled, imported transactions will be sent to your configured webhook immediately.'),
+                    ),
+                    const SizedBox(height: 8),
                     ElevatedButton.icon(
                       onPressed: _isImporting ? null : _importSms,
                       icon: _isImporting
@@ -137,10 +147,14 @@ class _ImportScreenState extends State<ImportScreen> {
                               height: 20,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Icon(Icons.download),
+                          : const Icon(Icons.file_download_rounded),
                       label: Text(_isImporting ? 'Importing...' : 'Import SMS'),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 4,
                       ),
                     ),
                   ],

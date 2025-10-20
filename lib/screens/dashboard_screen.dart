@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hisabbox/controllers/transaction_controller.dart';
 import 'package:hisabbox/controllers/settings_controller.dart';
+import 'package:hisabbox/controllers/transaction_controller.dart';
 import 'package:hisabbox/screens/all_transactions_screen.dart';
-import 'package:hisabbox/screens/settings_screen.dart';
 import 'package:hisabbox/screens/import_screen.dart';
-import 'package:hisabbox/widgets/transaction_card.dart';
+import 'package:hisabbox/screens/settings_screen.dart';
 import 'package:hisabbox/widgets/provider_filter.dart';
 import 'package:hisabbox/widgets/summary_card.dart';
+import 'package:hisabbox/widgets/transaction_card.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -89,8 +89,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final previewTransactions =
-              transactions.length > 5 ? transactions.take(5).toList() : transactions;
+          final previewTransactions = transactions.length > 5
+              ? transactions.take(5).toList()
+              : transactions;
 
           return CustomScrollView(
             slivers: [
@@ -106,7 +107,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         balance: _transactionController.balance,
                       ),
                       const SizedBox(height: 16),
-                      const ProviderFilter(),
+                      const ProviderFilter(compact: true),
                       const SizedBox(height: 16),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -121,7 +122,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 await Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => const AllTransactionsScreen(),
+                                    builder: (context) =>
+                                        const AllTransactionsScreen(),
                                   ),
                                 );
                                 if (!mounted) return;
