@@ -65,6 +65,92 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  void _showWebhookInfoDialog() {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        final textTheme = Theme.of(dialogContext).textTheme;
+        const payloadFields = [
+          'id — Stable unique identifier for the transaction',
+          'provider — Source of the SMS (e.g., bkash, nagad)',
+          'type — Transaction category (sent, received, etc.)',
+          'amount — Transaction amount as a decimal number',
+          'recipient — Optional recipient account or phone',
+          'sender — Optional sender account or phone',
+          'transactionId — Provider reference / TRX ID',
+          'transactionHash — SHA-256 hash used for deduping',
+          'timestamp — ISO 8601 timestamp of the transaction',
+          'note — Optional memo parsed from the SMS',
+          'rawMessage — Original SMS body',
+          'synced — true after the record has been delivered',
+          'createdAt — When HisabBox stored the SMS locally',
+        ];
+        return AlertDialog(
+          title: const Text('Webhook payload guide'),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'HisabBox sends an HTTP POST request with a JSON body to your webhook URL whenever pending transactions are synced.',
+                  style: textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Headers',
+                  style: textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '• Content-Type: application/json',
+                  style: textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Payload fields',
+                  style: textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                for (final field in payloadFields)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 2.0),
+                    child: Text('• $field', style: textTheme.bodyMedium),
+                  ),
+                const SizedBox(height: 12),
+                Text(
+                  'Success criteria',
+                  style: textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Your server should reply with an HTTP 2xx status code. Any other response or network error will make HisabBox retry automatically with exponential backoff until delivery succeeds.',
+                  style: textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Test requests',
+                  style: textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'The "Test Webhook" button sends {"test": true, "timestamp": "..."} so you can verify connectivity without storing a transaction.',
+                  style: textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -254,9 +340,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Webhook Configuration',
-                      style: Theme.of(context).textTheme.titleLarge,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Webhook Configuration',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'Webhook payload details',
+                          icon: const Icon(Icons.info_outline),
+                          onPressed: _showWebhookInfoDialog,
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
                     SwitchListTile(
