@@ -9,11 +9,13 @@ class SettingsController extends GetxController {
   final RxBool webhookEnabled = false.obs;
   final RxString webhookUrl = ''.obs;
   final RxMap<Provider, bool> providerSettings = {
-    for (final provider in Provider.values) provider: true,
+    for (final provider in Provider.values)
+      provider: ProviderSettingsService.isDefaultEnabled(provider),
   }.obs;
   final RxBool smsListeningEnabled = true.obs;
   final RxMap<TransactionType, bool> transactionTypeSettings = {
-    for (final type in TransactionType.values) type: true,
+    for (final type in TransactionType.values)
+      type: CaptureSettingsService.defaultEnabledTypes.contains(type),
   }.obs;
 
   @override

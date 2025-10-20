@@ -40,7 +40,7 @@ class ProviderFilter extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Choose which mobile money providers you want to see in the list below.',
+                'Choose which providers you want to see in the list below.',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),

@@ -65,7 +65,7 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      const ProviderFilter(),
+                      const ProviderFilter(compact: true),
                       const SizedBox(height: 12),
                       Text(
                         'Showing ${transactions.length} entr${transactions.length == 1 ? 'y' : 'ies'}',

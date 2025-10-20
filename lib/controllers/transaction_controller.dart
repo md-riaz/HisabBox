@@ -2,14 +2,20 @@ import 'package:get/get.dart';
 import 'package:hisabbox/models/transaction.dart';
 import 'package:hisabbox/services/capture_settings_service.dart';
 import 'package:hisabbox/services/database_service.dart';
+import 'package:hisabbox/services/provider_settings_service.dart';
 import 'package:hisabbox/services/webhook_service.dart';
 
 class TransactionController extends GetxController {
   final RxList<Transaction> transactions = <Transaction>[].obs;
   final RxBool isLoading = false.obs;
-  final RxList<Provider> activeProviders = Provider.values.obs;
+  final RxList<Provider> activeProviders = Provider.values
+      .where(ProviderSettingsService.isDefaultEnabled)
+      .toList(growable: false)
+      .obs;
   final RxList<TransactionType> selectedTransactionTypes =
-      List<TransactionType>.from(TransactionType.values).obs;
+      CaptureSettingsService.defaultEnabledTypes
+          .toList(growable: false)
+          .obs;
   int? _currentLimit = 30;
 
   @override
@@ -24,7 +30,9 @@ class TransactionController extends GetxController {
           await CaptureSettingsService.getEnabledTransactionTypes();
       selectedTransactionTypes.assignAll(enabledTypes);
     } catch (_) {
-      selectedTransactionTypes.assignAll(TransactionType.values);
+      selectedTransactionTypes.assignAll(
+        CaptureSettingsService.defaultEnabledTypes.toList(growable: false),
+      );
     }
     await loadTransactions();
   }
