@@ -11,8 +11,7 @@ import 'package:hisabbox/services/providers/sms_provider.dart';
 
 /// Coordinates SMS parsing by delegating to the appropriate [SmsProvider]
 /// implementation based on the message sender and body.
-class BaseSmsProvider {
-  BaseSmsProvider._();
+abstract final class BaseSmsProvider {
 
   static final List<SmsProvider> _providers = [
     BkashProvider(),
