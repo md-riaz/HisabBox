@@ -28,7 +28,7 @@ class CaptureSettingsService {
     final stored = prefs.getStringList(_enabledTransactionTypesKey);
 
     if (stored == null || stored.isEmpty) {
-      return _defaultEnabledTypes;
+      return defaultEnabledTypes;
     }
 
     final enabledTypes = <TransactionType>{};
@@ -40,7 +40,7 @@ class CaptureSettingsService {
     }
 
     if (enabledTypes.isEmpty) {
-      return _defaultEnabledTypes;
+      return defaultEnabledTypes;
     }
 
     return enabledTypes;
@@ -80,7 +80,9 @@ class CaptureSettingsService {
     return null;
   }
 
-  static final Set<TransactionType> _defaultEnabledTypes = {
+  /// Default transaction types that should be enabled when the user has not
+  /// saved a preference yet.
+  static const Set<TransactionType> defaultEnabledTypes = {
     TransactionType.received
   };
 }

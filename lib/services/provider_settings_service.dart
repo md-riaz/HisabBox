@@ -9,15 +9,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ProviderSettingsService {
   static const String _providerPrefix = 'provider_enabled_';
 
+  /// Returns whether a provider is enabled by default when no preference has
+  /// been stored yet.
+  static bool isDefaultEnabled(Provider provider) =>
+      provider == Provider.bkash;
+
   /// Returns whether [provider] is currently enabled.
   ///
-  /// Defaults to `true` so providers remain enabled until explicitly
-  /// disabled by the user. This preserves behaviour for existing users that
-  /// have not stored preferences yet.
+  /// Defaults to [isDefaultEnabled] so bKash starts enabled while other
+  /// providers stay disabled until explicitly toggled by the user.
   static Future<bool> isProviderEnabled(Provider provider) async {
     final prefs = await SharedPreferences.getInstance();
     final storedPreference = prefs.getBool(_keyFor(provider));
-    return storedPreference ?? true;
+    return storedPreference ?? isDefaultEnabled(provider);
   }
 
   /// Persists the enabled/disabled flag for [provider].
@@ -35,7 +39,8 @@ class ProviderSettingsService {
     final Map<Provider, bool> result = {};
 
     for (final provider in Provider.values) {
-      result[provider] = prefs.getBool(_keyFor(provider)) ?? true;
+      result[provider] =
+          prefs.getBool(_keyFor(provider)) ?? isDefaultEnabled(provider);
     }
 
     return result;
