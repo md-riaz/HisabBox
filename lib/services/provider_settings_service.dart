@@ -11,12 +11,13 @@ class ProviderSettingsService {
 
   /// Returns whether [provider] is currently enabled.
   ///
-  /// Defaults to `true` only for bKash so other providers remain disabled
-  /// until explicitly enabled by the user.
+  /// Defaults to `true` so providers remain enabled until explicitly
+  /// disabled by the user. This preserves behaviour for existing users that
+  /// have not stored preferences yet.
   static Future<bool> isProviderEnabled(Provider provider) async {
     final prefs = await SharedPreferences.getInstance();
     final storedPreference = prefs.getBool(_keyFor(provider));
-    return storedPreference ?? provider == Provider.bkash;
+    return storedPreference ?? true;
   }
 
   /// Persists the enabled/disabled flag for [provider].
@@ -34,8 +35,7 @@ class ProviderSettingsService {
     final Map<Provider, bool> result = {};
 
     for (final provider in Provider.values) {
-      result[provider] =
-          prefs.getBool(_keyFor(provider)) ?? provider == Provider.bkash;
+      result[provider] = prefs.getBool(_keyFor(provider)) ?? true;
     }
 
     return result;
