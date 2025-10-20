@@ -108,7 +108,6 @@ If you see incorrect amounts:
 2. Enable "Enable Webhook"
 3. Enter your webhook URL (must be HTTPS)
 4. Test the connection
-5. Enable "Auto Sync" if desired
 
 ### What happens if webhook sync fails?
 
@@ -261,9 +260,8 @@ JSON format with all transaction fields:
 
 ### How often does webhook sync?
 
-- Automatically when new transaction is received (if auto-sync enabled)
+- Automatically when new transaction is received (if webhook enabled)
 - Manually when you tap the sync button
-- On app startup (if enabled)
 
 ### Can I use multiple webhooks?
 

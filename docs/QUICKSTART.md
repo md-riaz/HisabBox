@@ -64,7 +64,6 @@ If you want to sync to a cloud service:
 2. Enable "Enable Webhook"
 3. Enter your webhook URL (e.g., `https://your-server.com/webhook`)
 4. Tap "Test Webhook" to verify connection
-5. Enable "Auto Sync" if desired
 
 ## Basic Usage
 

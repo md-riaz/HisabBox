@@ -182,21 +182,8 @@ Enable or disable webhook sync.
 
 **Returns:** `Future<void>`
 
-#### `isAutoSyncEnabled()`
-Check whether automatic syncing is enabled.
-
-**Returns:** `Future<bool>`
-
-#### `setAutoSyncEnabled(bool enabled)`
-Update the auto-sync flag stored in shared preferences.
-
-**Parameters:**
-- `enabled`: Boolean flag
-
-**Returns:** `Future<void>`
-
 #### `processNewTransaction(Transaction transaction)`
-Process a newly captured transaction and trigger background sync when auto-sync is enabled.
+Process a newly captured transaction and trigger background sync when webhook is enabled.
 
 **Parameters:**
 - `transaction`: Newly inserted transaction
@@ -331,7 +318,6 @@ await controller.setActiveProviders([Provider.bkash, Provider.nagad]);
 
 - `webhookEnabled`: RxBool - Webhook sync enabled
 - `webhookUrl`: RxString - Webhook URL
-- `autoSync`: RxBool - Auto-sync enabled
 - `providerSettings`: RxMap<Provider, bool> - Enabled/disabled state for each provider
 - `enabledProviders`: List<Provider> - Convenience list of enabled providers
 
@@ -355,14 +341,6 @@ Set webhook URL.
 
 **Parameters:**
 - `url`: Webhook endpoint URL
-
-**Returns:** `Future<void>`
-
-#### `setAutoSync(bool enabled)`
-Enable/disable auto-sync.
-
-**Parameters:**
-- `enabled`: Boolean flag
 
 **Returns:** `Future<void>`
 

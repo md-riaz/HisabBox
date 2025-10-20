@@ -100,8 +100,8 @@ void main() {
       expect(transaction!.provider, Provider.bkash);
       expect(transaction.type, TransactionType.payment);
       expect(transaction.amount, 54.00);
-      expect(transaction.recipient,
-          'Grameenphone Ltd-MyGP Direct Charge-RM50518');
+      expect(
+          transaction.recipient, 'Grameenphone Ltd-MyGP Direct Charge-RM50518');
       expect(transaction.transactionId, 'CH428D66W2');
     });
 
@@ -256,7 +256,8 @@ void main() {
       const message = 'Some random text with amount 100';
       final timestamp = DateTime.now();
 
-      final transaction = BaseSmsProvider.parse('RandomSender', message, timestamp);
+      final transaction =
+          BaseSmsProvider.parse('RandomSender', message, timestamp);
 
       expect(transaction, isNull);
     });
@@ -266,7 +267,8 @@ void main() {
           'You have sent Tk1,500.00 to 01712345678 successfully. Fee Tk25.00. TrxID ABC123XYZ at 2024-01-01 12:00:00';
       final timestamp = DateTime(2024, 1, 1, 12, 0, 0);
 
-      final transaction = BaseSmsProvider.parse('01700000000', message, timestamp);
+      final transaction =
+          BaseSmsProvider.parse('01700000000', message, timestamp);
 
       expect(transaction, isNull);
     });
@@ -290,7 +292,6 @@ void main() {
       SharedPreferences.setMockInitialValues({
         'webhook_enabled': true,
         'webhook_url': 'https://example.com/webhook',
-        'auto_sync': true,
       });
 
       const message =

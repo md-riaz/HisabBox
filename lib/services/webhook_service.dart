@@ -11,7 +11,6 @@ import 'package:workmanager/workmanager.dart';
 class WebhookService {
   static const String _webhookUrlKey = 'webhook_url';
   static const String _webhookEnabledKey = 'webhook_enabled';
-  static const String _autoSyncKey = 'auto_sync';
   static const String _webhookSyncTask = 'webhook_sync_task';
   static const String _webhookUniqueName = 'webhook_sync_unique';
 
@@ -57,21 +56,8 @@ class WebhookService {
     }
   }
 
-  static Future<bool> isAutoSyncEnabled() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_autoSyncKey) ?? true;
-  }
-
-  static Future<void> setAutoSyncEnabled(bool enabled) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_autoSyncKey, enabled);
-  }
-
   static Future<void> processNewTransaction(Transaction transaction) async {
     if (transaction.synced) return;
-
-    final autoSyncEnabled = await isAutoSyncEnabled();
-    if (!autoSyncEnabled) return;
 
     final success = await syncTransactions();
     if (!success) {

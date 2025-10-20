@@ -363,7 +363,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     SwitchListTile(
                       title: const Text('Enable Webhook'),
                       subtitle: const Text(
-                        'Automatically sync transactions to webhook',
+                        'Automatically send new transactions to your webhook URL',
                       ),
                       value: _settingsController.webhookEnabled.value,
                       onChanged: (value) {
@@ -398,32 +398,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         label: Text(_isTesting ? 'Testing...' : 'Test Webhook'),
                       ),
                     ],
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Sync Settings',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 16),
-                    SwitchListTile(
-                      title: const Text('Auto Sync'),
-                      subtitle: const Text(
-                        'Automatically sync new transactions',
-                      ),
-                      value: _settingsController.autoSync.value,
-                      onChanged: (value) {
-                        _settingsController.setAutoSync(value);
-                      },
-                    ),
                   ],
                 ),
               ),
