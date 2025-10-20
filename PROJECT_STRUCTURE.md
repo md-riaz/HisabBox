@@ -193,7 +193,7 @@ HisabBox/
 ## Adding New Files
 
 ### New Provider
-1. Add patterns to `lib/services/providers/base_sms_provider.dart`
+1. Create a new provider file with patterns in `lib/services/providers/`
 2. Add tests to `test/base_sms_provider_test.dart`
 
 ### New Screen
