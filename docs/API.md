@@ -95,11 +95,12 @@ Calculate total amount for transactions.
 
 ---
 
-## SMS Parser Service
+## Base SMS Provider
 
-### `SmsParser.parse(address, message, timestamp)`
+### `BaseSmsProvider.parse(address, message, timestamp)`
 
-Parse an SMS message into a Transaction object.
+Route an SMS message to the matching provider and parse it into a Transaction
+object.
 
 **Parameters:**
 - `address`: String - SMS sender address
@@ -110,7 +111,7 @@ Parse an SMS message into a Transaction object.
 
 **Example:**
 ```dart
-final transaction = SmsParser.parse(
+final transaction = BaseSmsProvider.parse(
   'bKash',
   'You have sent Tk1,500.00 to 01712345678. TrxID ABC123',
   DateTime.now(),
@@ -496,11 +497,11 @@ class MockDatabaseService extends DatabaseService {
 }
 ```
 
-### Testing SMS Parser
+### Testing Base SMS Provider
 
 ```dart
 test('parses bKash sent transaction', () {
-  final transaction = SmsParser.parse(
+  final transaction = BaseSmsProvider.parse(
     'bKash',
     'You have sent Tk1,500.00 to 01712345678. TrxID ABC123',
     DateTime.now(),

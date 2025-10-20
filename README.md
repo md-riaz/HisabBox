@@ -190,7 +190,9 @@ lib/
 │   └── import_screen.dart
 ├── services/                 # Business logic
 │   ├── database_service.dart
-│   ├── sms_parser.dart
+│   ├── providers/
+│   │   ├── base_sms_provider.dart
+│   │   └── ...
 │   ├── sms_service.dart
 │   ├── webhook_service.dart
 │   └── permission_service.dart

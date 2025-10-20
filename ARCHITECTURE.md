@@ -302,7 +302,7 @@ Trigger Sync
 
 ### Adding New Providers
 1. Add provider to enum in transaction.dart
-2. Create regex patterns in sms_parser.dart
+2. Create regex patterns in providers/base_sms_provider.dart
 3. Implement detection logic
 4. Add parser method
 5. Write tests

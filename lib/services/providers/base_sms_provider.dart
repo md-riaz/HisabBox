@@ -9,7 +9,11 @@ import 'package:hisabbox/services/providers/nagad_provider.dart';
 import 'package:hisabbox/services/providers/rocket_provider.dart';
 import 'package:hisabbox/services/providers/sms_provider.dart';
 
-class SmsParser {
+/// Coordinates SMS parsing by delegating to the appropriate [SmsProvider]
+/// implementation based on the message sender and body.
+class BaseSmsProvider {
+  BaseSmsProvider._();
+
   static final List<SmsProvider> _providers = [
     BkashProvider(),
     NagadProvider(),
@@ -21,6 +25,8 @@ class SmsParser {
     IslamiBankProvider(),
   ];
 
+  /// Parses an incoming SMS into a [Transaction] by selecting the matching
+  /// provider and delegating the extraction work.
   static Transaction? parse(
     String address,
     String message,

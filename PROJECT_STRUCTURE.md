@@ -36,7 +36,9 @@ HisabBox/
 │   ├── services/                     # Business logic
 │   │   ├── database_service.dart     # SQLite operations
 │   │   ├── permission_service.dart   # Permission handling
-│   │   ├── sms_parser.dart           # SMS parsing logic
+│   │   ├── providers/                # SMS provider routing & parsing
+│   │   │   ├── base_sms_provider.dart # Provider routing logic
+│   │   │   └── ...                   # Provider-specific parsers
 │   │   ├── sms_service.dart          # SMS monitoring
 │   │   └── webhook_service.dart      # Webhook sync
 │   │
@@ -49,7 +51,7 @@ HisabBox/
 │   └── README.md                     # Lib directory documentation
 │
 ├── test/                             # Tests
-│   ├── sms_parser_test.dart          # SMS parser unit tests
+│   ├── base_sms_provider_test.dart   # Base SMS provider unit tests
 │   ├── transaction_model_test.dart   # Model unit tests
 │   └── widget_test.dart              # Widget tests
 │
@@ -105,7 +107,7 @@ HisabBox/
 
 #### Services
 - **database_service.dart**: SQLite database operations
-- **sms_parser.dart**: Parses SMS into transactions
+- **providers/base_sms_provider.dart**: Routes SMS to the correct provider
 - **sms_service.dart**: Monitors and processes SMS
 - **webhook_service.dart**: Syncs transactions to webhook
 - **permission_service.dart**: Handles runtime permissions
@@ -117,7 +119,7 @@ HisabBox/
 
 ### Test Directory
 
-- **sms_parser_test.dart**: Tests for SMS parsing logic
+- **base_sms_provider_test.dart**: Tests for SMS provider routing and parsing
 - **transaction_model_test.dart**: Tests for data model
 - **widget_test.dart**: Tests for UI components
 
@@ -191,8 +193,8 @@ HisabBox/
 ## Adding New Files
 
 ### New Provider
-1. Add patterns to `lib/services/sms_parser.dart`
-2. Add tests to `test/sms_parser_test.dart`
+1. Add patterns to `lib/services/providers/base_sms_provider.dart`
+2. Add tests to `test/base_sms_provider_test.dart`
 
 ### New Screen
 1. Create file in `lib/screens/`
@@ -247,7 +249,7 @@ main.dart
 ## Data Flow
 
 ```
-SMS → SmsService → SmsParser → Transaction Model → DatabaseService
+SMS → SmsService → BaseSmsProvider → Transaction Model → DatabaseService
                                                            ↓
                                                     TransactionProvider
                                                            ↓
