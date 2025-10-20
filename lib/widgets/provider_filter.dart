@@ -15,7 +15,8 @@ class ProviderFilter extends StatelessWidget {
       final activeProviders = controller.activeProviders.toList();
       return DecoratedBox(
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceVariant.withOpacity(0.25),
+          color:
+              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.25),
           borderRadius: BorderRadius.circular(24),
         ),
         child: Padding(
@@ -52,7 +53,8 @@ class ProviderFilter extends StatelessWidget {
                     provider: providerValue,
                     isActive: isActive,
                     onTap: () {
-                      final updatedProviders = List<Provider>.from(activeProviders);
+                      final updatedProviders =
+                          List<Provider>.from(activeProviders);
                       if (isActive) {
                         if (updatedProviders.length == 1) {
                           return;
@@ -89,9 +91,8 @@ class _ProviderFilterPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final accent = provider.accentColor;
-    final background = isActive
-        ? accent.withValues(alpha: 0.12)
-        : theme.colorScheme.surface;
+    final background =
+        isActive ? accent.withValues(alpha: 0.12) : theme.colorScheme.surface;
     final borderColor = isActive
         ? accent
         : theme.colorScheme.outlineVariant.withValues(alpha: 0.4);

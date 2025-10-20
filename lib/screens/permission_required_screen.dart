@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:hisabbox/services/permission_service.dart';
 
 class PermissionRequiredScreen extends StatefulWidget {
-  const PermissionRequiredScreen({super.key, required this.onPermissionsGranted});
+  const PermissionRequiredScreen(
+      {super.key, required this.onPermissionsGranted});
 
   final Future<void> Function() onPermissionsGranted;
 
   @override
-  State<PermissionRequiredScreen> createState() => _PermissionRequiredScreenState();
+  State<PermissionRequiredScreen> createState() =>
+      _PermissionRequiredScreenState();
 }
 
 class _PermissionRequiredScreenState extends State<PermissionRequiredScreen>
@@ -89,14 +91,17 @@ class _PermissionRequiredScreenState extends State<PermissionRequiredScreen>
               style: theme.textTheme.titleSmall,
             ),
             const SizedBox(height: 12),
-            Column(
+            const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                _InstructionStep(text: 'Open the app settings using the button below.'),
+              children: [
                 _InstructionStep(
-                  text: 'Tap the three dots in the top-right corner and choose "Allow restricted settings".',
+                    text: 'Open the app settings using the button below.'),
+                _InstructionStep(
+                  text:
+                      'Tap the three dots in the top-right corner and choose "Allow restricted settings".',
                 ),
-                _InstructionStep(text: 'Select Permissions → SMS and change it to "Allow".'),
+                _InstructionStep(
+                    text: 'Select Permissions → SMS and change it to "Allow".'),
                 _InstructionStep(text: 'Return to HisabBox to continue.'),
               ],
             ),

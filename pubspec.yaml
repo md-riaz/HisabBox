@@ -50,6 +50,14 @@ dev_dependencies:
   build_runner: ^2.9.0
   json_serializable: ^6.11.1
   sqflite_common_ffi: ^2.3.6
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   uses-material-design: true
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon/hisabbox.png"
+  adaptive_icon_background: "#00695C"
+  adaptive_icon_foreground: "assets/icon/hisabbox.png"

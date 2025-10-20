@@ -54,12 +54,6 @@ jobs:
           echo "tag_name=v$version" >> "$GITHUB_OUTPUT"
           echo "release_name=Release v$version" >> "$GITHUB_OUTPUT"
 
-      - name: Rehydrate launcher icons
-        run: |
-          flutter create --platforms android --project-name tmp_icon_app tmp_icons
-          cp -R tmp_icons/android/app/src/main/res/mipmap-* android/app/src/main/res/
-          rm -rf tmp_icons
-
       - name: Build universal release APK
         run: flutter build apk --release
 

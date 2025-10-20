@@ -146,7 +146,7 @@ class BkashProvider extends SmsProvider {
             RegExp(r'\ssuccessful$', caseSensitive: false),
             '',
           )
-          ?.trim();
+          .trim();
       return buildTransaction(
         provider: provider,
         type: TransactionType.payment,

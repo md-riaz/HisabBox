@@ -1,7 +1,7 @@
 import 'package:hisabbox/models/transaction.dart';
 import 'package:uuid/uuid.dart';
 
-final _uuid = Uuid();
+final _uuid = const Uuid();
 
 String generateInternalId() => _uuid.v4();
 
