@@ -7,11 +7,17 @@ class DatabaseService {
   static final DatabaseService instance = DatabaseService._init();
   static sqflite.Database? _database;
 
+  // Allows tests to override the filename used for the database. By default
+  // we use 'hisabbox.db' in the platform database path. Tests can set a
+  // different filename to avoid collisions when running multiple test files
+  // in parallel on CI or when sqflite uses the same shared database path.
+  String _dbFileName = 'hisabbox.db';
+
   DatabaseService._init();
 
   Future<sqflite.Database> get database async {
     if (_database != null) return _database!;
-    _database = await _initDB('hisabbox.db');
+    _database = await _initDB(_dbFileName);
     return _database!;
   }
 
@@ -69,6 +75,11 @@ class DatabaseService {
   }
 
   @visibleForTesting
+  void overrideDatabaseFilenameForTesting(String filename) {
+    _dbFileName = filename;
+  }
+
+  @visibleForTesting
   Future<void> resetForTesting() async {
     final db = _database;
     if (db != null) {
@@ -76,7 +87,7 @@ class DatabaseService {
       _database = null;
     }
     final dbPath = await sqflite.getDatabasesPath();
-    final path = join(dbPath, 'hisabbox.db');
+    final path = join(dbPath, _dbFileName);
     await sqflite.deleteDatabase(path);
   }
 

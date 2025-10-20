@@ -11,6 +11,12 @@ void main() {
   setUpAll(() {
     sqflite_ffi.sqfliteFfiInit();
     sqflite.databaseFactory = sqflite_ffi.databaseFactoryFfi;
+
+    // Use a unique DB filename for this test file to avoid collisions with
+    // other test files or previous runs that use the default database path.
+    DatabaseService.instance.overrideDatabaseFilenameForTesting(
+      'hisabbox_test_transaction_controller.db',
+    );
   });
 
   setUp(() async {
