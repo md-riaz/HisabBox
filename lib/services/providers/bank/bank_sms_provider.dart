@@ -7,7 +7,7 @@ abstract class BankSmsProvider extends SmsProvider {
     this._provider,
     Iterable<String> senderIds,
     Iterable<String> fallbackSenderIds,
-  ) : _senderIds = _normaliseSenderIds(senderIds, fallbackSenderIds);
+  ) : _senderIds = normalizeSenderIdSet(senderIds, fallbackSenderIds);
 
   final Provider _provider;
   final Set<String> _senderIds;
@@ -74,27 +74,4 @@ abstract class BankSmsProvider extends SmsProvider {
 
     return null;
   }
-}
-
-Set<String> _normaliseSenderIds(
-  Iterable<String> values,
-  Iterable<String> fallback,
-) {
-  final normalised = _sanitize(values);
-  if (normalised.isNotEmpty) {
-    return normalised;
-  }
-  return _sanitize(fallback);
-}
-
-Set<String> _sanitize(Iterable<String> values) {
-  final result = <String>{};
-  for (final value in values) {
-    final trimmed = value.trim().toLowerCase();
-    if (trimmed.isEmpty) {
-      continue;
-    }
-    result.add(trimmed);
-  }
-  return result;
 }

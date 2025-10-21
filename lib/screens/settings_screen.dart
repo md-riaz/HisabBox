@@ -74,12 +74,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
         .toList(growable: false);
   }
 
-  Future<void> _saveSenderIds(Provider provider) async {
-    final controller = _senderIdControllers[provider];
-    if (controller == null) {
-      return;
-    }
-
+  Future<void> _runProviderAction(
+    Provider provider,
+    Future<String> Function() action, {
+    required String Function(Object error) onError,
+  }) async {
     setState(() {
       _savingSenderIds.add(provider);
     });
@@ -87,16 +86,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final messenger = ScaffoldMessenger.of(context);
 
     try {
-      final parsed = _extractSenderIds(controller.text);
-      await _settingsController.setSenderIds(provider, parsed);
+      final successMessage = await action();
       if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(content: Text('${provider.displayName} sender IDs updated')),
-      );
-    } catch (error) {
+      messenger.showSnackBar(SnackBar(content: Text(successMessage)));
+    } catch (error, stackTrace) {
       if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(content: Text('Failed to update sender IDs: $error')),
+      messenger.showSnackBar(SnackBar(content: Text(onError(error))));
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stackTrace,
+          library: 'settings_screen',
+          context: ErrorDescription('handling sender ID action for $provider'),
+        ),
       );
     } finally {
       if (mounted) {
@@ -107,34 +109,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Future<void> _resetSenderIds(Provider provider) async {
-    setState(() {
-      _savingSenderIds.add(provider);
-    });
-
-    final messenger = ScaffoldMessenger.of(context);
-
-    try {
-      await _settingsController.resetSenderIds(provider);
-      final defaults = SenderIdSettingsService.defaultSenderIdsFor(
-        provider,
-      ).join(', ');
-      if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(content: Text('Restored defaults: $defaults')),
-      );
-    } catch (error) {
-      if (!mounted) return;
-      messenger.showSnackBar(
-        SnackBar(content: Text('Failed to reset sender IDs: $error')),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _savingSenderIds.remove(provider);
-        });
-      }
+  Future<void> _saveSenderIds(Provider provider) async {
+    final controller = _senderIdControllers[provider];
+    if (controller == null) {
+      return;
     }
+
+    await _runProviderAction(
+      provider,
+      () async {
+        final parsed = _extractSenderIds(controller.text);
+        await _settingsController.setSenderIds(provider, parsed);
+        return '${provider.displayName} sender IDs updated';
+      },
+      onError: (error) => 'Failed to update ${provider.displayName}: $error',
+    );
+  }
+
+  Future<void> _resetSenderIds(Provider provider) async {
+    await _runProviderAction(
+      provider,
+      () async {
+        await _settingsController.resetSenderIds(provider);
+        final defaults = SenderIdSettingsService.defaultSenderIdsFor(
+          provider,
+        ).join(', ');
+        return 'Restored defaults: $defaults';
+      },
+      onError: (error) => 'Failed to reset ${provider.displayName}: $error',
+    );
   }
 
   Future<void> _testWebhook() async {

@@ -4,7 +4,10 @@ import 'package:hisabbox/services/providers/sms_provider.dart';
 
 class NagadProvider extends SmsProvider {
   NagadProvider({Iterable<String>? senderIds})
-    : _senderIds = _normaliseSenderIds(senderIds ?? defaultSenderIds);
+    : _senderIds = normalizeSenderIdSet(
+        senderIds ?? const <String>[],
+        defaultSenderIds,
+      );
 
   /// Matches customer transfers such as
   /// "Send Money Tk 1,200.00 to 018XXXXXXXX. Trx ID ABC123".
@@ -27,21 +30,6 @@ class NagadProvider extends SmsProvider {
 
   static const List<String> defaultSenderIds = ['nagad', '16167'];
   final Set<String> _senderIds;
-
-  static Set<String> _normaliseSenderIds(Iterable<String> values) {
-    final result = <String>{};
-    for (final value in values) {
-      final trimmed = value.trim().toLowerCase();
-      if (trimmed.isEmpty) {
-        continue;
-      }
-      result.add(trimmed);
-    }
-    if (result.isEmpty) {
-      return defaultSenderIds.toSet();
-    }
-    return result;
-  }
 
   @override
   Provider get provider => Provider.nagad;

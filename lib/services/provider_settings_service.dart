@@ -1,5 +1,4 @@
 import 'package:hisabbox/models/transaction.dart';
-import 'package:hisabbox/services/sender_id_settings_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Manages the enabled/disabled state of SMS providers.
@@ -15,8 +14,7 @@ class ProviderSettingsService {
   ///
   /// Only bKash starts enabled out of the box so the app behaves like legacy
   /// installs until users explicitly opt into other providers.
-  static bool isDefaultEnabled(Provider provider) =>
-      provider == Provider.bkash;
+  static bool isDefaultEnabled(Provider provider) => provider == Provider.bkash;
 
   /// Returns whether [provider] is currently enabled.
   ///

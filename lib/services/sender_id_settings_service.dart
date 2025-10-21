@@ -28,14 +28,7 @@ class SenderIdSettingsService {
   /// Returns the currently configured sender IDs for [provider].
   static Future<List<String>> getSenderIds(Provider provider) async {
     final prefs = await SharedPreferences.getInstance();
-    final stored = prefs.getStringList(_keyFor(provider));
-    final normalized = _normalize(stored);
-
-    if (normalized.isNotEmpty) {
-      return normalized;
-    }
-
-    return List<String>.from(_defaultSenderIds[provider] ?? const <String>[]);
+    return _loadSenderIds(prefs, provider);
   }
 
   /// Persists the [senderIds] for [provider] and returns the sanitized list.
@@ -45,12 +38,9 @@ class SenderIdSettingsService {
   ) async {
     final prefs = await SharedPreferences.getInstance();
     final normalized = _normalize(senderIds);
-    final values = normalized.isNotEmpty
-        ? normalized
-        : List<String>.from(_defaultSenderIds[provider] ?? const <String>[]);
 
-    await prefs.setStringList(_keyFor(provider), values);
-    return values;
+    await prefs.setStringList(_keyFor(provider), normalized);
+    return normalized;
   }
 
   /// Restores the default sender IDs for [provider].
@@ -67,11 +57,7 @@ class SenderIdSettingsService {
     final Map<Provider, List<String>> result = {};
 
     for (final provider in supportedProviders) {
-      final stored = prefs.getStringList(_keyFor(provider));
-      final normalized = _normalize(stored);
-      result[provider] = normalized.isNotEmpty
-          ? normalized
-          : List<String>.from(_defaultSenderIds[provider] ?? const <String>[]);
+      result[provider] = _loadSenderIds(prefs, provider);
     }
 
     return result;
@@ -97,6 +83,18 @@ class SenderIdSettingsService {
       normalized.add(trimmed.toLowerCase());
     }
     return normalized.toList();
+  }
+
+  static List<String> _loadSenderIds(
+    SharedPreferences prefs,
+    Provider provider,
+  ) {
+    final stored = prefs.getStringList(_keyFor(provider));
+    if (stored == null) {
+      return List<String>.from(_defaultSenderIds[provider] ?? const <String>[]);
+    }
+
+    return _normalize(stored);
   }
 
   static String _keyFor(Provider provider) =>

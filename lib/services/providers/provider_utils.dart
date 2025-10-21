@@ -39,3 +39,26 @@ Transaction buildTransaction({
     createdAt: DateTime.now(),
   );
 }
+
+Set<String> sanitizeSenderIds(Iterable<String> values) {
+  final result = <String>{};
+  for (final value in values) {
+    final trimmed = value.trim().toLowerCase();
+    if (trimmed.isEmpty) {
+      continue;
+    }
+    result.add(trimmed);
+  }
+  return result;
+}
+
+Set<String> normalizeSenderIdSet(
+  Iterable<String> values,
+  Iterable<String> fallback,
+) {
+  final normalized = sanitizeSenderIds(values);
+  if (normalized.isNotEmpty) {
+    return normalized;
+  }
+  return sanitizeSenderIds(fallback);
+}

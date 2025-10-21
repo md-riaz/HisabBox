@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:hisabbox/models/transaction.dart';
 import 'package:hisabbox/services/provider_settings_service.dart';
 import 'package:hisabbox/services/providers/bank/brac_bank_provider.dart';
@@ -20,7 +21,14 @@ abstract final class BaseSmsProvider {
   }) async {
     final trimmedAddress = address.trim();
     final trimmedMessage = message.trim();
-    final senderIdMap = await SenderIdSettingsService.getAllSenderIds();
+    Map<Provider, List<String>> senderIdMap;
+    try {
+      senderIdMap = await SenderIdSettingsService.getAllSenderIds();
+    } catch (error, stackTrace) {
+      debugPrint('Failed to load sender IDs: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      senderIdMap = const <Provider, List<String>>{};
+    }
     final Iterable<Provider> activeProviders =
         enabledProviders ?? SenderIdSettingsService.supportedProviders;
 
@@ -28,8 +36,14 @@ abstract final class BaseSmsProvider {
       return null;
     }
 
-    final Map<Provider, bool> providerSettings =
-        await ProviderSettingsService.getProviderSettings();
+    Map<Provider, bool> providerSettings;
+    try {
+      providerSettings = await ProviderSettingsService.getProviderSettings();
+    } catch (error, stackTrace) {
+      debugPrint('Failed to load provider settings: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      providerSettings = const <Provider, bool>{};
+    }
     final providers = _buildProviders(
       senderIdMap,
       activeProviders,
