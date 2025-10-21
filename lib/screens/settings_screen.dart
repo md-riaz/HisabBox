@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:hisabbox/controllers/settings_controller.dart';
 import 'package:hisabbox/controllers/transaction_controller.dart';
@@ -50,20 +51,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     final success = await _settingsController.testWebhook();
 
+    if (!mounted) {
+      return;
+    }
+
     setState(() {
       _isTesting = false;
     });
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            success ? 'Webhook test successful!' : 'Webhook test failed',
-          ),
-          backgroundColor: success ? Colors.green : Colors.red,
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          success ? 'Webhook test successful!' : 'Webhook test failed',
         ),
-      );
-    }
+        backgroundColor: success ? Colors.green : Colors.red,
+      ),
+    );
   }
 
   void _showWebhookInfoDialog() {
@@ -166,6 +169,356 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Future<void> _handlePinLockToggle(bool value) async {
+    if (value) {
+      final pin = await _showCreatePinDialog();
+      if (pin == null) {
+        _settingsController.pinLockEnabled.value = false;
+        return;
+      }
+      await _settingsController.enablePinLock(pin);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('PIN lock enabled')),
+      );
+    } else {
+      final disableConfirmed = await _showDisablePinDialog();
+      if (!disableConfirmed) {
+        _settingsController.pinLockEnabled.value = true;
+        return;
+      }
+      await _settingsController.disablePinLock();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('PIN lock disabled')),
+      );
+    }
+  }
+
+  Future<void> _changePin() async {
+    final newPin = await _showChangePinDialog();
+    if (newPin == null) {
+      return;
+    }
+    await _settingsController.enablePinLock(newPin);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('PIN updated successfully')),
+    );
+  }
+
+  Future<String?> _showCreatePinDialog() {
+    return showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        final newPinController = TextEditingController();
+        final confirmController = TextEditingController();
+        String? error;
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Enable PIN lock'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Enter a 4-6 digit PIN to secure HisabBox.'),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: newPinController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                    ],
+                    obscureText: true,
+                    maxLength: 6,
+                    decoration: const InputDecoration(
+                      labelText: 'New PIN',
+                      counterText: '',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: confirmController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                    ],
+                    obscureText: true,
+                    maxLength: 6,
+                    decoration: const InputDecoration(
+                      labelText: 'Confirm PIN',
+                      counterText: '',
+                    ),
+                  ),
+                  if (error != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      error!,
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ],
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    final newPin = newPinController.text.trim();
+                    final confirmPin = confirmController.text.trim();
+                    if (newPin.length < 4) {
+                      setState(() {
+                        error = 'PIN must be at least 4 digits';
+                      });
+                      return;
+                    }
+                    if (newPin != confirmPin) {
+                      setState(() {
+                        error = 'PIN codes do not match';
+                      });
+                      return;
+                    }
+                    Navigator.of(dialogContext).pop(newPin);
+                  },
+                  child: const Text('Save PIN'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<String?> _showChangePinDialog() {
+    return showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        final currentPinController = TextEditingController();
+        final newPinController = TextEditingController();
+        final confirmController = TextEditingController();
+        String? error;
+        var isProcessing = false;
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Change PIN'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: currentPinController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                    ],
+                    obscureText: true,
+                    maxLength: 6,
+                    decoration: const InputDecoration(
+                      labelText: 'Current PIN',
+                      counterText: '',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: newPinController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                    ],
+                    obscureText: true,
+                    maxLength: 6,
+                    decoration: const InputDecoration(
+                      labelText: 'New PIN',
+                      counterText: '',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: confirmController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                    ],
+                    obscureText: true,
+                    maxLength: 6,
+                    decoration: const InputDecoration(
+                      labelText: 'Confirm PIN',
+                      counterText: '',
+                    ),
+                  ),
+                  if (error != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      error!,
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ],
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isProcessing
+                      ? null
+                      : () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: isProcessing
+                      ? null
+                      : () async {
+                          final currentPin = currentPinController.text.trim();
+                          final newPin = newPinController.text.trim();
+                          final confirmPin = confirmController.text.trim();
+                          if (currentPin.length < 4) {
+                            setState(() {
+                              error = 'Current PIN is too short';
+                            });
+                            return;
+                          }
+                          if (newPin.length < 4) {
+                            setState(() {
+                              error = 'New PIN must be at least 4 digits';
+                            });
+                            return;
+                          }
+                          if (newPin != confirmPin) {
+                            setState(() {
+                              error = 'New PIN entries do not match';
+                            });
+                            return;
+                          }
+
+                          setState(() {
+                            isProcessing = true;
+                            error = null;
+                          });
+
+                          final isValid =
+                              await _settingsController.verifyPin(currentPin);
+                          if (!dialogContext.mounted) {
+                            return;
+                          }
+
+                          if (!isValid) {
+                            setState(() {
+                              isProcessing = false;
+                              error = 'Current PIN is incorrect';
+                            });
+                            return;
+                          }
+
+                          Navigator.of(dialogContext).pop(newPin);
+                        },
+                  child: isProcessing
+                      ? const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Update PIN'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<bool> _showDisablePinDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        final pinController = TextEditingController();
+        String? error;
+        var isProcessing = false;
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Disable PIN lock'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Enter your current PIN to disable the lock.'),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: pinController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                    ],
+                    obscureText: true,
+                    maxLength: 6,
+                    decoration: const InputDecoration(
+                      labelText: 'Current PIN',
+                      counterText: '',
+                    ),
+                  ),
+                  if (error != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      error!,
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ],
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isProcessing
+                      ? null
+                      : () => Navigator.of(dialogContext).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: isProcessing
+                      ? null
+                      : () async {
+                          final pin = pinController.text.trim();
+                          if (pin.length < 4) {
+                            setState(() {
+                              error = 'PIN must be at least 4 digits';
+                            });
+                            return;
+                          }
+                          setState(() {
+                            isProcessing = true;
+                            error = null;
+                          });
+                          final isValid =
+                              await _settingsController.verifyPin(pin);
+                          if (!dialogContext.mounted) {
+                            return;
+                          }
+                          if (!isValid) {
+                            setState(() {
+                              isProcessing = false;
+                              error = 'Incorrect PIN';
+                            });
+                            return;
+                          }
+                          Navigator.of(dialogContext).pop(true);
+                        },
+                  child: isProcessing
+                      ? const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Disable'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+    return result ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -176,6 +529,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _settingsController.smsListeningEnabled.value;
         final transactionTypeSettings =
             _settingsController.transactionTypeSettings;
+        final pinLockEnabled = _settingsController.pinLockEnabled.value;
         return ListView(
           padding: const EdgeInsets.all(16.0),
           children: [
@@ -198,10 +552,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       value: smsListeningEnabled,
                       onChanged: (value) async {
-                        final messenger = ScaffoldMessenger.of(context);
                         await _settingsController.setSmsListeningEnabled(value);
-                        if (!mounted) return;
-                        messenger.showSnackBar(
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
                               value
@@ -244,19 +597,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                           checkmarkColor: type.accentColor,
                           onSelected: (selected) async {
-                            final messenger = ScaffoldMessenger.of(context);
                             final success = await _settingsController
                                 .setTransactionTypeEnabled(type, selected);
                             if (!success) {
-                              if (mounted) {
-                                messenger.showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'At least one transaction type must remain enabled.',
-                                    ),
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'At least one transaction type must remain enabled.',
                                   ),
-                                );
-                              }
+                                ),
+                              );
                               return;
                             }
 
@@ -270,6 +621,55 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         );
                       }).toList(),
                     ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Security',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 16),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('PIN lock'),
+                      subtitle: Text(
+                        pinLockEnabled
+                            ? 'Enabled — the app requires your PIN on launch'
+                            : 'Disabled — anyone with access to your phone can open HisabBox',
+                      ),
+                      value: pinLockEnabled,
+                      onChanged: (value) {
+                        _handlePinLockToggle(value);
+                      },
+                    ),
+                    if (pinLockEnabled) ...[
+                      const Divider(),
+                      ListTile(
+                        leading: const Icon(Icons.edit),
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Change PIN'),
+                        subtitle: const Text('Update the code that unlocks HisabBox'),
+                        onTap: _changePin,
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.lock_open),
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Disable PIN lock'),
+                        subtitle:
+                            const Text('Remove the PIN requirement for launching the app'),
+                        onTap: () async {
+                          await _handlePinLockToggle(false);
+                        },
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -350,7 +750,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           await _transactionController
                               .setActiveProviders(enabledProviders);
 
-                          if (!mounted) return;
+                          if (!context.mounted) return;
 
                           scaffoldMessenger.showSnackBar(
                             SnackBar(
