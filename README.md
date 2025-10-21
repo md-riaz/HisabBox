@@ -208,6 +208,15 @@ lib/
 flutter build apk --release
 ```
 
+### Android signing
+
+This repository intentionally includes a release keystore for convenience because the app is not distributed via public app stores:
+
+- Keystore: `android/app/keystore/release.keystore`
+- Config: `android/key.properties`
+
+If you ever move to a public distribution, rotate the key and stop committing signing materials by restoring the default ignore rules.
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
