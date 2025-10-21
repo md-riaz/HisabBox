@@ -196,7 +196,9 @@ class _PreferencesSnapshot {
 
   static _PreferencesSnapshot? _cached;
   static Future<_PreferencesSnapshot>? _inProgress;
+  static int _generation = 0;
   static bool _invalidatorRegistered = false;
+  static Future<void>? _registrationInProgress;
 
   List<Provider> get enabledProviders => Provider.values
       .where((provider) => isProviderEnabled(provider))
@@ -220,15 +222,12 @@ class _PreferencesSnapshot {
     return false;
   }
 
-  static Future<_PreferencesSnapshot> load() {
-    if (!_invalidatorRegistered) {
-      registerSmsPreferencesInvalidator(_PreferencesSnapshot.invalidate);
-      _invalidatorRegistered = true;
-    }
+  static Future<_PreferencesSnapshot> load() async {
+    await _ensureInvalidatorRegistered();
 
     final cached = _cached;
     if (cached != null) {
-      return Future<_PreferencesSnapshot>.value(cached);
+      return cached;
     }
 
     final pending = _inProgress;
@@ -236,47 +235,102 @@ class _PreferencesSnapshot {
       return pending;
     }
 
-    final future = _loadInternal();
+    final future = _createLoadFuture();
     _inProgress = future;
-    return future;
+    try {
+      return await future;
+    } finally {
+      if (identical(_inProgress, future)) {
+        _inProgress = null;
+      }
+    }
   }
 
   static void invalidate() {
+    _generation++;
     _cached = null;
     _inProgress = null;
   }
 
-  static Future<_PreferencesSnapshot> _loadInternal() async {
-    try {
-      final listeningEnabled =
-          await CaptureSettingsService.isSmsListeningEnabled();
+  static Future<void> _ensureInvalidatorRegistered() {
+    if (_invalidatorRegistered) {
+      return Future<void>.value();
+    }
 
-      Map<Provider, bool> providerSettings;
-      Set<TransactionType> enabledTypes;
-      Map<Provider, List<String>> senderIdMap;
+    final pending = _registrationInProgress;
+    if (pending != null) {
+      return pending;
+    }
 
-      if (!listeningEnabled) {
-        providerSettings = const <Provider, bool>{};
-        enabledTypes = const <TransactionType>{};
-        senderIdMap = const <Provider, List<String>>{};
-      } else {
-        providerSettings = await _loadProviderSettings();
-        enabledTypes = await _loadEnabledTransactionTypes();
-        senderIdMap = await _loadSenderIdMap();
+    final future = Future<void>.sync(() {
+      if (_invalidatorRegistered) {
+        return;
       }
 
-      final snapshot = _PreferencesSnapshot(
-        listeningEnabled: listeningEnabled,
-        providerSettings: providerSettings,
-        enabledTransactionTypes: enabledTypes,
-        senderIdMap: senderIdMap,
-      );
-      _cached = snapshot;
-      return snapshot;
-    } finally {
-      _inProgress = null;
+      registerSmsPreferencesInvalidator(_PreferencesSnapshot.invalidate);
+      _invalidatorRegistered = true;
+    });
+
+    _registrationInProgress = future;
+    return future.whenComplete(() {
+      if (identical(_registrationInProgress, future)) {
+        _registrationInProgress = null;
+      }
+    });
+  }
+
+  static Future<_PreferencesSnapshot> _createLoadFuture() async {
+    while (true) {
+      final loadGeneration = _generation;
+      try {
+        final snapshot = await _loadInternal();
+        if (loadGeneration == _generation) {
+          _cached = snapshot;
+          return snapshot;
+        }
+
+        debugPrint(
+          'Discarded stale SMS preference snapshot for generation $loadGeneration',
+        );
+
+        final cached = _cached;
+        if (cached != null) {
+          return cached;
+        }
+      } catch (error, stackTrace) {
+        debugPrint('Failed to load SMS preferences snapshot: $error');
+        debugPrintStack(stackTrace: stackTrace);
+        return _emptySnapshot();
+      }
     }
   }
+
+  static Future<_PreferencesSnapshot> _loadInternal() async {
+    final listeningEnabled =
+        await CaptureSettingsService.isSmsListeningEnabled();
+
+    if (!listeningEnabled) {
+      return _emptySnapshot();
+    }
+
+    final providerSettings = await _loadProviderSettings();
+    final enabledTypes = await _loadEnabledTransactionTypes();
+    final senderIdMap = await _loadSenderIdMap();
+
+    return _PreferencesSnapshot(
+      listeningEnabled: listeningEnabled,
+      providerSettings: providerSettings,
+      enabledTransactionTypes: enabledTypes,
+      senderIdMap: senderIdMap,
+    );
+  }
+
+  static _PreferencesSnapshot _emptySnapshot() => _PreferencesSnapshot(
+        listeningEnabled: false,
+        providerSettings: const <Provider, bool>{},
+        enabledTransactionTypes: const <TransactionType>{},
+        senderIdMap: const <Provider, List<String>>{},
+      );
 
   static Future<Map<Provider, bool>> _loadProviderSettings() async {
     try {
