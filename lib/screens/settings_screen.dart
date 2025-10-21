@@ -318,7 +318,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             value,
                           );
 
-                          await _transactionController.loadTransactions();
+                          // Update active providers in transaction controller
+                          final enabledProviders =
+                              _settingsController.enabledProviders;
+                          await _transactionController
+                              .setActiveProviders(enabledProviders);
 
                           if (!mounted) return;
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hisabbox/controllers/settings_controller.dart';
 import 'package:hisabbox/controllers/transaction_controller.dart';
 import 'package:hisabbox/models/provider_extensions.dart';
 import 'package:hisabbox/models/transaction.dart';
@@ -12,9 +13,11 @@ class ProviderFilter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<TransactionController>();
+    final settingsController = Get.find<SettingsController>();
     final theme = Theme.of(context);
     return Obx(() {
       final activeProviders = controller.activeProviders.toList();
+      final enabledProviders = settingsController.enabledProviders;
       return DecoratedBox(
         decoration: BoxDecoration(
           color:
@@ -22,7 +25,9 @@ class ProviderFilter extends StatelessWidget {
           borderRadius: BorderRadius.circular(24),
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          padding: compact
+              ? const EdgeInsets.symmetric(horizontal: 16, vertical: 12)
+              : const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -49,7 +54,7 @@ class ProviderFilter extends StatelessWidget {
               Wrap(
                 spacing: compact ? 8 : 12,
                 runSpacing: compact ? 8 : 12,
-                children: Provider.values.map((providerValue) {
+                children: enabledProviders.map((providerValue) {
                   final isActive = activeProviders.contains(providerValue);
                   return _ProviderFilterPill(
                     provider: providerValue,

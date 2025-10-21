@@ -95,9 +95,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
           return CustomScrollView(
             slivers: [
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 4.0),
+                sliver: SliverToBoxAdapter(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -106,9 +106,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         totalReceived: _transactionController.totalReceived,
                         balance: _transactionController.balance,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 12),
                       const ProviderFilter(compact: true),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 12),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -164,7 +164,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 )
               else
                 SliverPadding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.fromLTRB(16.0, 4.0, 16.0, 12.0),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
@@ -174,10 +174,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       childCount: previewTransactions.length,
                     ),
                   ),
-                ),
-              if (transactions.length > previewTransactions.length)
-                const SliverToBoxAdapter(
-                  child: SizedBox(height: 16),
                 ),
             ],
           );
