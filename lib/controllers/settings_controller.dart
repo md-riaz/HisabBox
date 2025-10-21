@@ -5,6 +5,7 @@ import 'package:hisabbox/services/provider_settings_service.dart';
 import 'package:hisabbox/services/sender_id_settings_service.dart';
 import 'package:hisabbox/services/sms_service.dart';
 import 'package:hisabbox/services/webhook_service.dart';
+import 'package:hisabbox/services/pin_lock_service.dart';
 
 class SettingsController extends GetxController {
   final RxBool webhookEnabled = false.obs;
@@ -15,11 +16,12 @@ class SettingsController extends GetxController {
   }.obs;
   final RxBool smsListeningEnabled = true.obs;
   final RxMap<TransactionType, bool> transactionTypeSettings = {
-    for (final type in TransactionType.values)
+      for (final type in TransactionType.values)
       type: CaptureSettingsService.defaultEnabledTypes.contains(type),
   }.obs;
   final RxMap<Provider, List<String>> senderIdSettings =
       <Provider, List<String>>{}.obs;
+  final RxBool pinLockEnabled = false.obs;
 
   @override
   void onInit() {
@@ -44,6 +46,7 @@ class SettingsController extends GetxController {
     transactionTypeSettings.assignAll(
       await CaptureSettingsService.getTransactionTypeSettings(),
     );
+    pinLockEnabled.value = await PinLockService.instance.hasPin();
   }
 
   Future<void> setWebhookEnabled(bool enabled) async {
@@ -111,5 +114,19 @@ class SettingsController extends GetxController {
   Future<void> resetSenderIds(Provider provider) async {
     final updated = await SenderIdSettingsService.resetToDefault(provider);
     senderIdSettings[provider] = updated;
+  }
+
+  Future<void> enablePinLock(String pin) async {
+    await PinLockService.instance.setPin(pin);
+    pinLockEnabled.value = true;
+  }
+
+  Future<void> disablePinLock() async {
+    await PinLockService.instance.clearPin();
+    pinLockEnabled.value = false;
+  }
+
+  Future<bool> verifyPin(String pin) {
+    return PinLockService.instance.verifyPin(pin);
   }
 }
