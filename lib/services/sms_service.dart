@@ -189,11 +189,11 @@ class _SmsPreferences {
     required this.senderIdMap,
   });
 
-  static final _SmsPreferences _disabled = _SmsPreferences._(
+  static const _SmsPreferences _disabled = _SmsPreferences._(
     listeningEnabled: false,
-    providerSettings: const <Provider, bool>{},
-    enabledTransactionTypes: const <TransactionType>{},
-    senderIdMap: const <Provider, List<String>>{},
+    providerSettings: <Provider, bool>{},
+    enabledTransactionTypes: <TransactionType>{},
+    senderIdMap: <Provider, List<String>>{},
   );
 
   final bool listeningEnabled;

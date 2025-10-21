@@ -4,10 +4,12 @@ import 'package:hisabbox/controllers/transaction_controller.dart';
 import 'package:hisabbox/controllers/settings_controller.dart';
 import 'package:hisabbox/screens/dashboard_screen.dart';
 import 'package:hisabbox/screens/permission_required_screen.dart';
+import 'package:hisabbox/screens/pin_lock_screen.dart';
 import 'package:hisabbox/services/database_service.dart';
 import 'package:hisabbox/services/sms_service.dart';
 import 'package:hisabbox/services/permission_service.dart';
 import 'package:hisabbox/services/webhook_service.dart';
+import 'package:hisabbox/services/pin_lock_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,12 +19,19 @@ void main() async {
 
   // Check current permissions before initializing services
   final permissionsGranted = await PermissionService.checkPermissions();
+  var pinLockEnabled = false;
 
   if (permissionsGranted) {
     await _initializeServicesAndControllers();
+    pinLockEnabled = await PinLockService.instance.hasPin();
   }
 
-  runApp(MyApp(permissionsGranted: permissionsGranted));
+  runApp(
+    MyApp(
+      permissionsGranted: permissionsGranted,
+      pinLockEnabled: pinLockEnabled,
+    ),
+  );
 }
 
 Future<void> _initializeServicesAndControllers() async {
@@ -38,9 +47,14 @@ Future<void> _initializeServicesAndControllers() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key, required this.permissionsGranted});
+  const MyApp({
+    super.key,
+    required this.permissionsGranted,
+    required this.pinLockEnabled,
+  });
 
   final bool permissionsGranted;
+  final bool pinLockEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -61,11 +75,18 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: permissionsGranted
-          ? const DashboardScreen()
+          ? (pinLockEnabled
+              ? const PinLockScreen()
+              : const DashboardScreen())
           : PermissionRequiredScreen(
               onPermissionsGranted: () async {
                 await _initializeServicesAndControllers();
-                Get.offAll(() => const DashboardScreen());
+                final hasPin = await PinLockService.instance.hasPin();
+                if (hasPin) {
+                  Get.offAll(() => const PinLockScreen());
+                } else {
+                  Get.offAll(() => const DashboardScreen());
+                }
               },
             ),
     );
