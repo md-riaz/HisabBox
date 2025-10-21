@@ -1,6 +1,8 @@
 import 'package:hisabbox/models/transaction.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:hisabbox/services/sms_preferences_cache.dart';
+
 /// Stores SMS capture preferences such as whether live listening is enabled
 /// and which transaction types should be imported.
 class CaptureSettingsService {
@@ -20,6 +22,7 @@ class CaptureSettingsService {
   static Future<void> setSmsListeningEnabled(bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_smsListeningEnabledKey, enabled);
+    invalidateSmsPreferencesCache();
   }
 
   /// Loads the persisted transaction type selections.
@@ -53,6 +56,7 @@ class CaptureSettingsService {
     final prefs = await SharedPreferences.getInstance();
     final names = enabledTypes.map((type) => type.name).toList(growable: false);
     await prefs.setStringList(_enabledTransactionTypesKey, names);
+    invalidateSmsPreferencesCache();
   }
 
   /// Returns the full on/off map for each [TransactionType].

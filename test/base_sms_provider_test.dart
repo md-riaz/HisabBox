@@ -192,6 +192,29 @@ void main() {
       expect(transaction.recipient, 'BrothersIT');
       expect(transaction.transactionId, 'CHA0EEADZY');
     });
+
+    test('uses preloaded sender IDs and provider settings when provided',
+        () async {
+      const message =
+          'You have sent Tk1,500.00 to 01712345678 successfully. Fee Tk25.00. TrxID ABC123XYZ at 2024-01-01 12:00:00';
+      final timestamp = DateTime(2024, 1, 1, 12, 0, 0);
+
+      final transaction = await BaseSmsProvider.parse(
+        'CustomSender',
+        message,
+        timestamp,
+        enabledProviders: const [Provider.bkash],
+        senderIdMap: const {
+          Provider.bkash: ['customsender'],
+        },
+        providerSettings: const {
+          Provider.bkash: true,
+        },
+      );
+
+      expect(transaction, isNotNull);
+      expect(transaction!.provider, Provider.bkash);
+    });
   });
 
   group('BaseSmsProvider - Nagad', () {
