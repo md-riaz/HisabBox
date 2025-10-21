@@ -153,7 +153,7 @@ class SmsService {
     for (final message in messages) {
       try {
         final imported = await _processMessage(message);
-        importedAny ||= imported;
+        importedAny = importedAny || imported;
       } catch (error, stackTrace) {
         debugPrint('Failed to import historical SMS: $error');
         debugPrintStack(stackTrace: stackTrace);
@@ -257,7 +257,7 @@ class _PreferencesSnapshot {
 
     final cached = _cached;
     if (cached != null) {
-      return cached;
+      return Future<_PreferencesSnapshot>.value(cached);
     }
 
     final pending = _inProgress;
