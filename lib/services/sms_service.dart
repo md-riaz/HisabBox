@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:another_telephony/telephony.dart';
+import 'package:flutter/foundation.dart';
 import 'package:hisabbox/models/transaction.dart';
 import 'package:hisabbox/services/capture_settings_service.dart';
 import 'package:hisabbox/services/database_service.dart';
@@ -40,12 +43,24 @@ class SmsService {
   @pragma('vm:entry-point')
   static Future<void> _onBackgroundMessage(SmsMessage message) async {
     // Handle SMS in background
-    await _processMessage(message);
+    try {
+      await _processMessage(message);
+    } catch (error, stackTrace) {
+      debugPrint('Failed to process background SMS: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
   }
 
   void _onNewMessage(SmsMessage message) {
     // Handle SMS in foreground
-    _processMessage(message);
+    unawaited(
+      _processMessage(message).catchError(
+        (Object error, StackTrace stackTrace) {
+          debugPrint('Failed to process foreground SMS: $error');
+          debugPrintStack(stackTrace: stackTrace);
+        },
+      ),
+    );
   }
 
   static Future<bool> _processMessage(SmsMessage message) async {
@@ -91,9 +106,14 @@ class SmsService {
         return false;
       }
 
-      await DatabaseService.instance.insertTransaction(transaction);
-      await WebhookService.processNewTransaction(transaction);
-      return true;
+      try {
+        await DatabaseService.instance.insertTransaction(transaction);
+        await WebhookService.processNewTransaction(transaction);
+        return true;
+      } catch (error, stackTrace) {
+        debugPrint('Failed to persist transaction from SMS: $error');
+        debugPrintStack(stackTrace: stackTrace);
+      }
     }
 
     return false;
@@ -119,8 +139,13 @@ class SmsService {
 
     var importedAny = false;
     for (final message in messages) {
-      final imported = await _processMessage(message);
-      importedAny = importedAny || imported;
+      try {
+        final imported = await _processMessage(message);
+        importedAny ||= imported;
+      } catch (error, stackTrace) {
+        debugPrint('Failed to import historical SMS: $error');
+        debugPrintStack(stackTrace: stackTrace);
+      }
     }
 
     if (syncImported && importedAny) {
