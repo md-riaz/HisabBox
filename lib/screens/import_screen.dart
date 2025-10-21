@@ -153,20 +153,20 @@ class _ImportScreenState extends State<ImportScreen> {
                         duration: const Duration(milliseconds: 200),
                         transitionBuilder:
                             (Widget child, Animation<double> animation) {
-                              return FadeTransition(
-                                opacity: animation,
-                                child: SizeTransition(
-                                  sizeFactor: animation,
-                                  axis: Axis.horizontal,
-                                  child: child,
-                                ),
-                              );
-                            },
+                          return FadeTransition(
+                            opacity: animation,
+                            child: SizeTransition(
+                              sizeFactor: animation,
+                              axis: Axis.horizontal,
+                              child: child,
+                            ),
+                          );
+                        },
                         child: _isImporting
-                            ? Row(
-                                key: const ValueKey('importing'),
+                            ? const Row(
+                                key: ValueKey('importing'),
                                 mainAxisSize: MainAxisSize.min,
-                                children: const [
+                                children: [
                                   SizedBox(
                                     width: 18,
                                     height: 18,
@@ -178,10 +178,10 @@ class _ImportScreenState extends State<ImportScreen> {
                                   Text('Importing…'),
                                 ],
                               )
-                            : Row(
-                                key: const ValueKey('idle'),
+                            : const Row(
+                                key: ValueKey('idle'),
                                 mainAxisSize: MainAxisSize.min,
-                                children: const [
+                                children: [
                                   Icon(Icons.file_download_rounded),
                                   SizedBox(width: 12),
                                   Text('Import SMS'),

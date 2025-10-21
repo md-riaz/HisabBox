@@ -2,7 +2,8 @@ import 'package:hisabbox/models/transaction.dart';
 import 'package:hisabbox/services/providers/bank/bank_sms_provider.dart';
 
 class DutchBanglaBankProvider extends BankSmsProvider {
-  DutchBanglaBankProvider() : super(Provider.dutchBanglaBank);
+  DutchBanglaBankProvider()
+      : super(Provider.dutchBanglaBank, _senderIds, _senderIds);
 
   static const Set<String> _senderIds = {'dbbl', 'dutch-bangla', 'dutchbangla'};
 

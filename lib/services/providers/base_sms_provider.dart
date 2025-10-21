@@ -80,7 +80,7 @@ abstract final class BaseSmsProvider {
       return const <SmsProvider>[];
     }
 
-    bool _isAllowed(Provider provider) {
+    bool isAllowed(Provider provider) {
       if (!allowed.contains(provider)) {
         return false;
       }
@@ -91,7 +91,7 @@ abstract final class BaseSmsProvider {
 
     final List<SmsProvider> providers = [];
 
-    if (_isAllowed(Provider.bkash)) {
+    if (isAllowed(Provider.bkash)) {
       providers.add(
         BkashProvider(
           senderIds:
@@ -100,7 +100,7 @@ abstract final class BaseSmsProvider {
       );
     }
 
-    if (_isAllowed(Provider.nagad)) {
+    if (isAllowed(Provider.nagad)) {
       providers.add(
         NagadProvider(
           senderIds:
@@ -109,7 +109,7 @@ abstract final class BaseSmsProvider {
       );
     }
 
-    if (_isAllowed(Provider.rocket)) {
+    if (isAllowed(Provider.rocket)) {
       providers.add(
         RocketProvider(
           senderIds:
@@ -118,11 +118,10 @@ abstract final class BaseSmsProvider {
       );
     }
 
-    if (_isAllowed(Provider.bracBank)) {
+    if (isAllowed(Provider.bracBank)) {
       providers.add(
         BracBankProvider(
-          senderIds:
-              senderIdMap[Provider.bracBank] ??
+          senderIds: senderIdMap[Provider.bracBank] ??
               BracBankProvider.defaultSenderIds,
         ),
       );
