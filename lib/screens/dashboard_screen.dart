@@ -145,6 +145,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SliverFillRemaining(
                   child: Center(
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
