@@ -4,15 +4,40 @@ import 'package:hisabbox/services/providers/sms_provider.dart';
 
 class BkashProvider extends SmsProvider {
   BkashProvider({Iterable<String>? senderIds})
-    : _senderIds = normalizeSenderIdSet(
-        senderIds ?? const <String>[],
-        defaultSenderIds,
-      );
+      : _senderIds = normalizeSenderIdSet(
+          senderIds ?? const <String>[],
+          defaultSenderIds,
+        );
 
   /// Matches customer-to-customer transfers such as
   /// "You have sent Tk 1,500.00 to 017XXXXXXXX. TrxID ABC123".
   static final RegExp _sentPattern = RegExp(
     r'You have sent Tk\s*([\d,]+(?:\.\d+)?) to ([\d\s]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
+    caseSensitive: false,
+    dotAll: true,
+  );
+
+  /// Matches "Send Money" transactions
+  /// "Send Money Tk 105.00 to 01754064711 successful. Ref . Fee Tk 0.00. Balance Tk 440.00. TrxID 5KF4NT722Q"
+  static final RegExp _sendMoneyPattern = RegExp(
+    r'Send Money Tk\s*([\d,]+(?:\.\d+)?) to ([\d\s]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
+    caseSensitive: false,
+    dotAll: true,
+  );
+
+  /// Matches Cash In transactions
+  /// "Cash In Tk 400.00 from 01771885253 successful. Fee Tk 0.00. Balance Tk 485.00. TrxID 5KD6N9FYTG"
+  static final RegExp _cashInPattern = RegExp(
+    r'Cash In Tk\s*([\d,]+(?:\.\d+)?) from ([\d\s]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
+    caseSensitive: false,
+    dotAll: true,
+  );
+
+  /// Matches Mobile Recharge transactions
+  /// "Received Recharge request of Tk 50.00 for 01768665824. Fee Tk 0.00. Balance Tk 534.00. TrxID 5J84DVTYXE"
+  /// "Your bKash Mobile Recharge request of Tk 50.00 for 01768665824 was successful."
+  static final RegExp _mobileRechargePattern = RegExp(
+    r'(?:Received Recharge request of|Mobile Recharge.*?of) Tk\s*([\d,]+(?:\.\d+)?) for ([\d\s]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
     caseSensitive: false,
     dotAll: true,
   );
@@ -76,6 +101,37 @@ class BkashProvider extends SmsProvider {
 
   @override
   Transaction? parse(String address, String message, DateTime timestamp) {
+    // Check for Cash In (received from agent)
+    final cashInMatch = _cashInPattern.firstMatch(message);
+    if (cashInMatch != null) {
+      final sender = cashInMatch.group(2)?.trim();
+      return buildTransaction(
+        provider: provider,
+        type: TransactionType.cashin,
+        amount: parseAmount(cashInMatch.group(1)!),
+        sender: sender,
+        transactionId: cashInMatch.group(3)!,
+        timestamp: timestamp,
+        rawMessage: message,
+      );
+    }
+
+    // Check for Send Money
+    final sendMoneyMatch = _sendMoneyPattern.firstMatch(message);
+    if (sendMoneyMatch != null) {
+      final recipient = sendMoneyMatch.group(2)?.trim();
+      return buildTransaction(
+        provider: provider,
+        type: TransactionType.sent,
+        amount: parseAmount(sendMoneyMatch.group(1)!),
+        recipient: recipient,
+        transactionId: sendMoneyMatch.group(3)!,
+        timestamp: timestamp,
+        rawMessage: message,
+      );
+    }
+
+    // Check for regular sent transactions
     final sentMatch = _sentPattern.firstMatch(message);
     if (sentMatch != null) {
       final recipient = sentMatch.group(2)?.trim();
@@ -90,6 +146,22 @@ class BkashProvider extends SmsProvider {
       );
     }
 
+    // Check for Mobile Recharge (only the confirmation message with TrxID)
+    final mobileRechargeMatch = _mobileRechargePattern.firstMatch(message);
+    if (mobileRechargeMatch != null) {
+      final recipient = mobileRechargeMatch.group(2)?.trim();
+      return buildTransaction(
+        provider: provider,
+        type: TransactionType.payment,
+        amount: parseAmount(mobileRechargeMatch.group(1)!),
+        recipient: recipient,
+        transactionId: mobileRechargeMatch.group(3)!,
+        timestamp: timestamp,
+        rawMessage: message,
+      );
+    }
+
+    // Check for received deposit
     final receivedDepositMatch = _receivedDepositPattern.firstMatch(message);
     if (receivedDepositMatch != null) {
       final sender = receivedDepositMatch.group(2)?.trim();
@@ -104,6 +176,7 @@ class BkashProvider extends SmsProvider {
       );
     }
 
+    // Check for regular received transactions
     final receivedMatch = _receivedPattern.firstMatch(message);
     if (receivedMatch != null) {
       final sender = receivedMatch.group(2)?.trim();
@@ -118,6 +191,7 @@ class BkashProvider extends SmsProvider {
       );
     }
 
+    // Check for cash out
     final cashoutMatch = _cashoutPattern.firstMatch(message);
     if (cashoutMatch != null) {
       final recipient = cashoutMatch.group(2)?.trim();
@@ -132,6 +206,7 @@ class BkashProvider extends SmsProvider {
       );
     }
 
+    // Check for payment
     final paymentMatch = _paymentPattern.firstMatch(message);
     if (paymentMatch != null) {
       final recipientMatch = _paymentRecipientPattern.firstMatch(message);
@@ -153,6 +228,7 @@ class BkashProvider extends SmsProvider {
       );
     }
 
+    // Check for bill payment
     final billPaymentMatch = _billPaymentPattern.firstMatch(message);
     if (billPaymentMatch != null) {
       final recipient = billPaymentMatch.group(1)?.trim();
