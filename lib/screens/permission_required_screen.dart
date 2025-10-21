@@ -201,7 +201,7 @@ class _PermissionRequiredScreenState extends State<PermissionRequiredScreen>
             ),
             const SizedBox(height: 12),
             Text(
-              'Android may block automated SMS permission prompts for security. Follow these steps to grant permissions manually — after opening App Settings you may need to force stop HisabBox before the three-dot menu appears:',
+              'Android may block automated SMS permission prompts for security. After you open App Settings, you may need to force stop HisabBox so the three-dot menu appears. Then follow these steps to grant permissions manually:',
               style: theme.textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
@@ -215,12 +215,12 @@ class _PermissionRequiredScreenState extends State<PermissionRequiredScreen>
                 _InstructionStep(
                   number: '2',
                   text:
-                      'Force stop (force close) HisabBox on the App Info screen — this makes the three-dot menu appear',
+                      'Force stop (force close) HisabBox on the App Info screen — this reveals the three-dot menu',
                 ),
                 _InstructionStep(
                   number: '3',
                   text:
-                      'Tap the three dots (⋮) in the top-right corner once they appear',
+                      'Tap the three dots (⋮) in the top-right corner when they appear',
                 ),
                 _InstructionStep(
                   number: '4',
@@ -235,7 +235,11 @@ class _PermissionRequiredScreenState extends State<PermissionRequiredScreen>
                   number: '7',
                   text: 'Also enable Notifications permission',
                 ),
-                _InstructionStep(number: '8', text: 'Return to HisabBox'),
+                _InstructionStep(
+                  number: '8',
+                  text:
+                      'Return to HisabBox and tap "Grant Permissions" again if prompted',
+                ),
               ],
             ),
             const SizedBox(height: 24),
