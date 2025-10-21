@@ -7,7 +7,7 @@ extension TransactionTypeUiMetadata on TransactionType {
       case TransactionType.sent:
         return 'Send Money';
       case TransactionType.received:
-        return 'Received';
+        return 'Receive Money';
       case TransactionType.cashout:
         return 'Cash Out';
       case TransactionType.cashin:
@@ -17,7 +17,7 @@ extension TransactionTypeUiMetadata on TransactionType {
       case TransactionType.refund:
         return 'Refund';
       case TransactionType.fee:
-        return 'Service Fee';
+        return 'Fee';
       case TransactionType.other:
         return 'Other';
     }
@@ -30,17 +30,17 @@ extension TransactionTypeUiMetadata on TransactionType {
       case TransactionType.received:
         return Icons.arrow_downward;
       case TransactionType.cashout:
-        return Icons.money_off;
+        return Icons.payments_outlined;
       case TransactionType.cashin:
-        return Icons.attach_money;
+        return Icons.account_balance_wallet_outlined;
       case TransactionType.payment:
         return Icons.payment;
       case TransactionType.refund:
-        return Icons.refresh;
+        return Icons.replay;
       case TransactionType.fee:
-        return Icons.receipt;
+        return Icons.receipt_long_outlined;
       case TransactionType.other:
-        return Icons.help_outline;
+        return Icons.more_horiz;
     }
   }
 

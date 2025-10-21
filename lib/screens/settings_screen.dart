@@ -74,7 +74,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const payloadFields = [
           'id — Stable unique identifier for the transaction',
           'provider — Source of the SMS (e.g., bkash, nagad)',
-          'type — Transaction category (sent, received, etc.)',
+          'type — Transaction category (sent, received, cashout, cashin, payment, refund, fee, other)',
           'amount — Transaction amount as a decimal number',
           'recipient — Optional recipient account or phone',
           'sender — Optional sender account or phone',
