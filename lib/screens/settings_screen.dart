@@ -51,20 +51,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     final success = await _settingsController.testWebhook();
 
+    if (!mounted) {
+      return;
+    }
+
     setState(() {
       _isTesting = false;
     });
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            success ? 'Webhook test successful!' : 'Webhook test failed',
-          ),
-          backgroundColor: success ? Colors.green : Colors.red,
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          success ? 'Webhook test successful!' : 'Webhook test failed',
         ),
-      );
-    }
+        backgroundColor: success ? Colors.green : Colors.red,
+      ),
+    );
   }
 
   void _showWebhookInfoDialog() {
@@ -370,8 +372,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           final currentPin = currentPinController.text.trim();
                           final newPin = newPinController.text.trim();
                           final confirmPin = confirmController.text.trim();
-                          final navigator = Navigator.of(dialogContext);
-
                           if (currentPin.length < 4) {
                             setState(() {
                               error = 'Current PIN is too short';
@@ -398,7 +398,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                           final isValid =
                               await _settingsController.verifyPin(currentPin);
-                          if (!navigator.mounted) {
+                          if (!dialogContext.mounted) {
                             return;
                           }
 
@@ -410,7 +410,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             return;
                           }
 
-                          navigator.pop(newPin);
+                          Navigator.of(dialogContext).pop(newPin);
                         },
                   child: isProcessing
                       ? const SizedBox(
@@ -478,7 +478,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ? null
                       : () async {
                           final pin = pinController.text.trim();
-                          final navigator = Navigator.of(dialogContext);
                           if (pin.length < 4) {
                             setState(() {
                               error = 'PIN must be at least 4 digits';
@@ -491,7 +490,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           });
                           final isValid =
                               await _settingsController.verifyPin(pin);
-                          if (!navigator.mounted) {
+                          if (!dialogContext.mounted) {
                             return;
                           }
                           if (!isValid) {
@@ -501,7 +500,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             });
                             return;
                           }
-                          navigator.pop(true);
+                          Navigator.of(dialogContext).pop(true);
                         },
                   child: isProcessing
                       ? const SizedBox(
@@ -554,7 +553,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       value: smsListeningEnabled,
                       onChanged: (value) async {
                         await _settingsController.setSmsListeningEnabled(value);
-                        if (!mounted) return;
+                        if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
@@ -601,7 +600,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             final success = await _settingsController
                                 .setTransactionTypeEnabled(type, selected);
                             if (!success) {
-                              if (!mounted) return;
+                              if (!context.mounted) return;
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text(
@@ -751,7 +750,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           await _transactionController
                               .setActiveProviders(enabledProviders);
 
-                          if (!mounted) return;
+                          if (!context.mounted) return;
 
                           scaffoldMessenger.showSnackBar(
                             SnackBar(
