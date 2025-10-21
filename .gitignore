@@ -53,8 +53,11 @@ unlinked_spec.ds
 **/android/captures/
 **/android/local.properties
 **/android/**/GeneratedPluginRegistrant.java
-**/android/key.properties
-*.jks
+#! allow committing signing files for this project
+#! note: this project is not published to app stores
+#! remove these exceptions if you later move to public distribution
+!android/key.properties
+!android/app/keystore/release.keystore
 android/gradle/wrapper/gradle-wrapper.jar
 android/gradlew
 android/gradlew.bat
