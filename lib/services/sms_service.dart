@@ -48,11 +48,11 @@ class SmsService {
     _processMessage(message);
   }
 
-  static Future<void> _processMessage(SmsMessage message) async {
+  static Future<bool> _processMessage(SmsMessage message) async {
     final listeningEnabled =
         await CaptureSettingsService.isSmsListeningEnabled();
     if (!listeningEnabled) {
-      return;
+      return false;
     }
 
     final address = message.address ?? '';
@@ -65,7 +65,7 @@ class SmsService {
     final enabledProviders =
         await ProviderSettingsService.getEnabledProviders();
     if (enabledProviders.isEmpty) {
-      return;
+      return false;
     }
 
     final Transaction? transaction = await BaseSmsProvider.parse(
@@ -81,19 +81,22 @@ class SmsService {
         transaction.type,
       );
       if (!typeEnabled) {
-        return;
+        return false;
       }
 
       final isEnabled = await ProviderSettingsService.isProviderEnabled(
         transaction.provider,
       );
       if (!isEnabled) {
-        return;
+        return false;
       }
 
       await DatabaseService.instance.insertTransaction(transaction);
       await WebhookService.processNewTransaction(transaction);
+      return true;
     }
+
+    return false;
   }
 
   Future<void> importHistoricalSms({
@@ -114,14 +117,17 @@ class SmsService {
           ),
     );
 
+    var importedAny = false;
     for (final message in messages) {
-      await _processMessage(message);
-      if (syncImported) {
-        try {
-          await WebhookService.syncTransactionsForce();
-        } catch (_) {
-          // ignore; scheduling/retry will be handled by WebhookService if needed
-        }
+      final imported = await _processMessage(message);
+      importedAny = importedAny || imported;
+    }
+
+    if (syncImported && importedAny) {
+      try {
+        await WebhookService.syncTransactionsForce();
+      } catch (_) {
+        // ignore; scheduling/retry will be handled by WebhookService if needed
       }
     }
   }
