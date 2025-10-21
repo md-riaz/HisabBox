@@ -8,9 +8,10 @@ class BracBankProvider extends BankSmsProvider {
             Provider.bracBank, senderIds ?? defaultSenderIds, defaultSenderIds);
 
   static const List<String> defaultSenderIds = [
-    'bracbank',
     'brac-bank',
-    'brac',
+    'brac bank',
+    'bracbank',
+    'brac_bank',
   ];
 
   static final List<RegExp> _bodyIdentifiers = [
