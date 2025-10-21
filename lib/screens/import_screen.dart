@@ -143,7 +143,10 @@ class _ImportScreenState extends State<ImportScreen> {
                     ElevatedButton(
                       onPressed: _isImporting ? null : _importSms,
                       style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 16,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -153,15 +156,15 @@ class _ImportScreenState extends State<ImportScreen> {
                         duration: const Duration(milliseconds: 200),
                         transitionBuilder:
                             (Widget child, Animation<double> animation) {
-                          return FadeTransition(
-                            opacity: animation,
-                            child: SizeTransition(
-                              sizeFactor: animation,
-                              axis: Axis.horizontal,
-                              child: child,
-                            ),
-                          );
-                        },
+                              return FadeTransition(
+                                opacity: animation,
+                                child: SizeTransition(
+                                  sizeFactor: animation,
+                                  axis: Axis.horizontal,
+                                  child: child,
+                                ),
+                              );
+                            },
                         child: _isImporting
                             ? const Row(
                                 key: ValueKey('importing'),

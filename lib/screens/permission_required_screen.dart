@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:hisabbox/services/permission_service.dart';
 
 class PermissionRequiredScreen extends StatefulWidget {
-  const PermissionRequiredScreen(
-      {super.key, required this.onPermissionsGranted});
+  const PermissionRequiredScreen({
+    super.key,
+    required this.onPermissionsGranted,
+  });
 
   final Future<void> Function() onPermissionsGranted;
 
@@ -91,9 +93,7 @@ class _PermissionRequiredScreenState extends State<PermissionRequiredScreen>
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Permissions Required'),
-      ),
+      appBar: AppBar(title: const Text('Permissions Required')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -177,14 +177,14 @@ class _PermissionRequiredScreenState extends State<PermissionRequiredScreen>
                     ? const SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                        ),
+                        child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.check_circle),
-                label: Text(_isRequestingPermission
-                    ? 'Requesting...'
-                    : 'Grant Permissions'),
+                label: Text(
+                  _isRequestingPermission
+                      ? 'Requesting...'
+                      : 'Grant Permissions',
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -201,7 +201,7 @@ class _PermissionRequiredScreenState extends State<PermissionRequiredScreen>
             ),
             const SizedBox(height: 12),
             Text(
-              'Android may block automated SMS permission prompts for security. Follow these steps to grant permissions manually:',
+              'Android may block automated SMS permission prompts for security. After you open App Settings, you may need to force stop HisabBox so the three-dot menu appears. Then follow these steps to grant permissions manually:',
               style: theme.textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
@@ -214,27 +214,31 @@ class _PermissionRequiredScreenState extends State<PermissionRequiredScreen>
                 ),
                 _InstructionStep(
                   number: '2',
-                  text: 'Tap the three dots (⋮) in the top-right corner',
+                  text:
+                      'Force stop (force close) HisabBox on the App Info screen — this reveals the three-dot menu',
                 ),
                 _InstructionStep(
                   number: '3',
-                  text: 'Select "Allow restricted settings"',
+                  text:
+                      'Tap the three dots (⋮) in the top-right corner when they appear',
                 ),
                 _InstructionStep(
                   number: '4',
-                  text: 'Go to Permissions → SMS',
+                  text: 'Select "Allow restricted settings"',
                 ),
+                _InstructionStep(number: '5', text: 'Go to Permissions → SMS'),
                 _InstructionStep(
-                  number: '5',
+                  number: '6',
                   text: 'Change permission to "Allow"',
                 ),
                 _InstructionStep(
-                  number: '6',
+                  number: '7',
                   text: 'Also enable Notifications permission',
                 ),
                 _InstructionStep(
-                  number: '7',
-                  text: 'Return to HisabBox',
+                  number: '8',
+                  text:
+                      'Return to HisabBox and tap "Grant Permissions" again if prompted',
                 ),
               ],
             ),
@@ -249,10 +253,7 @@ class _PermissionRequiredScreenState extends State<PermissionRequiredScreen>
                   children: [
                     Row(
                       children: [
-                        Icon(
-                          Icons.image,
-                          color: theme.colorScheme.primary,
-                        ),
+                        Icon(Icons.image, color: theme.colorScheme.primary),
                         const SizedBox(width: 8),
                         Text(
                           'Visual Guide',
@@ -354,10 +355,7 @@ class _InstructionStep extends StatelessWidget {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(top: 4.0),
-              child: Text(
-                text,
-                style: theme.textTheme.bodyMedium,
-              ),
+              child: Text(text, style: theme.textTheme.bodyMedium),
             ),
           ),
         ],
@@ -383,11 +381,7 @@ class _PermissionItem extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
-          size: 24,
-          color: theme.colorScheme.primary,
-        ),
+        Icon(icon, size: 24, color: theme.colorScheme.primary),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -400,10 +394,7 @@ class _PermissionItem extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4),
-              Text(
-                description,
-                style: theme.textTheme.bodySmall,
-              ),
+              Text(description, style: theme.textTheme.bodySmall),
             ],
           ),
         ),
