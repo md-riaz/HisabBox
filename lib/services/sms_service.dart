@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:another_telephony/telephony.dart';
+import 'package:flutter/foundation.dart';
 import 'package:hisabbox/models/transaction.dart';
 import 'package:hisabbox/services/capture_settings_service.dart';
 import 'package:hisabbox/services/database_service.dart';
@@ -40,60 +43,91 @@ class SmsService {
   @pragma('vm:entry-point')
   static Future<void> _onBackgroundMessage(SmsMessage message) async {
     // Handle SMS in background
-    await _processMessage(message);
+    try {
+      await _processMessage(message);
+    } catch (error, stackTrace) {
+      debugPrint('Failed to process background SMS: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
   }
 
   void _onNewMessage(SmsMessage message) {
     // Handle SMS in foreground
-    _processMessage(message);
+    unawaited(
+      _processMessage(message),
+    );
   }
 
-  static Future<void> _processMessage(SmsMessage message) async {
-    final listeningEnabled =
-        await CaptureSettingsService.isSmsListeningEnabled();
-    if (!listeningEnabled) {
-      return;
-    }
-
-    final address = message.address ?? '';
-    final body = message.body ?? '';
-    final timestamp = message.date != null
-        ? DateTime.fromMillisecondsSinceEpoch(message.date!)
-        : DateTime.now();
-
-    // Parse the SMS
-    final enabledProviders =
-        await ProviderSettingsService.getEnabledProviders();
-    if (enabledProviders.isEmpty) {
-      return;
-    }
-
-    final Transaction? transaction = await BaseSmsProvider.parse(
-      address,
-      body,
-      timestamp,
-      enabledProviders: enabledProviders,
-    );
-
-    // Save to database if it's a valid transaction
-    if (transaction != null) {
-      final typeEnabled = await CaptureSettingsService.isTransactionTypeEnabled(
-        transaction.type,
-      );
-      if (!typeEnabled) {
-        return;
+  static Future<bool> _processMessage(SmsMessage message) async {
+    try {
+      final listeningEnabled =
+          await CaptureSettingsService.isSmsListeningEnabled();
+      if (!listeningEnabled) {
+        return false;
       }
 
-      final isEnabled = await ProviderSettingsService.isProviderEnabled(
-        transaction.provider,
-      );
-      if (!isEnabled) {
-        return;
+      final address = message.address ?? '';
+      final body = message.body ?? '';
+      final timestamp = message.date != null
+          ? DateTime.fromMillisecondsSinceEpoch(message.date!)
+          : DateTime.now();
+
+      // Parse the SMS
+      final enabledProviders =
+          await ProviderSettingsService.getEnabledProviders();
+      if (enabledProviders.isEmpty) {
+        return false;
       }
 
-      await DatabaseService.instance.insertTransaction(transaction);
-      await WebhookService.processNewTransaction(transaction);
+      final Transaction? transaction = await BaseSmsProvider.parse(
+        address,
+        body,
+        timestamp,
+        enabledProviders: enabledProviders,
+      );
+
+      // Save to database if it's a valid transaction
+      if (transaction != null) {
+        final typeEnabled =
+            await CaptureSettingsService.isTransactionTypeEnabled(
+          transaction.type,
+        );
+        if (!typeEnabled) {
+          return false;
+        }
+
+        final isEnabled = await ProviderSettingsService.isProviderEnabled(
+          transaction.provider,
+        );
+        if (!isEnabled) {
+          return false;
+        }
+
+        try {
+          await DatabaseService.instance.insertTransaction(transaction);
+        } catch (error, stackTrace) {
+          debugPrint('Failed to persist transaction from SMS: $error');
+          debugPrintStack(stackTrace: stackTrace);
+          return false;
+        }
+
+        try {
+          await WebhookService.processNewTransaction(transaction);
+        } catch (error, stackTrace) {
+          debugPrint(
+            'Failed to process webhook for SMS transaction: $error',
+          );
+          debugPrintStack(stackTrace: stackTrace);
+        }
+
+        return true;
+      }
+    } catch (error, stackTrace) {
+      debugPrint('Failed to process SMS message: $error');
+      debugPrintStack(stackTrace: stackTrace);
     }
+
+    return false;
   }
 
   Future<void> importHistoricalSms({
@@ -114,14 +148,27 @@ class SmsService {
           ),
     );
 
+    var importedAny = false;
     for (final message in messages) {
-      await _processMessage(message);
-      if (syncImported) {
-        try {
-          await WebhookService.syncTransactionsForce();
-        } catch (_) {
-          // ignore; scheduling/retry will be handled by WebhookService if needed
-        }
+      try {
+        final imported = await _processMessage(message);
+        importedAny ||= imported;
+      } catch (error, stackTrace) {
+        debugPrint('Failed to import historical SMS: $error');
+        debugPrintStack(stackTrace: stackTrace);
+      }
+    }
+
+    if (syncImported) {
+      if (!importedAny) {
+        debugPrint(
+          'Forced webhook sync requested after SMS import with no new transactions.',
+        );
+      }
+      try {
+        await WebhookService.syncTransactionsForce();
+      } catch (_) {
+        // ignore; scheduling/retry will be handled by WebhookService if needed
       }
     }
   }
