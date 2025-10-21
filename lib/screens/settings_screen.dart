@@ -146,14 +146,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (dialogContext) {
         return AlertDialog(
           title: const Text('Developer'),
-          content: const Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Name: Md. Riaz'),
-              SizedBox(height: 8),
-              Text('Email: mdriaz.wd@gmail.com'),
-            ],
+          content: const SingleChildScrollView(
+            child: ListBody(
+              children: [
+                Text('Name: Md. Riaz'),
+                SizedBox(height: 8),
+                Text('Email: mdriaz.wd@gmail.com'),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -451,7 +451,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                         IconButton(
                           tooltip: 'Developer info',
-                          icon: const Icon(Icons.question_mark),
+                          icon: const Icon(Icons.info_outline),
                           onPressed: _showDeveloperInfoDialog,
                         ),
                       ],
