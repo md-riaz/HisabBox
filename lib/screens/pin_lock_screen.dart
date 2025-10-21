@@ -50,9 +50,7 @@ class _PinLockScreenState extends State<PinLockScreen> {
         _isVerifying = false;
         _errorMessage = 'Incorrect PIN. Try again.';
       });
-      _pinController
-        ..clear()
-        ..notifyListeners();
+      _pinController.clear();
     }
   }
 
