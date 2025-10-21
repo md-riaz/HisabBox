@@ -97,7 +97,7 @@ Calculate total amount for transactions.
 
 ## Base SMS Provider
 
-### `BaseSmsProvider.parse(address, message, timestamp)`
+### `BaseSmsProvider.parse(address, message, timestamp, {enabledProviders})`
 
 Route an SMS message to the matching provider and parse it into a Transaction
 object.
@@ -106,6 +106,7 @@ object.
 - `address`: String - SMS sender address
 - `message`: String - SMS message body
 - `timestamp`: DateTime - Message timestamp
+- `enabledProviders`: Iterable<Provider>? - Optional whitelist of providers to consider during parsing. When omitted, the method honours the persisted provider settings and only processes enabled sources.
 
 **Returns:** `Future<Transaction?>` - Parsed transaction or null if not recognized
 

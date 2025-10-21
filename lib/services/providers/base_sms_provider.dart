@@ -1,4 +1,5 @@
 import 'package:hisabbox/models/transaction.dart';
+import 'package:hisabbox/services/provider_settings_service.dart';
 import 'package:hisabbox/services/providers/bank/brac_bank_provider.dart';
 import 'package:hisabbox/services/providers/bkash_provider.dart';
 import 'package:hisabbox/services/providers/nagad_provider.dart';
@@ -14,12 +15,26 @@ abstract final class BaseSmsProvider {
   static Future<Transaction?> parse(
     String address,
     String message,
-    DateTime timestamp,
-  ) async {
+    DateTime timestamp, {
+    Iterable<Provider>? enabledProviders,
+  }) async {
     final trimmedAddress = address.trim();
     final trimmedMessage = message.trim();
     final senderIdMap = await SenderIdSettingsService.getAllSenderIds();
-    final providers = _buildProviders(senderIdMap);
+    final Iterable<Provider> activeProviders =
+        enabledProviders ?? SenderIdSettingsService.supportedProviders;
+
+    if (activeProviders.isEmpty) {
+      return null;
+    }
+
+    final Map<Provider, bool> providerSettings =
+        await ProviderSettingsService.getProviderSettings();
+    final providers = _buildProviders(
+      senderIdMap,
+      activeProviders,
+      providerSettings,
+    );
 
     for (final provider in providers) {
       if (!provider.matches(trimmedAddress, trimmedMessage)) {
@@ -42,24 +57,63 @@ abstract final class BaseSmsProvider {
 
   static List<SmsProvider> _buildProviders(
     Map<Provider, List<String>> senderIdMap,
+    Iterable<Provider> enabledProviders,
+    Map<Provider, bool> providerSettings,
   ) {
-    return [
-      BkashProvider(
-        senderIds:
-            senderIdMap[Provider.bkash] ?? BkashProvider.defaultSenderIds,
-      ),
-      NagadProvider(
-        senderIds:
-            senderIdMap[Provider.nagad] ?? NagadProvider.defaultSenderIds,
-      ),
-      RocketProvider(
-        senderIds:
-            senderIdMap[Provider.rocket] ?? RocketProvider.defaultSenderIds,
-      ),
-      BracBankProvider(
-        senderIds:
-            senderIdMap[Provider.bracBank] ?? BracBankProvider.defaultSenderIds,
-      ),
-    ];
+    final Set<Provider> allowed = Set<Provider>.from(enabledProviders);
+
+    if (allowed.isEmpty) {
+      return const <SmsProvider>[];
+    }
+
+    bool _isAllowed(Provider provider) {
+      if (!allowed.contains(provider)) {
+        return false;
+      }
+
+      return providerSettings[provider] ??
+          ProviderSettingsService.isDefaultEnabled(provider);
+    }
+
+    final List<SmsProvider> providers = [];
+
+    if (_isAllowed(Provider.bkash)) {
+      providers.add(
+        BkashProvider(
+          senderIds:
+              senderIdMap[Provider.bkash] ?? BkashProvider.defaultSenderIds,
+        ),
+      );
+    }
+
+    if (_isAllowed(Provider.nagad)) {
+      providers.add(
+        NagadProvider(
+          senderIds:
+              senderIdMap[Provider.nagad] ?? NagadProvider.defaultSenderIds,
+        ),
+      );
+    }
+
+    if (_isAllowed(Provider.rocket)) {
+      providers.add(
+        RocketProvider(
+          senderIds:
+              senderIdMap[Provider.rocket] ?? RocketProvider.defaultSenderIds,
+        ),
+      );
+    }
+
+    if (_isAllowed(Provider.bracBank)) {
+      providers.add(
+        BracBankProvider(
+          senderIds:
+              senderIdMap[Provider.bracBank] ??
+              BracBankProvider.defaultSenderIds,
+        ),
+      );
+    }
+
+    return providers;
   }
 }

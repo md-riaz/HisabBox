@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisabbox/models/transaction.dart';
 import 'package:hisabbox/services/database_service.dart';
+import 'package:hisabbox/services/provider_settings_service.dart';
 import 'package:hisabbox/services/providers/base_sms_provider.dart';
 import 'package:hisabbox/services/webhook_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -16,6 +17,13 @@ void main() {
     sqflite.databaseFactory = sqflite_ffi.databaseFactoryFfi;
   });
 
+  Future<void> enableSupportedProviders() async {
+    await ProviderSettingsService.setProviderEnabled(Provider.bkash, true);
+    await ProviderSettingsService.setProviderEnabled(Provider.nagad, true);
+    await ProviderSettingsService.setProviderEnabled(Provider.rocket, true);
+    await ProviderSettingsService.setProviderEnabled(Provider.bracBank, true);
+  }
+
   setUp(() async {
     await DatabaseService.instance.resetForTesting();
     SharedPreferences.setMockInitialValues({});
@@ -28,6 +36,7 @@ void main() {
         ),
       ),
     );
+    await enableSupportedProviders();
   });
 
   group('BaseSmsProvider - bKash', () {
@@ -262,6 +271,22 @@ void main() {
       expect(transaction.sender, '01898765432');
       expect(transaction.transactionId, 'NOP345QRS');
     });
+
+    test('returns null when Rocket provider is disabled', () async {
+      await ProviderSettingsService.setProviderEnabled(Provider.rocket, false);
+
+      const message =
+          'Tk 800.00 sent to 01712345678 successfully. TxnID: HIJ012KLM';
+      final timestamp = DateTime(2024, 1, 7, 13, 0, 0);
+
+      final transaction = await BaseSmsProvider.parse(
+        'Rocket',
+        message,
+        timestamp,
+      );
+
+      expect(transaction, isNull);
+    });
   });
 
   group('BaseSmsProvider - Bank', () {
@@ -344,6 +369,7 @@ void main() {
         'webhook_enabled': true,
         'webhook_url': 'https://example.com/webhook',
       });
+      await enableSupportedProviders();
 
       const message =
           'You have received Tk2,000.00 from 01798765432. TrxID DEF456GHI at 2024-01-02 14:30:00';
@@ -394,6 +420,7 @@ void main() {
       SharedPreferences.setMockInitialValues({
         'sender_ids_bkash': ['custombkash'],
       });
+      await enableSupportedProviders();
 
       const message =
           'You have sent Tk1,500.00 to 01712345678 successfully. Fee Tk25.00. TrxID ABC123XYZ at 2024-01-01 12:00:00';
@@ -411,6 +438,7 @@ void main() {
 
     test('falls back to defaults when overrides are empty', () async {
       SharedPreferences.setMockInitialValues({'sender_ids_rocket': <String>[]});
+      await enableSupportedProviders();
 
       const message =
           'Tk 800.00 sent to 01712345678 successfully. TxnID: HIJ012KLM';
