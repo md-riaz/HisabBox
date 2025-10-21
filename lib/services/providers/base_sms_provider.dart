@@ -13,22 +13,21 @@ import 'package:hisabbox/services/sender_id_settings_service.dart';
 abstract final class BaseSmsProvider {
   /// Parses an incoming SMS into a [Transaction] by selecting the matching
   /// provider and delegating the extraction work.
+  ///
+  /// Optional [senderIdMap] and [providerSettings] parameters allow callers to
+  /// reuse preloaded preferences to avoid redundant storage reads.
   static Future<Transaction?> parse(
     String address,
     String message,
     DateTime timestamp, {
     Iterable<Provider>? enabledProviders,
+    Map<Provider, List<String>>? senderIdMap,
+    Map<Provider, bool>? providerSettings,
   }) async {
     final trimmedAddress = address.trim();
     final trimmedMessage = message.trim();
-    Map<Provider, List<String>> senderIdMap;
-    try {
-      senderIdMap = await SenderIdSettingsService.getAllSenderIds();
-    } catch (error, stackTrace) {
-      debugPrint('Failed to load sender IDs: $error');
-      debugPrintStack(stackTrace: stackTrace);
-      senderIdMap = const <Provider, List<String>>{};
-    }
+    final Map<Provider, List<String>> resolvedSenderIds =
+        senderIdMap ?? await _loadSenderIdMap();
     final Iterable<Provider> activeProviders =
         enabledProviders ?? SenderIdSettingsService.supportedProviders;
 
@@ -36,18 +35,12 @@ abstract final class BaseSmsProvider {
       return null;
     }
 
-    Map<Provider, bool> providerSettings;
-    try {
-      providerSettings = await ProviderSettingsService.getProviderSettings();
-    } catch (error, stackTrace) {
-      debugPrint('Failed to load provider settings: $error');
-      debugPrintStack(stackTrace: stackTrace);
-      providerSettings = const <Provider, bool>{};
-    }
+    final Map<Provider, bool> resolvedProviderSettings =
+        providerSettings ?? await _loadProviderSettings();
     final providers = _buildProviders(
-      senderIdMap,
+      resolvedSenderIds,
       activeProviders,
-      providerSettings,
+      resolvedProviderSettings,
     );
 
     for (final provider in providers) {
@@ -128,5 +121,25 @@ abstract final class BaseSmsProvider {
     }
 
     return providers;
+  }
+
+  static Future<Map<Provider, List<String>>> _loadSenderIdMap() async {
+    try {
+      return await SenderIdSettingsService.getAllSenderIds();
+    } catch (error, stackTrace) {
+      debugPrint('Failed to load sender IDs: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      return const <Provider, List<String>>{};
+    }
+  }
+
+  static Future<Map<Provider, bool>> _loadProviderSettings() async {
+    try {
+      return await ProviderSettingsService.getProviderSettings();
+    } catch (error, stackTrace) {
+      debugPrint('Failed to load provider settings: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      return const <Provider, bool>{};
+    }
   }
 }

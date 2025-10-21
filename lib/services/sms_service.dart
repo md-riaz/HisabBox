@@ -7,6 +7,8 @@ import 'package:hisabbox/services/capture_settings_service.dart';
 import 'package:hisabbox/services/database_service.dart';
 import 'package:hisabbox/services/provider_settings_service.dart';
 import 'package:hisabbox/services/providers/base_sms_provider.dart';
+import 'package:hisabbox/services/sender_id_settings_service.dart';
+import 'package:hisabbox/services/sms_preferences_cache.dart';
 import 'package:hisabbox/services/webhook_service.dart';
 
 class SmsService {
@@ -60,9 +62,8 @@ class SmsService {
 
   static Future<bool> _processMessage(SmsMessage message) async {
     try {
-      final listeningEnabled =
-          await CaptureSettingsService.isSmsListeningEnabled();
-      if (!listeningEnabled) {
+      final snapshot = await _PreferencesSnapshot.load();
+      if (!snapshot.listeningEnabled) {
         return false;
       }
 
@@ -73,8 +74,7 @@ class SmsService {
           : DateTime.now();
 
       // Parse the SMS
-      final enabledProviders =
-          await ProviderSettingsService.getEnabledProviders();
+      final enabledProviders = snapshot.enabledProviders;
       if (enabledProviders.isEmpty) {
         return false;
       }
@@ -84,19 +84,20 @@ class SmsService {
         body,
         timestamp,
         enabledProviders: enabledProviders,
+        senderIdMap: snapshot.senderIdMap,
+        providerSettings: snapshot.providerSettings,
       );
 
       // Save to database if it's a valid transaction
       if (transaction != null) {
-        final typeEnabled =
-            await CaptureSettingsService.isTransactionTypeEnabled(
+        final typeEnabled = snapshot.isTransactionTypeEnabled(
           transaction.type,
         );
         if (!typeEnabled) {
           return false;
         }
 
-        final isEnabled = await ProviderSettingsService.isProviderEnabled(
+        final isEnabled = snapshot.isProviderEnabled(
           transaction.provider,
         );
         if (!isEnabled) {
@@ -177,5 +178,133 @@ class SmsService {
     return await telephony.getInboxSms(
       columns: [SmsColumn.ADDRESS, SmsColumn.BODY, SmsColumn.DATE],
     );
+  }
+}
+
+class _PreferencesSnapshot {
+  _PreferencesSnapshot({
+    required this.listeningEnabled,
+    required this.providerSettings,
+    required this.enabledTransactionTypes,
+    required this.senderIdMap,
+  });
+
+  final bool listeningEnabled;
+  final Map<Provider, bool> providerSettings;
+  final Set<TransactionType> enabledTransactionTypes;
+  final Map<Provider, List<String>> senderIdMap;
+
+  static _PreferencesSnapshot? _cached;
+  static Future<_PreferencesSnapshot>? _inProgress;
+  static bool _invalidatorRegistered = false;
+
+  List<Provider> get enabledProviders => Provider.values
+      .where((provider) => isProviderEnabled(provider))
+      .toList(growable: false);
+
+  bool isProviderEnabled(Provider provider) {
+    final stored = providerSettings[provider];
+    if (stored != null) {
+      return stored;
+    }
+    return ProviderSettingsService.isDefaultEnabled(provider);
+  }
+
+  bool isTransactionTypeEnabled(TransactionType type) {
+    if (enabledTransactionTypes.contains(type)) {
+      return true;
+    }
+    if (enabledTransactionTypes.isEmpty) {
+      return CaptureSettingsService.defaultEnabledTypes.contains(type);
+    }
+    return false;
+  }
+
+  static Future<_PreferencesSnapshot> load() {
+    if (!_invalidatorRegistered) {
+      registerSmsPreferencesInvalidator(_PreferencesSnapshot.invalidate);
+      _invalidatorRegistered = true;
+    }
+
+    final cached = _cached;
+    if (cached != null) {
+      return Future<_PreferencesSnapshot>.value(cached);
+    }
+
+    final pending = _inProgress;
+    if (pending != null) {
+      return pending;
+    }
+
+    final future = _loadInternal();
+    _inProgress = future;
+    return future;
+  }
+
+  static void invalidate() {
+    _cached = null;
+    _inProgress = null;
+  }
+
+  static Future<_PreferencesSnapshot> _loadInternal() async {
+    try {
+      final listeningEnabled =
+          await CaptureSettingsService.isSmsListeningEnabled();
+
+      Map<Provider, bool> providerSettings;
+      Set<TransactionType> enabledTypes;
+      Map<Provider, List<String>> senderIdMap;
+
+      if (!listeningEnabled) {
+        providerSettings = const <Provider, bool>{};
+        enabledTypes = const <TransactionType>{};
+        senderIdMap = const <Provider, List<String>>{};
+      } else {
+        providerSettings = await _loadProviderSettings();
+        enabledTypes = await _loadEnabledTransactionTypes();
+        senderIdMap = await _loadSenderIdMap();
+      }
+
+      final snapshot = _PreferencesSnapshot(
+        listeningEnabled: listeningEnabled,
+        providerSettings: providerSettings,
+        enabledTransactionTypes: enabledTypes,
+        senderIdMap: senderIdMap,
+      );
+      _cached = snapshot;
+      return snapshot;
+    } finally {
+      _inProgress = null;
+    }
+  }
+
+  static Future<Map<Provider, bool>> _loadProviderSettings() async {
+    try {
+      return await ProviderSettingsService.getProviderSettings();
+    } catch (error, stackTrace) {
+      debugPrint('Failed to load provider settings: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      return const <Provider, bool>{};
+    }
+  }
+
+  static Future<Set<TransactionType>> _loadEnabledTransactionTypes() async {
+    try {
+      return await CaptureSettingsService.getEnabledTransactionTypes();
+    } catch (error, stackTrace) {
+      debugPrint('Failed to load transaction type settings: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      return CaptureSettingsService.defaultEnabledTypes;
+    }
+  }
+
+  static Future<Map<Provider, List<String>>> _loadSenderIdMap() async {
+    try {
+      return await SenderIdSettingsService.getAllSenderIds();
+    } catch (error, stackTrace) {
+      debugPrint('Failed to load sender IDs: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      return const <Provider, List<String>>{};
+    }
   }
 }
