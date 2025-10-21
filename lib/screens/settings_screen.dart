@@ -140,6 +140,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  void _showDeveloperInfoDialog() {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Developer'),
+          content: const Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Name: Md. Riaz'),
+              SizedBox(height: 8),
+              Text('Email: mdriaz.wd@gmail.com'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -414,14 +440,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'About',
-                      style: Theme.of(context).textTheme.titleLarge,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'About',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'Developer info',
+                          icon: const Icon(Icons.question_mark),
+                          onPressed: _showDeveloperInfoDialog,
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
                     const ListTile(
                       title: Text('Version'),
-                      subtitle: Text('1.0.0'),
+                      subtitle: Text('1.0.1'),
                     ),
                     const ListTile(
                       title: Text('Description'),
