@@ -98,45 +98,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 4.0),
                 sliver: SliverToBoxAdapter(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: SummaryCard(
+                    totalSent: _transactionController.totalSent,
+                    totalReceived: _transactionController.totalReceived,
+                    balance: _transactionController.balance,
+                  ),
+                ),
+              ),
+              const SliverPadding(
+                padding: EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 4.0),
+                sliver: SliverToBoxAdapter(
+                  child: ProviderFilter(compact: true),
+                ),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 4.0),
+                sliver: SliverToBoxAdapter(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      SummaryCard(
-                        totalSent: _transactionController.totalSent,
-                        totalReceived: _transactionController.totalReceived,
-                        balance: _transactionController.balance,
+                      Text(
+                        'Recent transactions',
+                        style: Theme.of(context).textTheme.titleLarge,
                       ),
-                      const SizedBox(height: 12),
-                      const ProviderFilter(compact: true),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Recent transactions',
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          if (transactions.isNotEmpty)
-                            TextButton.icon(
-                              onPressed: () async {
-                                await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        const AllTransactionsScreen(),
-                                  ),
-                                );
-                                if (!mounted) return;
-                                await _transactionController.loadTransactions(
-                                  limit: 30,
-                                  updateLimit: true,
-                                );
-                              },
-                              icon: const Icon(Icons.arrow_forward_rounded),
-                              label: const Text('View all'),
-                            ),
-                        ],
-                      ),
+                      if (transactions.isNotEmpty)
+                        TextButton.icon(
+                          onPressed: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const AllTransactionsScreen(),
+                              ),
+                            );
+                            if (!mounted) return;
+                            await _transactionController.loadTransactions(
+                              limit: 30,
+                              updateLimit: true,
+                            );
+                          },
+                          icon: const Icon(Icons.arrow_forward_rounded),
+                          label: const Text('View all'),
+                        ),
                     ],
                   ),
                 ),

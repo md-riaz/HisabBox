@@ -55,9 +55,9 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
 
           return CustomScrollView(
             slivers: [
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                sliver: SliverToBoxAdapter(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -72,119 +72,120 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen> {
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
-                      const SizedBox(height: 20),
-                      const ProviderFilter(compact: true),
-                      const SizedBox(height: 16),
-                      // Analytics Section
-                      Obx(() => Card(
-                            elevation: 0,
-                            color: theme.colorScheme.surfaceContainerHighest,
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                    ],
+                  ),
+                ),
+              ),
+              const SliverPadding(
+                padding: EdgeInsets.fromLTRB(16, 20, 16, 0),
+                sliver: SliverToBoxAdapter(
+                  child: ProviderFilter(compact: true),
+                ),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                sliver: SliverToBoxAdapter(
+                  child: Obx(() => Card(
+                        elevation: 0,
+                        color: theme.colorScheme.surfaceContainerHighest,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Analytics',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(
-                                    'Analytics',
-                                    style:
-                                        theme.textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
+                                  Expanded(
+                                    child: _AnalyticItem(
+                                      label: 'Total Stored',
+                                      value: '${_totalRecords.value}',
+                                      icon: Icons.storage,
+                                      color: theme.colorScheme.primary,
                                     ),
                                   ),
-                                  const SizedBox(height: 12),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: _AnalyticItem(
-                                          label: 'Total Stored',
-                                          value: '${_totalRecords.value}',
-                                          icon: Icons.storage,
-                                          color: theme.colorScheme.primary,
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: _AnalyticItem(
-                                          label: 'Showing',
-                                          value: '${transactions.length}',
-                                          icon: Icons.visibility,
-                                          color: theme.colorScheme.secondary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: _AnalyticItem(
-                                          label: 'Total Received',
-                                          value:
-                                              '৳${_transactionController.totalReceived.toStringAsFixed(2)}',
-                                          icon: Icons.arrow_downward,
-                                          color: Colors.green,
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: _AnalyticItem(
-                                          label: 'Total Sent',
-                                          value:
-                                              '৳${_transactionController.totalSent.toStringAsFixed(2)}',
-                                          icon: Icons.arrow_upward,
-                                          color: Colors.red,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: _transactionController.balance >= 0
-                                          ? Colors.green.withValues(alpha: 0.1)
-                                          : Colors.red.withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.account_balance_wallet,
-                                          size: 20,
-                                          color:
-                                              _transactionController.balance >=
-                                                      0
-                                                  ? Colors.green
-                                                  : Colors.red,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          'Balance: ৳${_transactionController.balance.toStringAsFixed(2)}',
-                                          style: theme.textTheme.titleMedium
-                                              ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                            color: _transactionController
-                                                        .balance >=
-                                                    0
-                                                ? Colors.green
-                                                : Colors.red,
-                                          ),
-                                        ),
-                                      ],
+                                  Expanded(
+                                    child: _AnalyticItem(
+                                      label: 'Showing',
+                                      value: '${transactions.length}',
+                                      icon: Icons.visibility,
+                                      color: theme.colorScheme.secondary,
                                     ),
                                   ),
                                 ],
                               ),
-                            ),
-                          )),
-                      const SizedBox(height: 16),
-                    ],
-                  ),
+                              const SizedBox(height: 12),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: _AnalyticItem(
+                                      label: 'Total Received',
+                                      value:
+                                          '৳${_transactionController.totalReceived.toStringAsFixed(2)}',
+                                      icon: Icons.arrow_downward,
+                                      color: Colors.green,
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: _AnalyticItem(
+                                      label: 'Total Sent',
+                                      value:
+                                          '৳${_transactionController.totalSent.toStringAsFixed(2)}',
+                                      icon: Icons.arrow_upward,
+                                      color: Colors.red,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: _transactionController.balance >= 0
+                                      ? Colors.green.withValues(alpha: 0.1)
+                                      : Colors.red.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.account_balance_wallet,
+                                      size: 20,
+                                      color: _transactionController.balance >= 0
+                                          ? Colors.green
+                                          : Colors.red,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Balance: ৳${_transactionController.balance.toStringAsFixed(2)}',
+                                      style:
+                                          theme.textTheme.titleMedium?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color:
+                                            _transactionController.balance >= 0
+                                                ? Colors.green
+                                                : Colors.red,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )),
                 ),
               ),
               if (transactions.isEmpty)
