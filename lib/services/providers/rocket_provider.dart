@@ -4,10 +4,10 @@ import 'package:hisabbox/services/providers/sms_provider.dart';
 
 class RocketProvider extends SmsProvider {
   RocketProvider({Iterable<String>? senderIds})
-    : _senderIds = normalizeSenderIdSet(
-        senderIds ?? const <String>[],
-        defaultSenderIds,
-      );
+      : _senderIds = normalizeSenderIdSet(
+          senderIds ?? const <String>[],
+          defaultSenderIds,
+        );
 
   /// Matches outgoing Rocket transfers like
   /// "Tk 800.00 sent to 017XXXXXXXX. TxnID ABC123".
@@ -16,15 +16,15 @@ class RocketProvider extends SmsProvider {
     caseSensitive: false,
   );
 
-  /// Captures incoming Rocket transfers indicating the sender number.
+  /// Captures incoming Rocket transfers indicating the sender number, including A/C and Other Bank A/C formats.
   static final RegExp _receivedPattern = RegExp(
-    r'Tk\s?([\d,]+\.?\d*) received from ([\d\s]+).*?TxnID[:\s]*([\w\d]+)',
+    r'Tk\s?([\d,]+\.?\d*) received from ((?:A/C:|Other Bank A/C:)?[\w*]+).*?TxnId[:\s]*([\w\d]+)',
     caseSensitive: false,
   );
 
   /// Identifies cash-out confirmations where only amount and transaction ID are reliable.
   static final RegExp _cashoutPattern = RegExp(
-    r'Cash Out Tk\s?([\d,]+\.?\d*) .*?TxnID[:\s]?([\w\d]+)',
+    r'Cash Out Tk\s?([\d,]+\.?\d*).*?TxnId[:\s]*([\w\d]+)',
     caseSensitive: false,
   );
 

@@ -514,33 +514,95 @@ void main() {
   group('RocketProvider', () {
     final provider = RocketProvider();
 
-    test('produces a sent transaction for matching SMS', () {
+    test('parses received Rocket transfer', () {
       const message =
-          'Tk 800.00 sent to 01712345678 successfully. TxnID: HIJ012KLM';
+          'Tk410.00 received from A/C:01700000001 Fee:Tk0, Your A/C Balance: Tk430.00 TxnId:ANONTXNID1 Date:09-APR-20 10:55:36 am.';
+      final timestamp = DateTime(2020, 4, 9, 10, 55, 36);
+      final transaction = provider.parse('16216', message, timestamp);
+      expect(transaction, isNotNull);
+      expect(transaction!.provider, Provider.rocket);
+      expect(transaction.type, TransactionType.received);
+      expect(transaction.amount, 410.00);
+      expect(transaction.sender, 'A/C:01700000001');
+      expect(transaction.transactionId, 'ANONTXNID1');
+    });
+
+    test('parses debited Rocket recharge', () {
+      const message =
+          'Tk303.00 debited to recharge mobile 01700000002, Your A/C Balance:Tk537.00 TxnId: ANONTXNID2 Date:09-APR-20 12:45:39 pm.';
+      final timestamp = DateTime(2020, 4, 9, 12, 45, 39);
+      final transaction = provider.parse('16216', message, timestamp);
+      expect(transaction, isNull,
+          reason: 'Recharge debits should not be parsed as transaction');
+    });
+
+    test('parses Rocket e-Commerce payment', () {
+      const message =
+          'Tk430.00 paid through e-Commerce gateway. NetBal: Tk107.00 TxnId: ANONTXNID3 Date:28-APR-20 12:05:33 am. Don\'t share your PIN with anybody';
+      final timestamp = DateTime(2020, 4, 28, 0, 5, 33);
+      final transaction = provider.parse('16216', message, timestamp);
+      expect(transaction, isNull,
+          reason:
+              'e-Commerce payments should not be parsed as Rocket transfer');
+    });
+
+    test('parses Rocket security code message', () {
+      const message = 'Your security code for Rocket transaction is 750551.';
+      final timestamp = DateTime(2020, 5, 10, 20, 0, 58);
+      final transaction = provider.parse('16216', message, timestamp);
+      expect(transaction, isNull,
+          reason: 'Security code messages should not be parsed as transaction');
+    });
+
+    test('parses received Rocket transfer with anonymized data', () {
+      const message =
+          'Tk10,000.00 received from Other Bank A/C:***00001 Fee:Tk.00 NetBal:Tk10,024.00 TxnId:ANONTXNID4 Date:05-JUN-23 02:11:05 pm.';
+      final timestamp = DateTime(2023, 6, 5, 14, 11, 5);
+      final transaction = provider.parse('16216', message, timestamp);
+      expect(transaction, isNotNull);
+      expect(transaction!.provider, Provider.rocket);
+      expect(transaction.type, TransactionType.received);
+      expect(transaction.amount, 10000.00);
+      expect(transaction.sender, 'Other Bank A/C:***00001');
+      expect(transaction.transactionId, 'ANONTXNID4');
+    });
+
+    test('parses Rocket sent transaction', () {
+      const message =
+          'Tk 800.00 sent to 01700000003 successfully. TxnID: ANONTXNID5';
       final timestamp = DateTime(2024, 1, 7, 13, 0);
-
       final transaction = provider.parse('Rocket', message, timestamp);
-
       expect(transaction, isNotNull);
       expect(transaction!.provider, Provider.rocket);
       expect(transaction.type, TransactionType.sent);
       expect(transaction.amount, 800.00);
-      expect(transaction.recipient, '01712345678');
-      expect(transaction.transactionId, 'HIJ012KLM');
+      expect(transaction.recipient, '01700000003');
+      expect(transaction.transactionId, 'ANONTXNID5');
     });
 
-    test('produces a received transaction for matching SMS', () {
-      const message = 'Tk 2,500.00 received from 01898765432. TxnID: NOP345QRS';
+    test('parses Rocket received transaction', () {
+      const message =
+          'Tk 2,500.00 received from 01700000004. TxnID: ANONTXNID6';
       final timestamp = DateTime(2024, 1, 8, 15, 30);
-
       final transaction = provider.parse('Rocket', message, timestamp);
-
       expect(transaction, isNotNull);
       expect(transaction!.provider, Provider.rocket);
       expect(transaction.type, TransactionType.received);
       expect(transaction.amount, 2500.00);
-      expect(transaction.sender, '01898765432');
-      expect(transaction.transactionId, 'NOP345QRS');
+      expect(transaction.sender, '01700000004');
+      expect(transaction.transactionId, 'ANONTXNID6');
+    });
+
+    test('parses Rocket cashout transaction', () {
+      const message =
+          'Cash Out Tk 1,200.00 from Agent 01700000005. Fee Tk 20.00. Balance Tk 2,000.00. TxnID: ANONTXNID7';
+      final timestamp = DateTime(2025, 10, 21, 10, 0);
+      final transaction = provider.parse('Rocket', message, timestamp);
+      expect(transaction, isNotNull);
+      expect(transaction!.provider, Provider.rocket);
+      expect(transaction.type, TransactionType.cashout);
+      expect(transaction.amount, 1200.00);
+      expect(transaction.transactionId, 'ANONTXNID7');
     });
   });
 }
