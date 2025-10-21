@@ -8,7 +8,6 @@ import 'package:hisabbox/services/database_service.dart';
 import 'package:hisabbox/services/provider_settings_service.dart';
 import 'package:hisabbox/services/providers/base_sms_provider.dart';
 import 'package:hisabbox/services/sender_id_settings_service.dart';
-import 'package:hisabbox/services/sms_preferences_cache.dart';
 import 'package:hisabbox/services/webhook_service.dart';
 
 class SmsService {
@@ -62,7 +61,7 @@ class SmsService {
 
   static Future<bool> _processMessage(SmsMessage message) async {
     try {
-      final snapshot = await _PreferencesSnapshot.load();
+      final snapshot = await _SmsPreferences.load();
       if (!snapshot.listeningEnabled) {
         return false;
       }
@@ -182,27 +181,45 @@ class SmsService {
 }
 
 @immutable
-class _PreferencesSnapshot {
-  const _PreferencesSnapshot._({
+class _SmsPreferences {
+  const _SmsPreferences._({
     required this.listeningEnabled,
     required this.providerSettings,
     required this.enabledTransactionTypes,
     required this.senderIdMap,
   });
 
-  factory _PreferencesSnapshot({
-    required bool listeningEnabled,
-    required Map<Provider, bool> providerSettings,
-    required Set<TransactionType> enabledTransactionTypes,
-    required Map<Provider, List<String>> senderIdMap,
-  }) {
+  static final _SmsPreferences _disabled = _SmsPreferences._(
+    listeningEnabled: false,
+    providerSettings: const <Provider, bool>{},
+    enabledTransactionTypes: const <TransactionType>{},
+    senderIdMap: const <Provider, List<String>>{},
+  );
+
+  final bool listeningEnabled;
+  final Map<Provider, bool> providerSettings;
+  final Set<TransactionType> enabledTransactionTypes;
+  final Map<Provider, List<String>> senderIdMap;
+
+  static Future<_SmsPreferences> load() async {
+    final listeningEnabled =
+        await CaptureSettingsService.isSmsListeningEnabled();
+
+    if (!listeningEnabled) {
+      return _disabled;
+    }
+
+    final providerSettings = await ProviderSettingsService.getProviderSettings();
+    final enabledTypes = await CaptureSettingsService.getEnabledTransactionTypes();
+    final senderIdMap = await SenderIdSettingsService.getAllSenderIds();
+
     final normalizedProviderSettings =
         Map<Provider, bool>.unmodifiable(Map<Provider, bool>.from(
       providerSettings,
     ));
     final normalizedEnabledTypes =
         Set<TransactionType>.unmodifiable(Set<TransactionType>.from(
-      enabledTransactionTypes,
+      enabledTypes,
     ));
     final normalizedSenderIds = Map<Provider, List<String>>.unmodifiable(
       senderIdMap.map(
@@ -213,22 +230,13 @@ class _PreferencesSnapshot {
       ),
     );
 
-    return _PreferencesSnapshot._(
+    return _SmsPreferences._(
       listeningEnabled: listeningEnabled,
       providerSettings: normalizedProviderSettings,
       enabledTransactionTypes: normalizedEnabledTypes,
       senderIdMap: normalizedSenderIds,
     );
   }
-
-  final bool listeningEnabled;
-  final Map<Provider, bool> providerSettings;
-  final Set<TransactionType> enabledTransactionTypes;
-  final Map<Provider, List<String>> senderIdMap;
-
-  static _PreferencesSnapshot? _cached;
-  static Future<_PreferencesSnapshot>? _inProgress;
-  static int _generation = 0;
 
   List<Provider> get enabledProviders => Provider.values
       .where((provider) => isProviderEnabled(provider))
@@ -250,182 +258,5 @@ class _PreferencesSnapshot {
       return CaptureSettingsService.defaultEnabledTypes.contains(type);
     }
     return false;
-  }
-
-  static Future<_PreferencesSnapshot> load() {
-    registerSmsPreferencesInvalidator(_PreferencesSnapshot.invalidate);
-
-    final cached = _cached;
-    if (cached != null) {
-      return Future<_PreferencesSnapshot>.value(cached);
-    }
-
-    final pending = _inProgress;
-    if (pending != null) {
-      return pending;
-    }
-
-    final completer = Completer<_PreferencesSnapshot>();
-    _inProgress = completer.future;
-
-    unawaited(() async {
-      try {
-        final snapshot = await _createLoadFuture();
-        completer.complete(snapshot);
-      } catch (error, stackTrace) {
-        if (!completer.isCompleted) {
-          completer.completeError(error, stackTrace);
-        }
-      } finally {
-        if (identical(_inProgress, completer.future)) {
-          _inProgress = null;
-        }
-      }
-    }());
-
-    return completer.future;
-  }
-
-  static void invalidate() {
-    _generation++;
-    _cached = null;
-    _inProgress = null;
-  }
-
-  static Future<_PreferencesSnapshot> _createLoadFuture() async {
-    const retryDelay = Duration(milliseconds: 50);
-    const maxInvalidationRetries = 5;
-    const maxErrorRetries = 3;
-
-    var invalidationRetries = 0;
-    var errorRetries = 0;
-
-    while (true) {
-      final loadGeneration = _generation;
-      try {
-        final snapshot = await _loadInternal();
-        if (loadGeneration == _generation) {
-          _cached = snapshot;
-          return snapshot;
-        }
-
-        invalidationRetries++;
-        if (invalidationRetries > maxInvalidationRetries) {
-          const message =
-              'SMS preferences changed too frequently while loading.';
-          debugPrint(message);
-          throw SmsPreferencesLoadException(message);
-        }
-      } on SmsPreferencesLoadException {
-        rethrow;
-      } catch (error, stackTrace) {
-        errorRetries++;
-        debugPrint(
-          'Failed to load SMS preferences snapshot (attempt $errorRetries): $error',
-        );
-        debugPrintStack(stackTrace: stackTrace);
-
-        if (errorRetries >= maxErrorRetries) {
-          throw SmsPreferencesLoadException(
-            'Unable to load SMS preferences snapshot after $errorRetries attempts.',
-            error,
-            stackTrace,
-          );
-        }
-      }
-
-      await Future<void>.delayed(retryDelay);
-    }
-  }
-
-  static Future<_PreferencesSnapshot> _loadInternal() async {
-    try {
-      final listeningEnabled =
-          await CaptureSettingsService.isSmsListeningEnabled();
-
-      if (!listeningEnabled) {
-        return _emptySnapshot();
-      }
-
-      final providerSettings = await _loadProviderSettings();
-      final enabledTypes = await _loadEnabledTransactionTypes();
-      final senderIdMap = await _loadSenderIdMap();
-
-      return _PreferencesSnapshot(
-        listeningEnabled: listeningEnabled,
-        providerSettings: providerSettings,
-        enabledTransactionTypes: enabledTypes,
-        senderIdMap: senderIdMap,
-      );
-    } on SmsPreferencesLoadException {
-      rethrow;
-    } catch (error, stackTrace) {
-      throw SmsPreferencesLoadException(
-        'Failed to load SMS preferences snapshot.',
-        error,
-        stackTrace,
-      );
-    }
-  }
-
-  static final _PreferencesSnapshot _disabledSnapshot = _PreferencesSnapshot(
-    listeningEnabled: false,
-    providerSettings: const <Provider, bool>{},
-    enabledTransactionTypes: const <TransactionType>{},
-    senderIdMap: const <Provider, List<String>>{},
-  );
-
-  static _PreferencesSnapshot _emptySnapshot() => _disabledSnapshot;
-
-  static Future<Map<Provider, bool>> _loadProviderSettings() async {
-    try {
-      return await ProviderSettingsService.getProviderSettings();
-    } catch (error, stackTrace) {
-      throw SmsPreferencesLoadException(
-        'Failed to load provider settings.',
-        error,
-        stackTrace,
-      );
-    }
-  }
-
-  static Future<Set<TransactionType>> _loadEnabledTransactionTypes() async {
-    try {
-      return await CaptureSettingsService.getEnabledTransactionTypes();
-    } catch (error, stackTrace) {
-      throw SmsPreferencesLoadException(
-        'Failed to load transaction type settings.',
-        error,
-        stackTrace,
-      );
-    }
-  }
-
-  static Future<Map<Provider, List<String>>> _loadSenderIdMap() async {
-    try {
-      return await SenderIdSettingsService.getAllSenderIds();
-    } catch (error, stackTrace) {
-      throw SmsPreferencesLoadException(
-        'Failed to load sender IDs.',
-        error,
-        stackTrace,
-      );
-    }
-  }
-}
-
-class SmsPreferencesLoadException implements Exception {
-  SmsPreferencesLoadException(this.message, [this.cause, this.stackTrace]);
-
-  final String message;
-  final Object? cause;
-  final StackTrace? stackTrace;
-
-  @override
-  String toString() {
-    if (cause == null) {
-      return message;
-    }
-    return '$message: $cause';
   }
 }

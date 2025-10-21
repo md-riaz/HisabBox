@@ -1,7 +1,6 @@
 import 'package:hisabbox/models/transaction.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:hisabbox/services/sms_preferences_cache.dart';
 
 /// Manages the enabled/disabled state of SMS providers.
 ///
@@ -35,7 +34,6 @@ class ProviderSettingsService {
   ) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyFor(provider), enabled);
-    invalidateSmsPreferencesCache();
   }
 
   /// Loads the full provider preference map.
