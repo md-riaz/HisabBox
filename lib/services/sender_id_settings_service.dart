@@ -1,7 +1,6 @@
 import 'package:hisabbox/models/transaction.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:hisabbox/services/sms_preferences_cache.dart';
 
 /// Stores and retrieves the SMS sender identifiers used by each provider.
 ///
@@ -42,7 +41,6 @@ class SenderIdSettingsService {
     final normalized = _normalize(senderIds);
 
     await prefs.setStringList(_keyFor(provider), normalized);
-    invalidateSmsPreferencesCache();
     return normalized;
   }
 
