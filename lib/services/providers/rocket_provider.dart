@@ -3,6 +3,12 @@ import 'package:hisabbox/services/providers/provider_utils.dart';
 import 'package:hisabbox/services/providers/sms_provider.dart';
 
 class RocketProvider extends SmsProvider {
+  RocketProvider({Iterable<String>? senderIds})
+    : _senderIds = normalizeSenderIdSet(
+        senderIds ?? const <String>[],
+        defaultSenderIds,
+      );
+
   /// Matches outgoing Rocket transfers like
   /// "Tk 800.00 sent to 017XXXXXXXX. TxnID ABC123".
   static final RegExp _sentPattern = RegExp(
@@ -22,7 +28,8 @@ class RocketProvider extends SmsProvider {
     caseSensitive: false,
   );
 
-  static const Set<String> _senderIds = {'rocket', '16216'};
+  static const List<String> defaultSenderIds = ['rocket', '16216'];
+  final Set<String> _senderIds;
 
   @override
   Provider get provider => Provider.rocket;

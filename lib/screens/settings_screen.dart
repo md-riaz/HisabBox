@@ -5,6 +5,7 @@ import 'package:hisabbox/controllers/transaction_controller.dart';
 import 'package:hisabbox/models/provider_extensions.dart';
 import 'package:hisabbox/models/transaction.dart';
 import 'package:hisabbox/models/transaction_type_extensions.dart';
+import 'package:hisabbox/services/sender_id_settings_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -19,6 +20,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late final SettingsController _settingsController;
   late final TransactionController _transactionController;
   late final Worker _webhookUrlWorker;
+  late final Worker _senderIdWorker;
+  final Map<Provider, TextEditingController> _senderIdControllers = {};
+  final Set<Provider> _savingSenderIds = <Provider>{};
 
   @override
   void initState() {
@@ -31,13 +35,109 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _webhookUrlController.text = value;
       }
     });
+    _senderIdWorker = ever<Map<Provider, List<String>>>(
+      _settingsController.senderIdSettings,
+      _syncSenderIdControllers,
+    );
+    _syncSenderIdControllers(_settingsController.senderIdSettings);
   }
 
   @override
   void dispose() {
     _webhookUrlController.dispose();
     _webhookUrlWorker.dispose();
+    _senderIdWorker.dispose();
+    for (final controller in _senderIdControllers.values) {
+      controller.dispose();
+    }
     super.dispose();
+  }
+
+  void _syncSenderIdControllers(Map<Provider, List<String>> values) {
+    for (final provider in SenderIdSettingsService.supportedProviders) {
+      final controller = _senderIdControllers.putIfAbsent(
+        provider,
+        () => TextEditingController(),
+      );
+      final text = (values[provider] ?? const <String>[]).join(', ');
+      if (controller.text != text) {
+        controller.text = text;
+      }
+    }
+  }
+
+  List<String> _extractSenderIds(String raw) {
+    return raw
+        .split(RegExp(r'[\n,]'))
+        .map((value) => value.trim())
+        .where((value) => value.isNotEmpty)
+        .toList(growable: false);
+  }
+
+  Future<void> _runProviderAction(
+    Provider provider,
+    Future<String> Function() action, {
+    required String Function(Object error) onError,
+  }) async {
+    setState(() {
+      _savingSenderIds.add(provider);
+    });
+
+    final messenger = ScaffoldMessenger.of(context);
+
+    try {
+      final successMessage = await action();
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(successMessage)));
+    } catch (error, stackTrace) {
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(content: Text(onError(error))));
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stackTrace,
+          library: 'settings_screen',
+          context: ErrorDescription('handling sender ID action for $provider'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _savingSenderIds.remove(provider);
+        });
+      }
+    }
+  }
+
+  Future<void> _saveSenderIds(Provider provider) async {
+    final controller = _senderIdControllers[provider];
+    if (controller == null) {
+      return;
+    }
+
+    await _runProviderAction(
+      provider,
+      () async {
+        final parsed = _extractSenderIds(controller.text);
+        await _settingsController.setSenderIds(provider, parsed);
+        return '${provider.displayName} sender IDs updated';
+      },
+      onError: (error) => 'Failed to update ${provider.displayName}: $error',
+    );
+  }
+
+  Future<void> _resetSenderIds(Provider provider) async {
+    await _runProviderAction(
+      provider,
+      () async {
+        await _settingsController.resetSenderIds(provider);
+        final defaults = SenderIdSettingsService.defaultSenderIdsFor(
+          provider,
+        ).join(', ');
+        return 'Restored defaults: $defaults';
+      },
+      onError: (error) => 'Failed to reset ${provider.displayName}: $error',
+    );
   }
 
   Future<void> _testWebhook() async {
@@ -97,20 +197,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   style: textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  'Headers',
-                  style: textTheme.titleMedium,
-                ),
+                Text('Headers', style: textTheme.titleMedium),
                 const SizedBox(height: 8),
                 Text(
                   '• Content-Type: application/json',
                   style: textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  'Payload fields',
-                  style: textTheme.titleMedium,
-                ),
+                Text('Payload fields', style: textTheme.titleMedium),
                 const SizedBox(height: 8),
                 for (final field in payloadFields)
                   Padding(
@@ -118,20 +212,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: Text('• $field', style: textTheme.bodyMedium),
                   ),
                 const SizedBox(height: 12),
-                Text(
-                  'Success criteria',
-                  style: textTheme.titleMedium,
-                ),
+                Text('Success criteria', style: textTheme.titleMedium),
                 const SizedBox(height: 8),
                 Text(
                   'Your server should reply with an HTTP 2xx status code. Any other response or network error will make HisabBox retry automatically with exponential backoff until delivery succeeds.',
                   style: textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  'Test requests',
-                  style: textTheme.titleMedium,
-                ),
+                Text('Test requests', style: textTheme.titleMedium),
                 const SizedBox(height: 8),
                 Text(
                   'The "Test Webhook" button sends {"test": true, "timestamp": "..."} so you can verify connectivity without storing a transaction.',
@@ -267,6 +355,118 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
+                      'Sender ID Configuration',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Update the sender IDs used to detect messages for each provider. '
+                      'Separate multiple IDs with commas or new lines.',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: 16),
+                    for (
+                      int index = 0;
+                      index < SenderIdSettingsService.supportedProviders.length;
+                      index++
+                    )
+                      Builder(
+                        builder: (context) {
+                          final provider =
+                              SenderIdSettingsService.supportedProviders[index];
+                          final controller = _senderIdControllers.putIfAbsent(
+                            provider,
+                            () => TextEditingController(),
+                          );
+                          final isSaving = _savingSenderIds.contains(provider);
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    provider.glyph,
+                                    color: provider.accentColor,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    provider.displayName,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleMedium,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              TextField(
+                                controller: controller,
+                                minLines: 1,
+                                maxLines: 3,
+                                decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
+                                  labelText: 'Sender IDs',
+                                  helperText:
+                                      'Example: 16247, bkash, bkash-alerts',
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: Wrap(
+                                  spacing: 8,
+                                  children: [
+                                    TextButton.icon(
+                                      onPressed: isSaving
+                                          ? null
+                                          : () => _resetSenderIds(provider),
+                                      icon: const Icon(Icons.restart_alt),
+                                      label: const Text('Reset'),
+                                    ),
+                                    FilledButton.icon(
+                                      onPressed: isSaving
+                                          ? null
+                                          : () => _saveSenderIds(provider),
+                                      icon: isSaving
+                                          ? const SizedBox(
+                                              width: 16,
+                                              height: 16,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                          : const Icon(Icons.save),
+                                      label: Text(
+                                        isSaving ? 'Saving…' : 'Save Changes',
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (index <
+                                  SenderIdSettingsService
+                                          .supportedProviders
+                                          .length -
+                                      1)
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 16.0),
+                                  child: Divider(height: 1),
+                                ),
+                            ],
+                          );
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
                       'Provider Control',
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
@@ -276,28 +476,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 16),
-                    ...providerSettings.entries
-                        .where((entry) => entry.key != Provider.other)
-                        .map((entry) {
-                      final providerType = entry.key;
-                      final isEnabled = entry.value;
-                      return SwitchListTile(
+                    for (final providerType
+                        in SenderIdSettingsService.supportedProviders)
+                      SwitchListTile(
                         title: Text(providerType.displayName),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              isEnabled
+                              providerSettings[providerType] ?? false
                                   ? 'Enabled — transactions will be recorded'
                                   : 'Disabled — SMS will be ignored',
                             ),
                             const SizedBox(height: 4),
                             Text(
                               providerType.matchingDescription,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
+                              style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(color: Colors.grey.shade600),
                             ),
                           ],
@@ -306,7 +501,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           providerType.glyph,
                           color: providerType.accentColor,
                         ),
-                        value: isEnabled,
+                        value: providerSettings[providerType] ?? false,
                         onChanged: (value) async {
                           final scaffoldMessenger = ScaffoldMessenger.of(
                             context,
@@ -330,8 +525,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                           );
                         },
-                      );
-                    }),
+                      ),
                   ],
                 ),
               ),

@@ -3,9 +3,14 @@ import 'package:hisabbox/services/providers/provider_utils.dart';
 import 'package:hisabbox/services/providers/sms_provider.dart';
 
 abstract class BankSmsProvider extends SmsProvider {
-  BankSmsProvider(this._provider);
+  BankSmsProvider(
+    this._provider,
+    Iterable<String> senderIds,
+    Iterable<String> fallbackSenderIds,
+  ) : _senderIds = normalizeSenderIdSet(senderIds, fallbackSenderIds);
 
   final Provider _provider;
+  final Set<String> _senderIds;
 
   static final RegExp _debitPattern = RegExp(
     r'(?:Debit|Debited|Withdrawn|Dr).*?(?:BDT|Tk|TK)\s?([\d,]+\.?\d*)',
@@ -20,7 +25,7 @@ abstract class BankSmsProvider extends SmsProvider {
   @override
   Provider get provider => _provider;
 
-  Set<String> get senderIds;
+  Set<String> get senderIds => _senderIds;
 
   List<RegExp> get bodyIdentifiers;
 

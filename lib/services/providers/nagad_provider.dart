@@ -3,6 +3,12 @@ import 'package:hisabbox/services/providers/provider_utils.dart';
 import 'package:hisabbox/services/providers/sms_provider.dart';
 
 class NagadProvider extends SmsProvider {
+  NagadProvider({Iterable<String>? senderIds})
+    : _senderIds = normalizeSenderIdSet(
+        senderIds ?? const <String>[],
+        defaultSenderIds,
+      );
+
   /// Matches customer transfers such as
   /// "Send Money Tk 1,200.00 to 018XXXXXXXX. Trx ID ABC123".
   static final RegExp _sentPattern = RegExp(
@@ -22,7 +28,8 @@ class NagadProvider extends SmsProvider {
     caseSensitive: false,
   );
 
-  static const Set<String> _senderIds = {'nagad', '16167'};
+  static const List<String> defaultSenderIds = ['nagad', '16167'];
+  final Set<String> _senderIds;
 
   @override
   Provider get provider => Provider.nagad;

@@ -11,8 +11,10 @@ class ProviderSettingsService {
 
   /// Returns whether a provider is enabled by default when no preference has
   /// been stored yet.
-  static bool isDefaultEnabled(Provider provider) =>
-      provider == Provider.bkash;
+  ///
+  /// Only bKash starts enabled out of the box so the app behaves like legacy
+  /// installs until users explicitly opt into other providers.
+  static bool isDefaultEnabled(Provider provider) => provider == Provider.bkash;
 
   /// Returns whether [provider] is currently enabled.
   ///
@@ -57,5 +59,4 @@ class ProviderSettingsService {
 
   static String _keyFor(Provider provider) =>
       '$_providerPrefix${provider.name}';
-
 }

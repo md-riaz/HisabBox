@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:hisabbox/models/transaction.dart';
 import 'package:hisabbox/services/capture_settings_service.dart';
 import 'package:hisabbox/services/provider_settings_service.dart';
+import 'package:hisabbox/services/sender_id_settings_service.dart';
 import 'package:hisabbox/services/sms_service.dart';
 import 'package:hisabbox/services/webhook_service.dart';
 
@@ -17,6 +18,8 @@ class SettingsController extends GetxController {
     for (final type in TransactionType.values)
       type: CaptureSettingsService.defaultEnabledTypes.contains(type),
   }.obs;
+  final RxMap<Provider, List<String>> senderIdSettings =
+      <Provider, List<String>>{}.obs;
 
   @override
   void onInit() {
@@ -35,6 +38,7 @@ class SettingsController extends GetxController {
     providerSettings.assignAll(
       await ProviderSettingsService.getProviderSettings(),
     );
+    senderIdSettings.assignAll(await SenderIdSettingsService.getAllSenderIds());
     smsListeningEnabled.value =
         await CaptureSettingsService.isSmsListeningEnabled();
     transactionTypeSettings.assignAll(
@@ -94,5 +98,18 @@ class SettingsController extends GetxController {
   Future<bool> testWebhook() async {
     if (webhookUrl.isEmpty) return false;
     return WebhookService.testWebhook(webhookUrl.value);
+  }
+
+  Future<void> setSenderIds(Provider provider, List<String> senderIds) async {
+    final updated = await SenderIdSettingsService.setSenderIds(
+      provider,
+      senderIds,
+    );
+    senderIdSettings[provider] = updated;
+  }
+
+  Future<void> resetSenderIds(Provider provider) async {
+    final updated = await SenderIdSettingsService.resetToDefault(provider);
+    senderIdSettings[provider] = updated;
   }
 }

@@ -136,25 +136,57 @@ class _ImportScreenState extends State<ImportScreen> {
                       onChanged: (v) => setState(() => _syncToWebhook = v),
                       title: const Text('Sync imported SMS to webhook'),
                       subtitle: const Text(
-                          'If enabled, imported transactions will be sent to your configured webhook immediately.'),
+                        'If enabled, imported transactions will be sent to your configured webhook immediately.',
+                      ),
                     ),
                     const SizedBox(height: 8),
-                    ElevatedButton.icon(
+                    ElevatedButton(
                       onPressed: _isImporting ? null : _importSms,
-                      icon: _isImporting
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.file_download_rounded),
-                      label: Text(_isImporting ? 'Importing...' : 'Import SMS'),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                         elevation: 4,
+                      ),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        transitionBuilder:
+                            (Widget child, Animation<double> animation) {
+                              return FadeTransition(
+                                opacity: animation,
+                                child: SizeTransition(
+                                  sizeFactor: animation,
+                                  axis: Axis.horizontal,
+                                  child: child,
+                                ),
+                              );
+                            },
+                        child: _isImporting
+                            ? Row(
+                                key: const ValueKey('importing'),
+                                mainAxisSize: MainAxisSize.min,
+                                children: const [
+                                  SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                  SizedBox(width: 12),
+                                  Text('Importing…'),
+                                ],
+                              )
+                            : Row(
+                                key: const ValueKey('idle'),
+                                mainAxisSize: MainAxisSize.min,
+                                children: const [
+                                  Icon(Icons.file_download_rounded),
+                                  SizedBox(width: 12),
+                                  Text('Import SMS'),
+                                ],
+                              ),
                       ),
                     ),
                   ],
@@ -172,7 +204,7 @@ class _ImportScreenState extends State<ImportScreen> {
                     SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'This will scan your SMS inbox for financial transactions from bKash, Nagad, Rocket, and banks.',
+                        'This will scan your SMS inbox for financial transactions from bKash, Nagad, Rocket, and BRAC Bank.',
                         style: TextStyle(color: Colors.blue),
                       ),
                     ),

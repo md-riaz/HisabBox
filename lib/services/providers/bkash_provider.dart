@@ -3,6 +3,12 @@ import 'package:hisabbox/services/providers/provider_utils.dart';
 import 'package:hisabbox/services/providers/sms_provider.dart';
 
 class BkashProvider extends SmsProvider {
+  BkashProvider({Iterable<String>? senderIds})
+    : _senderIds = normalizeSenderIdSet(
+        senderIds ?? const <String>[],
+        defaultSenderIds,
+      );
+
   /// Matches customer-to-customer transfers such as
   /// "You have sent Tk 1,500.00 to 017XXXXXXXX. TrxID ABC123".
   static final RegExp _sentPattern = RegExp(
@@ -53,7 +59,8 @@ class BkashProvider extends SmsProvider {
     dotAll: true,
   );
 
-  static const Set<String> _senderIds = {'bkash', '16247'};
+  static const List<String> defaultSenderIds = ['bkash', '16247'];
+  final Set<String> _senderIds;
 
   @override
   Provider get provider => Provider.bkash;
@@ -130,22 +137,10 @@ class BkashProvider extends SmsProvider {
       final recipientMatch = _paymentRecipientPattern.firstMatch(message);
       final rawRecipient = recipientMatch?.group(1)?.trim();
       final recipient = rawRecipient
-          ?.replaceAll(
-            RegExp(r'\sis successful$', caseSensitive: false),
-            '',
-          )
-          .replaceAll(
-            RegExp(r'\swas successful$', caseSensitive: false),
-            '',
-          )
-          .replaceAll(
-            RegExp(r'\ssuccessfully$', caseSensitive: false),
-            '',
-          )
-          .replaceAll(
-            RegExp(r'\ssuccessful$', caseSensitive: false),
-            '',
-          )
+          ?.replaceAll(RegExp(r'\sis successful$', caseSensitive: false), '')
+          .replaceAll(RegExp(r'\swas successful$', caseSensitive: false), '')
+          .replaceAll(RegExp(r'\ssuccessfully$', caseSensitive: false), '')
+          .replaceAll(RegExp(r'\ssuccessful$', caseSensitive: false), '')
           .trim();
       return buildTransaction(
         provider: provider,
