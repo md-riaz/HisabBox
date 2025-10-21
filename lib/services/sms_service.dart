@@ -54,66 +54,77 @@ class SmsService {
   void _onNewMessage(SmsMessage message) {
     // Handle SMS in foreground
     unawaited(
-      _processMessage(message).catchError(
-        (Object error, StackTrace stackTrace) {
-          debugPrint('Failed to process foreground SMS: $error');
-          debugPrintStack(stackTrace: stackTrace);
-        },
-      ),
+      _processMessage(message),
     );
   }
 
   static Future<bool> _processMessage(SmsMessage message) async {
-    final listeningEnabled =
-        await CaptureSettingsService.isSmsListeningEnabled();
-    if (!listeningEnabled) {
-      return false;
-    }
-
-    final address = message.address ?? '';
-    final body = message.body ?? '';
-    final timestamp = message.date != null
-        ? DateTime.fromMillisecondsSinceEpoch(message.date!)
-        : DateTime.now();
-
-    // Parse the SMS
-    final enabledProviders =
-        await ProviderSettingsService.getEnabledProviders();
-    if (enabledProviders.isEmpty) {
-      return false;
-    }
-
-    final Transaction? transaction = await BaseSmsProvider.parse(
-      address,
-      body,
-      timestamp,
-      enabledProviders: enabledProviders,
-    );
-
-    // Save to database if it's a valid transaction
-    if (transaction != null) {
-      final typeEnabled = await CaptureSettingsService.isTransactionTypeEnabled(
-        transaction.type,
-      );
-      if (!typeEnabled) {
+    try {
+      final listeningEnabled =
+          await CaptureSettingsService.isSmsListeningEnabled();
+      if (!listeningEnabled) {
         return false;
       }
 
-      final isEnabled = await ProviderSettingsService.isProviderEnabled(
-        transaction.provider,
-      );
-      if (!isEnabled) {
+      final address = message.address ?? '';
+      final body = message.body ?? '';
+      final timestamp = message.date != null
+          ? DateTime.fromMillisecondsSinceEpoch(message.date!)
+          : DateTime.now();
+
+      // Parse the SMS
+      final enabledProviders =
+          await ProviderSettingsService.getEnabledProviders();
+      if (enabledProviders.isEmpty) {
         return false;
       }
 
-      try {
-        await DatabaseService.instance.insertTransaction(transaction);
-        await WebhookService.processNewTransaction(transaction);
+      final Transaction? transaction = await BaseSmsProvider.parse(
+        address,
+        body,
+        timestamp,
+        enabledProviders: enabledProviders,
+      );
+
+      // Save to database if it's a valid transaction
+      if (transaction != null) {
+        final typeEnabled =
+            await CaptureSettingsService.isTransactionTypeEnabled(
+          transaction.type,
+        );
+        if (!typeEnabled) {
+          return false;
+        }
+
+        final isEnabled = await ProviderSettingsService.isProviderEnabled(
+          transaction.provider,
+        );
+        if (!isEnabled) {
+          return false;
+        }
+
+        try {
+          await DatabaseService.instance.insertTransaction(transaction);
+        } catch (error, stackTrace) {
+          debugPrint('Failed to persist transaction from SMS: $error');
+          debugPrintStack(stackTrace: stackTrace);
+          return false;
+        }
+
+        try {
+          await WebhookService.processNewTransaction(transaction);
+        } catch (error, stackTrace) {
+          debugPrint(
+            'Failed to process webhook for SMS transaction: $error',
+          );
+          debugPrintStack(stackTrace: stackTrace);
+        }
+
         return true;
-      } catch (error, stackTrace) {
-        debugPrint('Failed to persist transaction from SMS: $error');
-        debugPrintStack(stackTrace: stackTrace);
       }
+    } catch (error, stackTrace) {
+      debugPrint('Failed to process SMS message: $error');
+      debugPrintStack(stackTrace: stackTrace);
     }
 
     return false;
@@ -148,7 +159,12 @@ class SmsService {
       }
     }
 
-    if (syncImported && importedAny) {
+    if (syncImported) {
+      if (!importedAny) {
+        debugPrint(
+          'Forced webhook sync requested after SMS import with no new transactions.',
+        );
+      }
       try {
         await WebhookService.syncTransactionsForce();
       } catch (_) {
