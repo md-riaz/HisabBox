@@ -62,8 +62,11 @@ class SmsService {
         : DateTime.now();
 
     // Parse the SMS
-    final Transaction? transaction =
-        BaseSmsProvider.parse(address, body, timestamp);
+    final Transaction? transaction = await BaseSmsProvider.parse(
+      address,
+      body,
+      timestamp,
+    );
 
     // Save to database if it's a valid transaction
     if (transaction != null) {

@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisabbox/controllers/transaction_controller.dart';
 import 'package:hisabbox/models/transaction.dart';
+import 'package:hisabbox/services/capture_settings_service.dart';
 import 'package:hisabbox/services/database_service.dart';
 import 'package:sqflite/sqflite.dart' as sqflite;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart' as sqflite_ffi;
@@ -51,7 +52,10 @@ void main() {
     addTearDown(controller.dispose);
 
     await controller.loadTransactions(limit: 10);
-    expect(controller.transactions.length, transactions.length);
+    expect(
+      controller.transactions.length,
+      CaptureSettingsService.defaultEnabledTypes.length,
+    );
 
     await controller.setSelectedTransactionTypes([TransactionType.received]);
     expect(controller.selectedTransactionTypes.toList(), [

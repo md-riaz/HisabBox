@@ -3,9 +3,14 @@ import 'package:hisabbox/services/providers/provider_utils.dart';
 import 'package:hisabbox/services/providers/sms_provider.dart';
 
 abstract class BankSmsProvider extends SmsProvider {
-  BankSmsProvider(this._provider);
+  BankSmsProvider(
+    this._provider,
+    Iterable<String> senderIds,
+    Iterable<String> fallbackSenderIds,
+  ) : _senderIds = _normaliseSenderIds(senderIds, fallbackSenderIds);
 
   final Provider _provider;
+  final Set<String> _senderIds;
 
   static final RegExp _debitPattern = RegExp(
     r'(?:Debit|Debited|Withdrawn|Dr).*?(?:BDT|Tk|TK)\s?([\d,]+\.?\d*)',
@@ -20,7 +25,7 @@ abstract class BankSmsProvider extends SmsProvider {
   @override
   Provider get provider => _provider;
 
-  Set<String> get senderIds;
+  Set<String> get senderIds => _senderIds;
 
   List<RegExp> get bodyIdentifiers;
 
@@ -69,4 +74,27 @@ abstract class BankSmsProvider extends SmsProvider {
 
     return null;
   }
+}
+
+Set<String> _normaliseSenderIds(
+  Iterable<String> values,
+  Iterable<String> fallback,
+) {
+  final normalised = _sanitize(values);
+  if (normalised.isNotEmpty) {
+    return normalised;
+  }
+  return _sanitize(fallback);
+}
+
+Set<String> _sanitize(Iterable<String> values) {
+  final result = <String>{};
+  for (final value in values) {
+    final trimmed = value.trim().toLowerCase();
+    if (trimmed.isEmpty) {
+      continue;
+    }
+    result.add(trimmed);
+  }
+  return result;
 }

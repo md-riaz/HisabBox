@@ -107,11 +107,11 @@ object.
 - `message`: String - SMS message body
 - `timestamp`: DateTime - Message timestamp
 
-**Returns:** `Transaction?` - Parsed transaction or null if not recognized
+**Returns:** `Future<Transaction?>` - Parsed transaction or null if not recognized
 
 **Example:**
 ```dart
-final transaction = BaseSmsProvider.parse(
+final transaction = await BaseSmsProvider.parse(
   'bKash',
   'You have sent Tk1,500.00 to 01712345678. TrxID ABC123',
   DateTime.now(),
@@ -478,8 +478,8 @@ class MockDatabaseService extends DatabaseService {
 ### Testing Base SMS Provider
 
 ```dart
-test('parses bKash sent transaction', () {
-  final transaction = BaseSmsProvider.parse(
+test('parses bKash sent transaction', () async {
+  final transaction = await BaseSmsProvider.parse(
     'bKash',
     'You have sent Tk1,500.00 to 01712345678. TrxID ABC123',
     DateTime.now(),

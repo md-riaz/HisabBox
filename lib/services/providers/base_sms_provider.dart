@@ -1,40 +1,27 @@
 import 'package:hisabbox/models/transaction.dart';
-import 'package:hisabbox/services/providers/bank/bank_asia_provider.dart';
 import 'package:hisabbox/services/providers/bank/brac_bank_provider.dart';
-import 'package:hisabbox/services/providers/bank/city_bank_provider.dart';
-import 'package:hisabbox/services/providers/bank/dutch_bangla_bank_provider.dart';
-import 'package:hisabbox/services/providers/bank/islami_bank_provider.dart';
 import 'package:hisabbox/services/providers/bkash_provider.dart';
 import 'package:hisabbox/services/providers/nagad_provider.dart';
 import 'package:hisabbox/services/providers/rocket_provider.dart';
 import 'package:hisabbox/services/providers/sms_provider.dart';
+import 'package:hisabbox/services/sender_id_settings_service.dart';
 
 /// Coordinates SMS parsing by delegating to the appropriate [SmsProvider]
 /// implementation based on the message sender and body.
 abstract final class BaseSmsProvider {
-
-  static final List<SmsProvider> _providers = [
-    BkashProvider(),
-    NagadProvider(),
-    RocketProvider(),
-    DutchBanglaBankProvider(),
-    BracBankProvider(),
-    CityBankProvider(),
-    BankAsiaProvider(),
-    IslamiBankProvider(),
-  ];
-
   /// Parses an incoming SMS into a [Transaction] by selecting the matching
   /// provider and delegating the extraction work.
-  static Transaction? parse(
+  static Future<Transaction?> parse(
     String address,
     String message,
     DateTime timestamp,
-  ) {
+  ) async {
     final trimmedAddress = address.trim();
     final trimmedMessage = message.trim();
+    final senderIdMap = await SenderIdSettingsService.getAllSenderIds();
+    final providers = _buildProviders(senderIdMap);
 
-    for (final provider in _providers) {
+    for (final provider in providers) {
       if (!provider.matches(trimmedAddress, trimmedMessage)) {
         continue;
       }
@@ -51,5 +38,28 @@ abstract final class BaseSmsProvider {
     }
 
     return null;
+  }
+
+  static List<SmsProvider> _buildProviders(
+    Map<Provider, List<String>> senderIdMap,
+  ) {
+    return [
+      BkashProvider(
+        senderIds:
+            senderIdMap[Provider.bkash] ?? BkashProvider.defaultSenderIds,
+      ),
+      NagadProvider(
+        senderIds:
+            senderIdMap[Provider.nagad] ?? NagadProvider.defaultSenderIds,
+      ),
+      RocketProvider(
+        senderIds:
+            senderIdMap[Provider.rocket] ?? RocketProvider.defaultSenderIds,
+      ),
+      BracBankProvider(
+        senderIds:
+            senderIdMap[Provider.bracBank] ?? BracBankProvider.defaultSenderIds,
+      ),
+    ];
   }
 }
