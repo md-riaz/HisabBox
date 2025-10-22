@@ -22,21 +22,19 @@ class ProviderSettingsService {
       supportedProviders.contains(provider);
 
   /// Returns whether a provider is enabled by default when no preference has
-  /// been stored yet.
-  ///
-  /// Only bKash starts enabled out of the box so the app behaves like legacy
-  /// installs until users explicitly opt into other providers.
+  /// been stored yet. Supported providers start enabled so new installs capture
+  /// messages immediately.
   static bool isDefaultEnabled(Provider provider) {
     if (!isSupported(provider)) {
       return false;
     }
-    return provider == Provider.bkash;
+    return true;
   }
 
   /// Returns whether [provider] is currently enabled.
   ///
-  /// Defaults to [isDefaultEnabled] so bKash starts enabled while other
-  /// providers stay disabled until explicitly toggled by the user.
+  /// Defaults to [isDefaultEnabled] so supported providers stay active unless
+  /// the user explicitly toggles them off.
   static Future<bool> isProviderEnabled(Provider provider) async {
     if (!isSupported(provider)) {
       return false;
@@ -52,13 +50,11 @@ class ProviderSettingsService {
     Provider provider,
     bool enabled,
   ) async {
-    final prefs = await SharedPreferences.getInstance();
-
     if (!isSupported(provider)) {
-      await prefs.remove(_keyFor(provider));
       return;
     }
 
+    final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyFor(provider), enabled);
   }
 
@@ -69,10 +65,6 @@ class ProviderSettingsService {
 
     for (final provider in Provider.values) {
       if (!isSupported(provider)) {
-        final key = _keyFor(provider);
-        if (prefs.containsKey(key)) {
-          await prefs.remove(key);
-        }
         result[provider] = false;
         continue;
       }

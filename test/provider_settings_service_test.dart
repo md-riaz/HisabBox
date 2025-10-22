@@ -10,26 +10,21 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  test('only bKash is enabled by default', () async {
+  test('supported providers are enabled by default', () async {
     final settings = await ProviderSettingsService.getProviderSettings();
 
-    expect(settings[Provider.bkash], isTrue);
+    for (final provider in ProviderSettingsService.supportedProviders) {
+      expect(settings[provider], isTrue);
+    }
 
     for (final provider in Provider.values.where(
-      (provider) => provider != Provider.bkash,
+      (provider) => !ProviderSettingsService.isSupported(provider),
     )) {
       expect(settings[provider], isFalse);
     }
   });
 
   test('provider toggle is persisted', () async {
-    expect(
-      await ProviderSettingsService.isProviderEnabled(Provider.nagad),
-      isFalse,
-    );
-
-    await ProviderSettingsService.setProviderEnabled(Provider.nagad, true);
-
     expect(
       await ProviderSettingsService.isProviderEnabled(Provider.nagad),
       isTrue,
@@ -40,6 +35,13 @@ void main() {
     expect(
       await ProviderSettingsService.isProviderEnabled(Provider.nagad),
       isFalse,
+    );
+
+    await ProviderSettingsService.setProviderEnabled(Provider.nagad, true);
+
+    expect(
+      await ProviderSettingsService.isProviderEnabled(Provider.nagad),
+      isTrue,
     );
   });
 
