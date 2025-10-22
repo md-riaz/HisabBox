@@ -35,8 +35,8 @@ class ProviderSettingsService {
 
   /// Returns whether [provider] is currently enabled.
   ///
-  /// Defaults to [isDefaultEnabled] so supported providers stay active unless
-  /// the user explicitly toggles them off.
+  /// Defaults to [isDefaultEnabled] so bKash starts enabled while other
+  /// supported providers remain disabled until a user opts into them.
   static Future<bool> isProviderEnabled(Provider provider) async {
     if (!isSupported(provider)) {
       return false;
