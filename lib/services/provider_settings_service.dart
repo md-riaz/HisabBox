@@ -22,13 +22,15 @@ class ProviderSettingsService {
       supportedProviders.contains(provider);
 
   /// Returns whether a provider is enabled by default when no preference has
-  /// been stored yet. Supported providers start enabled so new installs capture
-  /// messages immediately.
+  /// been stored yet.
+  ///
+  /// Fresh installs only enable bKash so the app can operate in a
+  /// privacy-preserving mode until the user explicitly opts other providers in.
   static bool isDefaultEnabled(Provider provider) {
     if (!isSupported(provider)) {
       return false;
     }
-    return true;
+    return provider == Provider.bkash;
   }
 
   /// Returns whether [provider] is currently enabled.
