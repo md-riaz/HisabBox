@@ -42,4 +42,16 @@ void main() {
       isFalse,
     );
   });
+
+  test('unsupported providers stay disabled', () async {
+    await ProviderSettingsService.setProviderEnabled(Provider.cityBank, true);
+
+    expect(
+      await ProviderSettingsService.isProviderEnabled(Provider.cityBank),
+      isFalse,
+    );
+
+    final settings = await ProviderSettingsService.getProviderSettings();
+    expect(settings[Provider.cityBank], isFalse);
+  });
 }

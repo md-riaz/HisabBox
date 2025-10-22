@@ -4,8 +4,8 @@ import 'package:get/get.dart';
 import 'package:hisabbox/controllers/settings_controller.dart';
 import 'package:hisabbox/controllers/transaction_controller.dart';
 import 'package:hisabbox/models/provider_extensions.dart';
-import 'package:hisabbox/models/transaction.dart';
 import 'package:hisabbox/models/transaction_type_extensions.dart';
+import 'package:hisabbox/services/provider_settings_service.dart';
 import 'package:hisabbox/widgets/sender_id_config_modal.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -21,17 +21,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late final SettingsController _settingsController;
   late final TransactionController _transactionController;
   late final Worker _webhookUrlWorker;
-
-  static const List<Provider> _providerToggleOrder = <Provider>[
-    Provider.bkash,
-    Provider.nagad,
-    Provider.rocket,
-    Provider.dutchBanglaBank,
-    Provider.bracBank,
-    Provider.cityBank,
-    Provider.bankAsia,
-    Provider.islamiBank,
-  ];
 
   @override
   void initState() {
@@ -718,7 +707,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 16),
-                    for (final providerType in _providerToggleOrder)
+                    for (final providerType
+                        in ProviderSettingsService.supportedProviders)
                       SwitchListTile(
                         title: Text(providerType.displayName),
                         subtitle: Column(
