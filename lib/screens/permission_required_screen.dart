@@ -113,6 +113,12 @@ class _PermissionRequiredScreenState extends State<PermissionRequiredScreen>
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
+            Text(
+              'To parse bKash/Nagad/Rocket SMS on this device and send only to your own webhook, allow SMS access.',
+              style: theme.textTheme.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
 
             // Required Permissions Card
             Card(
