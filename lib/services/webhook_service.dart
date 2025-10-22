@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 import 'package:hisabbox/models/transaction.dart';
 import 'package:hisabbox/services/database_service.dart';
+import 'package:hisabbox/services/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 
@@ -77,6 +79,17 @@ class WebhookService {
   }
 
   static Future<bool> syncTransactions() async {
+    return _syncTransactionsInternal();
+  }
+
+  /// Force a sync attempt for imports or manual requests.
+  /// This will ignore the auto-sync preference and attempt to send unsynced
+  /// transactions if the webhook is enabled and configured.
+  static Future<bool> syncTransactionsForce() async {
+    return _syncTransactionsInternal();
+  }
+
+  static Future<bool> _syncTransactionsInternal() async {
     final enabled = await isWebhookEnabled();
     if (!enabled) return true;
 
@@ -90,45 +103,31 @@ class WebhookService {
       return true;
     }
 
-    for (final transaction in unsyncedTransactions) {
-      try {
-        await _sendTransaction(url, transaction);
-        await DatabaseService.instance.markAsSynced(transaction.id);
-      } catch (e) {
-        // ignore: avoid_print
-        print('Error syncing transaction ${transaction.id}: $e');
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  /// Force a sync attempt for imports or manual requests.
-  /// This will ignore the auto-sync preference and attempt to send unsynced
-  /// transactions if the webhook is enabled and configured.
-  static Future<bool> syncTransactionsForce() async {
-    final enabled = await isWebhookEnabled();
-    if (!enabled) return true;
-
-    final url = await getWebhookUrl();
-    if (url == null || url.isEmpty) return true;
-
-    final unsyncedTransactions =
-        await DatabaseService.instance.getUnsyncedTransactions();
-
-    if (unsyncedTransactions.isEmpty) return true;
+    final totalTransactions = unsyncedTransactions.length;
+    var successfulTransactions = 0;
 
     for (final transaction in unsyncedTransactions) {
       try {
         await _sendTransaction(url, transaction);
         await DatabaseService.instance.markAsSynced(transaction.id);
+        successfulTransactions++;
       } catch (e) {
         // ignore: avoid_print
         print('Error syncing transaction ${transaction.id}: $e');
+        await NotificationService.showWebhookSummaryNotification(
+          success: false,
+          totalTransactions: totalTransactions,
+          successfulTransactions: successfulTransactions,
+        );
         return false;
       }
     }
+
+    await NotificationService.showWebhookSummaryNotification(
+      success: true,
+      totalTransactions: totalTransactions,
+      successfulTransactions: successfulTransactions,
+    );
 
     return true;
   }
@@ -180,6 +179,8 @@ class WebhookService {
 void webhookCallbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     WidgetsFlutterBinding.ensureInitialized();
+    DartPluginRegistrant.ensureInitialized();
+    await NotificationService.initialize();
     final attempt = (inputData?['attempt'] as int?) ?? 0;
     final success = await WebhookService.syncTransactions();
     if (!success) {

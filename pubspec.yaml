@@ -34,7 +34,10 @@ dependencies:
   
   # Background Processing
   workmanager: ^0.9.0+3
-  
+
+  # Notifications
+  flutter_local_notifications: ^17.1.2
+
   # JSON
   json_annotation: ^4.9.0
   

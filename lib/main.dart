@@ -10,6 +10,7 @@ import 'package:hisabbox/services/sms_service.dart';
 import 'package:hisabbox/services/permission_service.dart';
 import 'package:hisabbox/services/webhook_service.dart';
 import 'package:hisabbox/services/pin_lock_service.dart';
+import 'package:hisabbox/services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,6 +38,7 @@ void main() async {
 Future<void> _initializeServicesAndControllers() async {
   await SmsService.instance.initialize();
   await WebhookService.initialize();
+  await NotificationService.initialize();
 
   if (!Get.isRegistered<TransactionController>()) {
     Get.put(TransactionController());
