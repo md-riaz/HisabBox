@@ -2,11 +2,6 @@
     <!-- SMS permissions for reading and receiving transaction messages -->
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
-    <uses-permission android:name="android.permission.SEND_SMS" />
-    
-    <!-- Location permission: Android 10+ automatically requests this with SMS permissions.
-         We don't use location data, but it's required by Android OS policy for SMS access. -->
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="28" />
     
     <!-- Network and background service permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -38,11 +33,19 @@
         
         <!-- SMS Receiver provided by another_telephony -->
         <receiver android:name="com.wimlog.another_telephony.sms.IncomingSmsReceiver"
-            android:permission="android.permission.BROADCAST_SMS" android:exported="true">
+            android:permission="android.permission.BROADCAST_SMS"
+            android:directBootAware="true"
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.provider.Telephony.SMS_RECEIVED"/>
             </intent-filter>
         </receiver>
+
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
 
         <meta-data
             android:name="flutterEmbedding"
