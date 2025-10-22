@@ -8,6 +8,7 @@ import 'package:hisabbox/screens/pin_lock_screen.dart';
 import 'package:hisabbox/services/database_service.dart';
 import 'package:hisabbox/services/sms_service.dart';
 import 'package:hisabbox/services/permission_service.dart';
+import 'package:hisabbox/services/notification_service.dart';
 import 'package:hisabbox/services/webhook_service.dart';
 import 'package:hisabbox/services/pin_lock_service.dart';
 
@@ -37,6 +38,7 @@ void main() async {
 Future<void> _initializeServicesAndControllers() async {
   await SmsService.instance.initialize();
   await WebhookService.initialize();
+  await NotificationService.instance.initialize();
 
   if (!Get.isRegistered<TransactionController>()) {
     Get.put(TransactionController());
@@ -74,6 +76,12 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
+      builder: (context, child) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          NotificationService.instance.consumePendingNavigation();
+        });
+        return child ?? const SizedBox.shrink();
+      },
       home: permissionsGranted
           ? (pinLockEnabled
               ? const PinLockScreen()

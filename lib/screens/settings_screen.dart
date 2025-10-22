@@ -5,7 +5,7 @@ import 'package:hisabbox/controllers/settings_controller.dart';
 import 'package:hisabbox/controllers/transaction_controller.dart';
 import 'package:hisabbox/models/provider_extensions.dart';
 import 'package:hisabbox/models/transaction_type_extensions.dart';
-import 'package:hisabbox/services/sender_id_settings_service.dart';
+import 'package:hisabbox/services/provider_settings_service.dart';
 import 'package:hisabbox/widgets/sender_id_config_modal.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -708,7 +708,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     const SizedBox(height: 16),
                     for (final providerType
-                        in SenderIdSettingsService.supportedProviders)
+                        in ProviderSettingsService.supportedProviders)
                       SwitchListTile(
                         title: Text(providerType.displayName),
                         subtitle: Column(

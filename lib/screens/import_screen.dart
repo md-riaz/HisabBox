@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hisabbox/controllers/transaction_controller.dart';
+import 'package:hisabbox/services/permission_service.dart';
 import 'package:hisabbox/services/sms_service.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class ImportScreen extends StatefulWidget {
   const ImportScreen({super.key});
@@ -50,6 +52,42 @@ class _ImportScreenState extends State<ImportScreen> {
   }
 
   Future<void> _importSms() async {
+    if (_isImporting) {
+      return;
+    }
+
+    final messenger = ScaffoldMessenger.of(context);
+
+    final permissionStatus =
+        await PermissionService.ensureSmsPermissionForImport();
+    final isGranted = permissionStatus == PermissionStatus.granted;
+    if (!isGranted) {
+      final permanentlyDenied =
+          permissionStatus == PermissionStatus.permanentlyDenied;
+      if (!mounted) {
+        return;
+      }
+
+      final message = permanentlyDenied
+          ? 'SMS history permission is turned off. Enable it from Android settings to import messages.'
+          : 'SMS history permission is required to import your inbox.';
+
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(message),
+          action: permanentlyDenied
+              ? SnackBarAction(
+                  label: 'Open settings',
+                  onPressed: () {
+                    PermissionService.openSettings();
+                  },
+                )
+              : null,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isImporting = true;
     });

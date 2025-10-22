@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'dart:math';
+import 'dart:ui' as ui;
 
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 import 'package:hisabbox/models/transaction.dart';
 import 'package:hisabbox/services/database_service.dart';
+import 'package:hisabbox/services/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 
@@ -78,30 +80,21 @@ class WebhookService {
 
   static Future<bool> syncTransactions() async {
     final enabled = await isWebhookEnabled();
-    if (!enabled) return true;
+    if (!enabled) {
+      await NotificationService.instance.cancelSyncNotification();
+      return true;
+    }
 
     final url = await getWebhookUrl();
-    if (url == null || url.isEmpty) return true;
+    if (url == null || url.isEmpty) {
+      await NotificationService.instance.cancelSyncNotification();
+      return true;
+    }
 
     final unsyncedTransactions =
         await DatabaseService.instance.getUnsyncedTransactions();
 
-    if (unsyncedTransactions.isEmpty) {
-      return true;
-    }
-
-    for (final transaction in unsyncedTransactions) {
-      try {
-        await _sendTransaction(url, transaction);
-        await DatabaseService.instance.markAsSynced(transaction.id);
-      } catch (e) {
-        // ignore: avoid_print
-        print('Error syncing transaction ${transaction.id}: $e');
-        return false;
-      }
-    }
-
-    return true;
+    return _sendPendingTransactions(url, unsyncedTransactions);
   }
 
   /// Force a sync attempt for imports or manual requests.
@@ -109,25 +102,48 @@ class WebhookService {
   /// transactions if the webhook is enabled and configured.
   static Future<bool> syncTransactionsForce() async {
     final enabled = await isWebhookEnabled();
-    if (!enabled) return true;
+    if (!enabled) {
+      await NotificationService.instance.cancelSyncNotification();
+      return true;
+    }
 
     final url = await getWebhookUrl();
-    if (url == null || url.isEmpty) return true;
+    if (url == null || url.isEmpty) {
+      await NotificationService.instance.cancelSyncNotification();
+      return true;
+    }
 
     final unsyncedTransactions =
         await DatabaseService.instance.getUnsyncedTransactions();
 
-    if (unsyncedTransactions.isEmpty) return true;
+    return _sendPendingTransactions(url, unsyncedTransactions);
+  }
 
-    for (final transaction in unsyncedTransactions) {
-      try {
-        await _sendTransaction(url, transaction);
-        await DatabaseService.instance.markAsSynced(transaction.id);
-      } catch (e) {
-        // ignore: avoid_print
-        print('Error syncing transaction ${transaction.id}: $e');
-        return false;
+  static Future<bool> _sendPendingTransactions(
+    String url,
+    List<Transaction> unsyncedTransactions,
+  ) async {
+    if (unsyncedTransactions.isEmpty) {
+      await NotificationService.instance.cancelSyncNotification();
+      return true;
+    }
+
+    await NotificationService.instance
+        .showSyncInProgress(pendingCount: unsyncedTransactions.length);
+
+    try {
+      for (final transaction in unsyncedTransactions) {
+        try {
+          await _sendTransaction(url, transaction);
+          await DatabaseService.instance.markAsSynced(transaction.id);
+        } catch (e) {
+          // ignore: avoid_print
+          print('Error syncing transaction ${transaction.id}: $e');
+          return false;
+        }
       }
+    } finally {
+      await NotificationService.instance.cancelSyncNotification();
     }
 
     return true;
@@ -180,6 +196,7 @@ class WebhookService {
 void webhookCallbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     WidgetsFlutterBinding.ensureInitialized();
+    ui.DartPluginRegistrant.ensureInitialized();
     final attempt = (inputData?['attempt'] as int?) ?? 0;
     final success = await WebhookService.syncTransactions();
     if (!success) {

@@ -18,6 +18,14 @@ class PermissionService {
     return smsStatus.isGranted && notificationStatus.isGranted;
   }
 
+  static Future<PermissionStatus> ensureSmsPermissionForImport() async {
+    final status = await Permission.sms.status;
+    if (status.isGranted) {
+      return status;
+    }
+    return Permission.sms.request();
+  }
+
   static Future<void> openSettings() async {
     await openAppSettings();
   }
