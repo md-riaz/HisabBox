@@ -56,6 +56,8 @@ class _ImportScreenState extends State<ImportScreen> {
       return;
     }
 
+    final messenger = ScaffoldMessenger.of(context);
+
     final permissionStatus =
         await PermissionService.ensureSmsPermissionForImport();
     final isGranted = permissionStatus == PermissionStatus.granted;
@@ -66,7 +68,6 @@ class _ImportScreenState extends State<ImportScreen> {
         return;
       }
 
-      final messenger = ScaffoldMessenger.of(context);
       final message = permanentlyDenied
           ? 'SMS history permission is turned off. Enable it from Android settings to import messages.'
           : 'SMS history permission is required to import your inbox.';

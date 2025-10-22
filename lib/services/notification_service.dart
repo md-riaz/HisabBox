@@ -2,13 +2,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:hisabbox/screens/dashboard_screen.dart';
+import 'package:hisabbox/screens/pin_lock_screen.dart';
+import 'package:hisabbox/services/pin_lock_service.dart';
 
 /// Centralized helper for foreground notifications.
 ///
 /// The application uses a persistent notification whenever webhook syncing is
 /// running so reviewers (and users) can immediately tell that background work
-/// is happening. Tapping the notification should jump straight into the
-/// dashboard so the latest totals are one tap away.
+/// is happening. Tapping the notification should return the user to the app
+/// while still honoring any PIN lock that has been configured.
 class NotificationService {
   NotificationService._();
 
@@ -25,7 +27,7 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
 
   bool _initialized = false;
-  bool _pendingDashboardNavigation = false;
+  bool _pendingNotificationNavigation = false;
   bool _pluginAvailable = true;
 
   /// Initializes the notification plugin and registers the sync channel.
@@ -43,8 +45,9 @@ class NotificationService {
       return;
     }
 
-    const initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const initializationSettingsAndroid = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const initializationSettings = InitializationSettings(
       android: initializationSettingsAndroid,
     );
@@ -85,9 +88,8 @@ class NotificationService {
       showBadge: false,
     );
 
-    final androidPlugin = _plugin
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+    final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
     await androidPlugin?.createNotificationChannel(channel);
   }
 
@@ -135,7 +137,10 @@ class NotificationService {
 
   /// Removes the sync notification if it is showing.
   Future<void> cancelSyncNotification() async {
-    if (!_initialized || !_pluginAvailable) {
+    if (!_initialized) {
+      await initialize();
+    }
+    if (!_pluginAvailable) {
       return;
     }
     try {
@@ -145,24 +150,38 @@ class NotificationService {
     }
   }
 
-  /// Ensures the dashboard route opens once navigation is available.
+  /// Ensures any pending navigation from the sync notification runs once
+  /// navigation is available.
   void consumePendingNavigation() {
-    if (!_pendingDashboardNavigation) {
+    if (!_pendingNotificationNavigation) {
       return;
     }
     if (Get.key.currentState == null) {
       return;
     }
-    _pendingDashboardNavigation = false;
-    Get.offAll(() => const DashboardScreen());
+    _navigateRespectingPinLock();
   }
 
   void _handleSyncNotificationTap() {
     if (Get.key.currentState == null) {
-      _pendingDashboardNavigation = true;
+      _pendingNotificationNavigation = true;
       return;
     }
-    _pendingDashboardNavigation = false;
-    Get.offAll(() => const DashboardScreen());
+    _navigateRespectingPinLock();
+  }
+
+  void _navigateRespectingPinLock() {
+    _pendingNotificationNavigation = false;
+    PinLockService.instance.hasPin().then((hasPin) {
+      if (Get.key.currentState == null) {
+        _pendingNotificationNavigation = true;
+        return;
+      }
+      if (hasPin) {
+        Get.offAll(() => const PinLockScreen());
+      } else {
+        Get.offAll(() => const DashboardScreen());
+      }
+    });
   }
 }
