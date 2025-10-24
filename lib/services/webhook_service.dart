@@ -137,6 +137,7 @@ class WebhookService {
 
     var successCount = 0;
     var failureCount = 0;
+    var fatalFailure = false;
 
     try {
       for (final transaction in unsyncedTransactions) {
@@ -150,11 +151,20 @@ class WebhookService {
           print('Error syncing transaction ${transaction.id}: $e');
         }
       }
+    } catch (e) {
+      fatalFailure = true;
+      final remaining =
+          max<int>(0, unsyncedTransactions.length - (successCount + failureCount));
+      if (remaining > 0) {
+        failureCount += remaining;
+      }
+      // ignore: avoid_print
+      print('Webhook sync encountered a fatal error: $e');
     } finally {
       await NotificationService.instance.cancelSyncNotification();
     }
 
-    final overallSuccess = failureCount == 0;
+    final overallSuccess = !fatalFailure && failureCount == 0;
     await NotificationService.instance.showSyncSummary(
       successCount: successCount,
       failureCount: failureCount,
