@@ -147,8 +147,7 @@ class WebhookService {
           successCount++;
         } catch (e) {
           failureCount++;
-          // ignore: avoid_print
-          print('Error syncing transaction ${transaction.id}: $e');
+          debugPrint('Error syncing transaction ${transaction.id}: $e');
         }
       }
     } catch (e) {
@@ -158,8 +157,7 @@ class WebhookService {
       if (remaining > 0) {
         failureCount += remaining;
       }
-      // ignore: avoid_print
-      print('Webhook sync encountered a fatal error: $e');
+      debugPrint('Webhook sync encountered a fatal error: $e');
     } finally {
       await NotificationService.instance.cancelSyncNotification();
     }
@@ -195,7 +193,11 @@ class WebhookService {
     String url,
     Transaction transaction,
   ) async {
-    await _dio.post(url, data: jsonEncode(transaction.toJson()));
+    await _dio.post(
+      url,
+      data: jsonEncode(transaction.toJson()),
+      options: Options(headers: {'X-Idempotency-Key': transaction.id}),
+    );
   }
 
   static Future<bool> testWebhook(String url) async {

@@ -216,13 +216,20 @@ class NotificationService {
     final title = overallSuccess
         ? 'HisabBox sync completed'
         : 'HisabBox sync needs attention';
-    final statusMessage = overallSuccess
-        ? 'Sync succeeded.'
-        : 'Some transactions failed.';
-    final countsMessage = total == 0
-        ? 'No transactions required syncing.'
-        : '$successCount successful · $failureCount failed';
-    final body = '$countsMessage $statusMessage';
+
+    final String body;
+    if (total == 0) {
+      body = 'No transactions required syncing.';
+    } else if (failureCount == 0) {
+      final plural = successCount == 1 ? 'transaction' : 'transactions';
+      body = 'Synced $successCount $plural successfully.';
+    } else if (successCount == 0) {
+      final plural = failureCount == 1 ? 'transaction' : 'transactions';
+      body = 'All $failureCount $plural failed to sync.';
+    } else {
+      body =
+          '$successCount successful · $failureCount failed. Some transactions failed to sync.';
+    }
 
     final androidDetails = AndroidNotificationDetails(
       _summaryChannelId,
