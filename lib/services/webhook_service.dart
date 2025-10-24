@@ -30,9 +30,7 @@ class WebhookService {
   }
 
   static Future<void> initialize() async {
-    await Workmanager().initialize(
-      webhookCallbackDispatcher,
-    );
+    await Workmanager().initialize(webhookCallbackDispatcher);
   }
 
   static Future<String?> getWebhookUrl() async {
@@ -91,8 +89,8 @@ class WebhookService {
       return true;
     }
 
-    final unsyncedTransactions =
-        await DatabaseService.instance.getUnsyncedTransactions();
+    final unsyncedTransactions = await DatabaseService.instance
+        .getUnsyncedTransactions();
 
     return _sendPendingTransactions(url, unsyncedTransactions);
   }
@@ -113,8 +111,8 @@ class WebhookService {
       return true;
     }
 
-    final unsyncedTransactions =
-        await DatabaseService.instance.getUnsyncedTransactions();
+    final unsyncedTransactions = await DatabaseService.instance
+        .getUnsyncedTransactions();
 
     return _sendPendingTransactions(url, unsyncedTransactions);
   }
@@ -125,28 +123,53 @@ class WebhookService {
   ) async {
     if (unsyncedTransactions.isEmpty) {
       await NotificationService.instance.cancelSyncNotification();
+      await NotificationService.instance.showSyncSummary(
+        successCount: 0,
+        failureCount: 0,
+        overallSuccess: true,
+      );
       return true;
     }
 
-    await NotificationService.instance
-        .showSyncInProgress(pendingCount: unsyncedTransactions.length);
+    await NotificationService.instance.showSyncInProgress(
+      pendingCount: unsyncedTransactions.length,
+    );
+
+    var successCount = 0;
+    var failureCount = 0;
+    var fatalFailure = false;
 
     try {
       for (final transaction in unsyncedTransactions) {
         try {
           await _sendTransaction(url, transaction);
           await DatabaseService.instance.markAsSynced(transaction.id);
+          successCount++;
         } catch (e) {
-          // ignore: avoid_print
-          print('Error syncing transaction ${transaction.id}: $e');
-          return false;
+          failureCount++;
+          debugPrint('Error syncing transaction ${transaction.id}: $e');
         }
       }
+    } catch (e) {
+      fatalFailure = true;
+      final remaining =
+          max<int>(0, unsyncedTransactions.length - (successCount + failureCount));
+      if (remaining > 0) {
+        failureCount += remaining;
+      }
+      debugPrint('Webhook sync encountered a fatal error: $e');
     } finally {
       await NotificationService.instance.cancelSyncNotification();
     }
 
-    return true;
+    final overallSuccess = !fatalFailure && failureCount == 0;
+    await NotificationService.instance.showSyncSummary(
+      successCount: successCount,
+      failureCount: failureCount,
+      overallSuccess: overallSuccess,
+    );
+
+    return overallSuccess;
   }
 
   static Future<void> _scheduleSync({int attempt = 0}) async {
@@ -170,7 +193,11 @@ class WebhookService {
     String url,
     Transaction transaction,
   ) async {
-    await _dio.post(url, data: jsonEncode(transaction.toJson()));
+    await _dio.post(
+      url,
+      data: jsonEncode(transaction.toJson()),
+      options: Options(headers: {'X-Idempotency-Key': transaction.id}),
+    );
   }
 
   static Future<bool> testWebhook(String url) async {

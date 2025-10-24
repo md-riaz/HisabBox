@@ -20,7 +20,12 @@ class NotificationService {
   static const String _syncChannelName = 'Sync status';
   static const String _syncChannelDescription =
       'Shows when HisabBox is syncing transactions in the background.';
+  static const String _summaryChannelId = 'hisabbox_sync_summary';
+  static const String _summaryChannelName = 'Sync summary';
+  static const String _summaryChannelDescription =
+      'Summaries of recent HisabBox sync attempts.';
   static const int _syncNotificationId = 2001;
+  static const int _summaryNotificationId = 2002;
   static const String _syncPayload = 'open_dashboard_from_sync';
 
   final FlutterLocalNotificationsPlugin _plugin =
@@ -67,7 +72,7 @@ class NotificationService {
       return;
     }
 
-    await _createAndroidSyncChannel();
+    await _createAndroidChannels();
 
     _initialized = true;
 
@@ -77,8 +82,8 @@ class NotificationService {
     }
   }
 
-  Future<void> _createAndroidSyncChannel() async {
-    const channel = AndroidNotificationChannel(
+  Future<void> _createAndroidChannels() async {
+    const syncChannel = AndroidNotificationChannel(
       _syncChannelId,
       _syncChannelName,
       description: _syncChannelDescription,
@@ -87,10 +92,21 @@ class NotificationService {
       enableVibration: false,
       showBadge: false,
     );
+    const summaryChannel = AndroidNotificationChannel(
+      _summaryChannelId,
+      _summaryChannelName,
+      description: _summaryChannelDescription,
+      importance: Importance.defaultImportance,
+      playSound: true,
+      enableVibration: true,
+    );
 
-    final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
-    await androidPlugin?.createNotificationChannel(channel);
+    final androidPlugin = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    await androidPlugin?.createNotificationChannel(syncChannel);
+    await androidPlugin?.createNotificationChannel(summaryChannel);
   }
 
   /// Displays the persistent sync notification.
@@ -183,5 +199,66 @@ class NotificationService {
         Get.offAll(() => const DashboardScreen());
       }
     });
+  }
+
+  /// Shows a one-shot summary notification for the last sync attempt.
+  Future<void> showSyncSummary({
+    required int successCount,
+    required int failureCount,
+    required bool overallSuccess,
+  }) async {
+    await initialize();
+    if (!_pluginAvailable) {
+      return;
+    }
+
+    final total = successCount + failureCount;
+    final title = overallSuccess
+        ? 'HisabBox sync completed'
+        : 'HisabBox sync needs attention';
+
+    final String body;
+    if (total == 0) {
+      body = 'No transactions required syncing.';
+    } else if (failureCount == 0) {
+      final plural = successCount == 1 ? 'transaction' : 'transactions';
+      body = 'Synced $successCount $plural successfully.';
+    } else if (successCount == 0) {
+      final plural = failureCount == 1 ? 'transaction' : 'transactions';
+      body = 'All $failureCount $plural failed to sync.';
+    } else {
+      body =
+          '$successCount successful · $failureCount failed. Some transactions failed to sync.';
+    }
+
+    final androidDetails = AndroidNotificationDetails(
+      _summaryChannelId,
+      _summaryChannelName,
+      channelDescription: _summaryChannelDescription,
+      importance: overallSuccess
+          ? Importance.defaultImportance
+          : Importance.high,
+      priority: overallSuccess ? Priority.defaultPriority : Priority.high,
+      autoCancel: true,
+      enableVibration: !overallSuccess,
+      playSound: !overallSuccess,
+      showWhen: true,
+      icon: '@mipmap/ic_launcher',
+      category: AndroidNotificationCategory.status,
+    );
+
+    final details = NotificationDetails(android: androidDetails);
+
+    try {
+      await _plugin.show(
+        _summaryNotificationId,
+        title,
+        body,
+        details,
+        payload: _syncPayload,
+      );
+    } on MissingPluginException {
+      _pluginAvailable = false;
+    }
   }
 }
