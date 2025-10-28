@@ -71,7 +71,7 @@ class BracBankProvider extends BankSmsProvider {
       return buildTransaction(
         id: entryId,
         provider: provider,
-        type: TransactionType.sent,
+        type: TransactionType.cashout,
         amount: parseAmount(match.group(1)!),
         transactionId: entryId,
         timestamp: timestamp,

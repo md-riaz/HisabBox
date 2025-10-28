@@ -229,7 +229,7 @@ void main() {
       final transaction = provider.parse('BRAC-BANK', message, timestamp);
 
       expect(transaction, isNotNull);
-      expect(transaction!.type, TransactionType.sent);
+      expect(transaction!.type, TransactionType.cashout);
       expect(transaction.amount, 5000.00);
     });
 
@@ -241,7 +241,7 @@ void main() {
       final transaction = provider.parse('BRAC-BANK', message, timestamp);
 
       expect(transaction, isNotNull);
-      expect(transaction!.type, TransactionType.sent);
+      expect(transaction!.type, TransactionType.cashout);
       expect(transaction.amount, 3500.00);
     });
 
@@ -253,7 +253,7 @@ void main() {
       final transaction = provider.parse('BRAC-BANK', message, timestamp);
 
       expect(transaction, isNotNull);
-      expect(transaction!.type, TransactionType.sent);
+      expect(transaction!.type, TransactionType.cashout);
       expect(transaction.amount, 20000.00);
     });
 
@@ -265,7 +265,7 @@ void main() {
       final transaction = provider.parse('BRAC-BANK', message, timestamp);
 
       expect(transaction, isNotNull);
-      expect(transaction!.type, TransactionType.sent);
+      expect(transaction!.type, TransactionType.cashout);
       expect(transaction.amount, 5000.00);
     });
 
@@ -277,7 +277,7 @@ void main() {
       final transaction = provider.parse('BRAC-BANK', message, timestamp);
 
       expect(transaction, isNotNull);
-      expect(transaction!.type, TransactionType.sent);
+      expect(transaction!.type, TransactionType.cashout);
       expect(transaction.amount, 500.00);
     });
   });
