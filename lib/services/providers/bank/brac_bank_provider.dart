@@ -12,10 +12,12 @@ class BracBankProvider extends BankSmsProvider {
     'brac bank',
     'bracbank',
     'brac_bank',
+    'brac',
   ];
 
   static final List<RegExp> _bodyIdentifiers = [
     RegExp(r'brac\s+bank', caseSensitive: false),
+    RegExp(r'\bBBL(?:\s*A/?C)?', caseSensitive: false),
   ];
 
   // Debit patterns for BRAC Bank

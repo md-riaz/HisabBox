@@ -33,6 +33,12 @@ void main() {
     test('matches by body content when sender unknown', () {
       expect(provider.matches('unknown', 'Your BRAC Bank account'), true);
     });
+
+    test('matches BBL abbreviation in body when sender unknown', () {
+      const message =
+          'Tk 200.00 has been transferred from your BBL A/C: 07011**001 to A/C: 07011**002. Available balance is Tk 5,000.00.';
+      expect(provider.matches('unknown', message), true);
+    });
   });
 
   group('BracBankProvider - Fund Transfer (Debit)', () {
@@ -120,6 +126,22 @@ void main() {
       expect(transaction!.type, TransactionType.sent);
       expect(transaction.amount, 4000.00);
     });
+
+    test(
+      'parses transfer identified by BBL abbreviation with unknown sender',
+      () {
+        const message =
+            'Tk 200.00 has been transferred from your BBL A/C: 07011**001 to A/C: 07011**002. Available balance is Tk 5,000.00.';
+        final timestamp = DateTime(2025, 1, 1, 9, 30);
+
+        final transaction = provider.parse('UNKNOWN', message, timestamp);
+
+        expect(transaction, isNotNull);
+        expect(transaction!.type, TransactionType.sent);
+        expect(transaction.amount, 200.00);
+        expect(transaction.provider, Provider.bracBank);
+      },
+    );
 
     test('parses transfer to one-off beneficiary', () {
       const message =
