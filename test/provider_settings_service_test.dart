@@ -17,7 +17,6 @@ void main() {
 
     expect(settings[Provider.nagad], isFalse);
     expect(settings[Provider.rocket], isFalse);
-    expect(settings[Provider.bracBank], isFalse);
 
     for (final provider in Provider.values.where(
       (provider) => !ProviderSettingsService.isSupported(provider),
@@ -27,7 +26,8 @@ void main() {
   });
 
   test('getEnabledProviders only returns bKash by default', () async {
-    final enabledProviders = await ProviderSettingsService.getEnabledProviders();
+    final enabledProviders =
+        await ProviderSettingsService.getEnabledProviders();
 
     expect(enabledProviders, [Provider.bkash]);
   });
@@ -54,14 +54,14 @@ void main() {
   });
 
   test('unsupported providers stay disabled', () async {
-    await ProviderSettingsService.setProviderEnabled(Provider.cityBank, true);
+    await ProviderSettingsService.setProviderEnabled(Provider.other, true);
 
     expect(
-      await ProviderSettingsService.isProviderEnabled(Provider.cityBank),
+      await ProviderSettingsService.isProviderEnabled(Provider.other),
       isFalse,
     );
 
     final settings = await ProviderSettingsService.getProviderSettings();
-    expect(settings[Provider.cityBank], isFalse);
+    expect(settings[Provider.other], isFalse);
   });
 }

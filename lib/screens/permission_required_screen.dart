@@ -138,7 +138,7 @@ class _PermissionRequiredScreenState extends State<PermissionRequiredScreen>
                       icon: Icons.sms,
                       title: 'SMS Access',
                       description:
-                          'To read and monitor transaction messages from banks and mobile financial services.',
+                          'To read and monitor transaction messages from mobile financial services.',
                     ),
                     const SizedBox(height: 12),
                     const _PermissionItem(

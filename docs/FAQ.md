@@ -4,7 +4,7 @@
 
 ### What is HisabBox?
 
-HisabBox is an offline-first Android app that automatically parses financial SMS messages from bKash, Nagad, Rocket, and banks to track your transactions. It stores everything locally and optionally syncs to your own webhook for backup.
+HisabBox is an offline-first Android app that automatically parses financial SMS messages from bKash, Nagad, and Rocket to track your transactions. It stores everything locally and optionally syncs to your own webhook for backup.
 
 ### Is HisabBox free?
 
@@ -52,7 +52,6 @@ Currently supported:
 - bKash
 - Nagad
 - Rocket
-- Banks (DBBL, City Bank, BRAC Bank, EBL, Standard Chartered, and more)
 
 ### Can I add custom providers?
 

@@ -189,7 +189,7 @@ Tap any transaction card to see:
 
 **Solutions**:
 1. Check SMS permission is granted
-2. Verify sender is bKash, Nagad, Rocket, or a bank
+2. Verify sender is bKash, Nagad, or Rocket
 3. Restart the app
 4. Try manual import
 

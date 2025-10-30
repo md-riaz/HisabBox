@@ -3,8 +3,10 @@ import 'package:hisabbox/controllers/transaction_controller.dart';
 import 'package:hisabbox/models/transaction.dart';
 import 'package:hisabbox/services/capture_settings_service.dart';
 import 'package:hisabbox/services/database_service.dart';
+import 'package:get/get.dart';
 import 'package:sqflite/sqflite.dart' as sqflite;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart' as sqflite_ffi;
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -21,6 +23,7 @@ void main() {
   });
 
   setUp(() async {
+    SharedPreferences.setMockInitialValues({});
     await DatabaseService.instance.resetForTesting();
   });
 
@@ -50,6 +53,11 @@ void main() {
 
     final controller = TransactionController();
     addTearDown(controller.dispose);
+
+    controller.activeProviders.assignAll([Provider.bkash]);
+    controller.selectedTransactionTypes.assignAll(
+      CaptureSettingsService.defaultEnabledTypes.toList(),
+    );
 
     await controller.loadTransactions(limit: 10);
     expect(

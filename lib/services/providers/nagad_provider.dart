@@ -25,6 +25,13 @@ class NagadProvider extends SmsProvider {
     dotAll: true,
   );
 
+  /// Captures concise alerts like "Received Tk 3,500.00 from 019xxxxxxxx. Trx.ID: ABC123".
+  static final RegExp _compactReceivedPattern = RegExp(
+    r'Received\s+Tk\s*([\d,]+\.?\d*)\s*from\s*([\d\s]+).*?Trx[.\s]?ID[:\s]?([\w\d]+)',
+    caseSensitive: false,
+    dotAll: true,
+  );
+
   /// Captures payment to merchants like Daraz, Foodpanda, etc.
   /// Matches: "Payment to 'Daraz Bangladesh Limit' is Successful.\nAmount: Tk  494.00"
   static final RegExp _paymentPattern = RegExp(
@@ -41,7 +48,7 @@ class NagadProvider extends SmsProvider {
     dotAll: true,
   );
 
-  /// Captures bank add money transactions (Cash In).
+  /// Captures add money transactions (Cash In).
   /// Matches: "Add Money from Bank is Successful.\nFrom: IBBL\nAmount: Tk 340.0"
   static final RegExp _addMoneyPattern = RegExp(
     r'Add Money from Bank is Successful.*?From:\s*([^\n]+).*?Amount:\s*Tk\s*([\d,]+\.?\d*).*?TxnID:\s*([\w\d]+)',
@@ -166,6 +173,20 @@ class NagadProvider extends SmsProvider {
       );
     }
 
+    final compactReceivedMatch = _compactReceivedPattern.firstMatch(message);
+    if (compactReceivedMatch != null) {
+      final sender = compactReceivedMatch.group(2)?.trim();
+      return buildTransaction(
+        provider: provider,
+        type: TransactionType.received,
+        amount: parseAmount(compactReceivedMatch.group(1)!),
+        sender: sender,
+        transactionId: compactReceivedMatch.group(3)!,
+        timestamp: timestamp,
+        rawMessage: message,
+      );
+    }
+
     // Check for payment to merchant
     final paymentMatch = _paymentPattern.firstMatch(message);
     if (paymentMatch != null) {
@@ -196,7 +217,7 @@ class NagadProvider extends SmsProvider {
       );
     }
 
-    // Check for add money from bank
+    // Check for add money from linked accounts
     final addMoneyMatch = _addMoneyPattern.firstMatch(message);
     if (addMoneyMatch != null) {
       final sender = addMoneyMatch.group(1)?.trim();

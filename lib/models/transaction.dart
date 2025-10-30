@@ -31,16 +31,6 @@ enum Provider {
   nagad,
   @JsonValue('rocket')
   rocket,
-  @JsonValue('dutchBanglaBank')
-  dutchBanglaBank,
-  @JsonValue('bracBank')
-  bracBank,
-  @JsonValue('cityBank')
-  cityBank,
-  @JsonValue('bankAsia')
-  bankAsia,
-  @JsonValue('islamiBank')
-  islamiBank,
   @JsonValue('other')
   other,
 }

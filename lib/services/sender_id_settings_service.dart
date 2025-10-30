@@ -1,7 +1,6 @@
 import 'package:hisabbox/models/transaction.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 /// Stores and retrieves the SMS sender identifiers used by each provider.
 ///
 /// The sender IDs are persisted in [SharedPreferences] so they can be
@@ -16,14 +15,12 @@ class SenderIdSettingsService {
     Provider.bkash,
     Provider.nagad,
     Provider.rocket,
-    Provider.bracBank,
   ];
 
   static const Map<Provider, List<String>> _defaultSenderIds = {
     Provider.bkash: ['bkash', '16247'],
     Provider.nagad: ['nagad', '16167'],
     Provider.rocket: ['rocket', '16216'],
-    Provider.bracBank: ['bracbank', 'brac-bank', 'brac'],
   };
 
   /// Returns the currently configured sender IDs for [provider].

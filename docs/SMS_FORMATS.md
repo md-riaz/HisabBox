@@ -73,48 +73,6 @@ Cash Out Tk 1,000.00 successful. Agent: 01612345678. Fee: Tk 20.00. TxnID: DEF23
 Bill Payment Tk 550.00 to DESCO successful. TxnID: JKL567MNO at 2024-01-12 14:00:00. Balance: Tk 7,422.00
 ```
 
-## Bank SMS Examples
-
-### Debit Transaction (DBBL)
-```
-Your A/C XXXXXXXXX1234 debited by BDT 5,000.00 on 01-Jan-2024 12:00:00. Balance: BDT 15,000.00. Ref: TXN123456
-```
-
-### Credit Transaction (DBBL)
-```
-Your A/C XXXXXXXXX1234 credited with BDT 10,000.00 on 02-Jan-2024 14:30:00. Balance: BDT 25,000.00. Ref: TXN789012
-```
-
-### Debit Transaction (City Bank)
-```
-City Bank: A/C XX1234 Dr Tk 3,500.00 on 03-Jan-24. Available Balance Tk 21,500.00
-```
-
-### Credit Transaction (City Bank)
-```
-City Bank: A/C XX1234 Cr Tk 8,000.00 on 04-Jan-24. Available Balance Tk 29,500.00
-```
-
-### Debit Transaction (BRAC Bank)
-```
-BRAC Bank Alert: Your A/C ***1234 Debited Tk 2,000.00 on 05-Jan-2024. Balance: Tk 27,500.00
-```
-
-### Credit Transaction (BRAC Bank)
-```
-BRAC Bank Alert: Your A/C ***1234 Credited Tk 5,500.00 on 06-Jan-2024. Balance: Tk 33,000.00
-```
-
-### ATM Withdrawal (EBL)
-```
-EBL: Withdrawal of Tk 4,000.00 from ATM at Location XYZ on 07-Jan-24 10:30. A/C **1234. Bal: Tk 29,000.00
-```
-
-### POS Transaction (Standard Chartered)
-```
-Standard Chartered: Card ending 1234 used for POS txn of Tk 1,500.00 at Merchant ABC on 08-Jan-24. Avl Bal: Tk 27,500.00
-```
-
 ## Important Notes
 
 ### SMS Sender Addresses
@@ -124,7 +82,6 @@ The parser identifies providers based on sender addresses:
 - **bKash**: Usually from "bKash" or "16247"
 - **Nagad**: Usually from "Nagad" or "16167"
 - **Rocket**: Usually from "Rocket" or "16216"
-- **Banks**: Various, but usually contains "bank" or financial keywords
 
 ### Parsing Flexibility
 
@@ -176,13 +133,6 @@ To test if a specific SMS will be parsed:
 - "bill payment"
 - "TxnID"
 
-### Bank Keywords
-- "debit", "debited", "dr"
-- "credit", "credited", "cr"
-- "withdraw", "withdrawal"
-- "deposit"
-- "A/C", "account"
-- "balance", "bal"
 
 ## Troubleshooting
 
@@ -190,7 +140,7 @@ To test if a specific SMS will be parsed:
 
 1. **Check Permissions**: Ensure SMS read permission is granted
 2. **Provider Detection**: The sender address should contain provider keywords
-3. **Format Mismatch**: Some custom bank formats may not be recognized
+3. **Format Mismatch**: Some custom wallet formats may not be recognized
 4. **Import**: Try manual import from Settings
 
 ### Incorrect Amount
