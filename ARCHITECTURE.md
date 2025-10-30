@@ -2,7 +2,7 @@
 
 ## Overview
 
-HisabBox is an offline-first Flutter application designed to parse financial SMS messages from Bangladeshi mobile financial services (bKash, Nagad, Rocket) and banks. The architecture emphasizes data persistence, privacy, and zero data loss.
+HisabBox is an offline-first Flutter application designed to parse financial SMS messages from Bangladeshi mobile wallet services (bKash, Nagad, Rocket). The architecture emphasizes data persistence, privacy, and zero data loss.
 
 ## Design Principles
 
@@ -45,7 +45,6 @@ HisabBox is an offline-first Flutter application designed to parse financial SMS
 1. bKash (patterns for sent, received, cashout, payment)
 2. Nagad (patterns for sent, received, cashout)
 3. Rocket (patterns for sent, received, cashout)
-4. Banks (generic patterns for debit/credit)
 
 **Extension Points**:
 - Easy to add new providers by adding patterns

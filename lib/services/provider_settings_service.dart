@@ -1,7 +1,6 @@
 import 'package:hisabbox/models/transaction.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 /// Manages the enabled/disabled state of SMS providers.
 ///
 /// Provider preferences are stored in [SharedPreferences] so they can be
@@ -15,7 +14,6 @@ class ProviderSettingsService {
     Provider.bkash,
     Provider.nagad,
     Provider.rocket,
-    Provider.bracBank,
   ];
 
   static bool isSupported(Provider provider) =>

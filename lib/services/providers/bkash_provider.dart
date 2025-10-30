@@ -4,10 +4,10 @@ import 'package:hisabbox/services/providers/sms_provider.dart';
 
 class BkashProvider extends SmsProvider {
   BkashProvider({Iterable<String>? senderIds})
-      : _senderIds = normalizeSenderIdSet(
-          senderIds ?? const <String>[],
-          defaultSenderIds,
-        );
+    : _senderIds = normalizeSenderIdSet(
+        senderIds ?? const <String>[],
+        defaultSenderIds,
+      );
 
   /// Matches customer-to-customer transfers such as
   /// "You have sent Tk 1,500.00 to 017XXXXXXXX. TrxID ABC123".
@@ -50,7 +50,7 @@ class BkashProvider extends SmsProvider {
     dotAll: true,
   );
 
-  /// Identifies bank-to-bKash transfers that mention "received deposit".
+  /// Identifies add-money transfers that mention "received deposit".
   static final RegExp _receivedDepositPattern = RegExp(
     r'You have received deposit from [^\.]+ of Tk\s*([\d,]+(?:\.\d+)?) from ([^\.]+).*?Trx[.\s]*ID[:\s]*([\w\d]+)',
     caseSensitive: false,

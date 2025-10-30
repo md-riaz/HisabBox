@@ -21,7 +21,6 @@ void main() {
     await ProviderSettingsService.setProviderEnabled(Provider.bkash, true);
     await ProviderSettingsService.setProviderEnabled(Provider.nagad, true);
     await ProviderSettingsService.setProviderEnabled(Provider.rocket, true);
-    await ProviderSettingsService.setProviderEnabled(Provider.bracBank, true);
   }
 
   setUp(() async {
@@ -193,28 +192,28 @@ void main() {
       expect(transaction.transactionId, 'CHA0EEADZY');
     });
 
-    test('uses preloaded sender IDs and provider settings when provided',
-        () async {
-      const message =
-          'You have sent Tk1,500.00 to 01712345678 successfully. Fee Tk25.00. TrxID ABC123XYZ at 2024-01-01 12:00:00';
-      final timestamp = DateTime(2024, 1, 1, 12, 0, 0);
+    test(
+      'uses preloaded sender IDs and provider settings when provided',
+      () async {
+        const message =
+            'You have sent Tk1,500.00 to 01712345678 successfully. Fee Tk25.00. TrxID ABC123XYZ at 2024-01-01 12:00:00';
+        final timestamp = DateTime(2024, 1, 1, 12, 0, 0);
 
-      final transaction = await BaseSmsProvider.parse(
-        'CustomSender',
-        message,
-        timestamp,
-        enabledProviders: const [Provider.bkash],
-        senderIdMap: const {
-          Provider.bkash: ['customsender'],
-        },
-        providerSettings: const {
-          Provider.bkash: true,
-        },
-      );
+        final transaction = await BaseSmsProvider.parse(
+          'CustomSender',
+          message,
+          timestamp,
+          enabledProviders: const [Provider.bkash],
+          senderIdMap: const {
+            Provider.bkash: ['customsender'],
+          },
+          providerSettings: const {Provider.bkash: true},
+        );
 
-      expect(transaction, isNotNull);
-      expect(transaction!.provider, Provider.bkash);
-    });
+        expect(transaction, isNotNull);
+        expect(transaction!.provider, Provider.bkash);
+      },
+    );
   });
 
   group('BaseSmsProvider - Nagad', () {
@@ -239,7 +238,7 @@ void main() {
 
     test('parses Nagad received transaction', () async {
       const message =
-          'Received Tk 3,500.00 from 01998765432. Trx.ID: BCD789EFG';
+          'Money Received.\nAmount: Tk 3,500.00\nSender: 01998765432\nTxnID: BCD789EFG';
       final timestamp = DateTime(2024, 1, 6, 11, 30, 0);
 
       final transaction = await BaseSmsProvider.parse(
@@ -309,25 +308,6 @@ void main() {
       );
 
       expect(transaction, isNull);
-    });
-  });
-
-  group('BaseSmsProvider - Bank', () {
-    test('parses BRAC Bank debit transaction', () async {
-      const message =
-          'BRAC Bank: Your A/C debited by BDT 5,000.00 on 01-Jan-2024.';
-      final timestamp = DateTime(2024, 1, 9, 10, 0, 0);
-
-      final transaction = await BaseSmsProvider.parse(
-        'BRACBANK',
-        message,
-        timestamp,
-      );
-
-      expect(transaction, isNotNull);
-      expect(transaction!.provider, Provider.bracBank);
-      expect(transaction.type, TransactionType.sent);
-      expect(transaction.amount, 5000.00);
     });
   });
 

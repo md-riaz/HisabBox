@@ -4,14 +4,14 @@ This document captures the latest direction for HisabBox as a persistent SMS par
 
 ## 1. Vision
 
-HisabBox persistently ingests mobile financial service (MFS) and bank SMS alerts, stores them locally, and instantly pushes structured JSON payloads to a user-owned webhook. The app operates as a **local-first transaction gateway** that enables automation, accounting, and analytics without cloud lock-in or background battery drain.
+HisabBox persistently ingests mobile financial service (MFS) wallet SMS alerts, stores them locally, and instantly pushes structured JSON payloads to a user-owned webhook. The app operates as a **local-first transaction gateway** that enables automation, accounting, and analytics without cloud lock-in or background battery drain.
 
 ## 2. Actors
 
 | Actor | Role |
 | --- | --- |
 | User (Individual/Business) | Monitors, audits, and automates their financial SMS transactions. |
-| SMS Provider | bKash, Nagad, Rocket, and banking senders that issue alerts. |
+| SMS Provider | bKash, Nagad, Rocket, and other mobile wallet senders that issue alerts. |
 | HisabBox App | Parses SMS, stores data, and pushes transactions to the webhook. |
 | External API Server | Receives transaction payloads and executes business-specific logic. |
 
@@ -95,7 +95,7 @@ Persistence guarantees: every SMS is captured through the another_telephony plug
 
 ## 8. Future Enhancements
 
-- Expand bank SMS parsing (DBBL, City, BRAC, etc.).
+- Expand wallet SMS parsing (new Bangladeshi MFS providers).
 - Add webhook security via HMAC signatures and shared secrets.
 - Explore ML/NLP parsing for dynamic templates.
 - Support remote regex registry updates from trusted sources.

@@ -178,9 +178,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
       await _settingsController.enablePinLock(pin);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('PIN lock enabled')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('PIN lock enabled')));
     } else {
       final disableConfirmed = await _showDisablePinDialog();
       if (!disableConfirmed) {
@@ -189,9 +189,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
       await _settingsController.disablePinLock();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('PIN lock disabled')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('PIN lock disabled')));
     }
   }
 
@@ -202,9 +202,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
     await _settingsController.enablePinLock(newPin);
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('PIN updated successfully')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('PIN updated successfully')));
   }
 
   Future<String?> _showCreatePinDialog() {
@@ -226,9 +226,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   TextField(
                     controller: newPinController,
                     keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                    ],
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     obscureText: true,
                     maxLength: 6,
                     decoration: const InputDecoration(
@@ -240,9 +238,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   TextField(
                     controller: confirmController,
                     keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                    ],
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     obscureText: true,
                     maxLength: 6,
                     decoration: const InputDecoration(
@@ -252,10 +248,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   if (error != null) ...[
                     const SizedBox(height: 12),
-                    Text(
-                      error!,
-                      style: const TextStyle(color: Colors.red),
-                    ),
+                    Text(error!, style: const TextStyle(color: Colors.red)),
                   ],
                 ],
               ),
@@ -311,9 +304,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   TextField(
                     controller: currentPinController,
                     keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                    ],
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     obscureText: true,
                     maxLength: 6,
                     decoration: const InputDecoration(
@@ -325,9 +316,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   TextField(
                     controller: newPinController,
                     keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                    ],
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     obscureText: true,
                     maxLength: 6,
                     decoration: const InputDecoration(
@@ -339,9 +328,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   TextField(
                     controller: confirmController,
                     keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                    ],
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     obscureText: true,
                     maxLength: 6,
                     decoration: const InputDecoration(
@@ -351,10 +338,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   if (error != null) ...[
                     const SizedBox(height: 12),
-                    Text(
-                      error!,
-                      style: const TextStyle(color: Colors.red),
-                    ),
+                    Text(error!, style: const TextStyle(color: Colors.red)),
                   ],
                 ],
               ),
@@ -396,8 +380,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             error = null;
                           });
 
-                          final isValid =
-                              await _settingsController.verifyPin(currentPin);
+                          final isValid = await _settingsController.verifyPin(
+                            currentPin,
+                          );
                           if (!dialogContext.mounted) {
                             return;
                           }
@@ -447,9 +432,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   TextField(
                     controller: pinController,
                     keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                    ],
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     obscureText: true,
                     maxLength: 6,
                     decoration: const InputDecoration(
@@ -459,10 +442,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   if (error != null) ...[
                     const SizedBox(height: 12),
-                    Text(
-                      error!,
-                      style: const TextStyle(color: Colors.red),
-                    ),
+                    Text(error!, style: const TextStyle(color: Colors.red)),
                   ],
                 ],
               ),
@@ -488,8 +468,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             isProcessing = true;
                             error = null;
                           });
-                          final isValid =
-                              await _settingsController.verifyPin(pin);
+                          final isValid = await _settingsController.verifyPin(
+                            pin,
+                          );
                           if (!dialogContext.mounted) {
                             return;
                           }
@@ -656,15 +637,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         leading: const Icon(Icons.edit),
                         contentPadding: EdgeInsets.zero,
                         title: const Text('Change PIN'),
-                        subtitle: const Text('Update the code that unlocks HisabBox'),
+                        subtitle: const Text(
+                          'Update the code that unlocks HisabBox',
+                        ),
                         onTap: _changePin,
                       ),
                       ListTile(
                         leading: const Icon(Icons.lock_open),
                         contentPadding: EdgeInsets.zero,
                         title: const Text('Disable PIN lock'),
-                        subtitle:
-                            const Text('Remove the PIN requirement for launching the app'),
+                        subtitle: const Text(
+                          'Remove the PIN requirement for launching the app',
+                        ),
                         onTap: () async {
                           await _handlePinLockToggle(false);
                         },
@@ -723,9 +707,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             const SizedBox(height: 4),
                             Text(
                               providerType.matchingDescription,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
+                              style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(color: Colors.grey.shade600),
                             ),
                           ],
@@ -747,8 +729,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           // Update active providers in transaction controller
                           final enabledProviders =
                               _settingsController.enabledProviders;
-                          await _transactionController
-                              .setActiveProviders(enabledProviders);
+                          await _transactionController.setActiveProviders(
+                            enabledProviders,
+                          );
 
                           if (!context.mounted) return;
 
@@ -864,7 +847,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const ListTile(
                       title: Text('Description'),
                       subtitle: Text(
-                        'HisabBox is an offline-first SMS parser that tracks bKash, Nagad, Rocket, and bank messages',
+                        'HisabBox is an offline-first SMS parser that tracks bKash, Nagad, and Rocket wallet messages',
                       ),
                     ),
                   ],

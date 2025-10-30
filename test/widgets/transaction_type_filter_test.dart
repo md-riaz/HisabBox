@@ -9,6 +9,7 @@ import 'package:hisabbox/services/database_service.dart';
 import 'package:hisabbox/widgets/transaction_type_filter.dart';
 import 'package:sqflite/sqflite.dart' as sqflite;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart' as sqflite_ffi;
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -19,6 +20,7 @@ void main() {
   });
 
   setUp(() async {
+    SharedPreferences.setMockInitialValues({});
     await DatabaseService.instance.resetForTesting();
     Get.reset();
     Get.testMode = true;

@@ -395,7 +395,6 @@ enum Provider {
   bkash,
   nagad,
   rocket,
-  bank,
   other,
 }
 ```

@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release of HisabBox
 - Offline-first SMS parser for financial transactions
-- Support for bKash, Nagad, Rocket, and bank SMS parsing
+- Support for bKash, Nagad, and Rocket SMS parsing
 - SQLite database for local storage
 - Material 3 dashboard with transaction summary
 - Provider filtering functionality
@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Features
 - Parse financial SMS from multiple providers
 - Store transactions locally with zero data loss
-- Filter transactions by provider (bKash, Nagad, Rocket, Bank)
+- Filter transactions by provider (bKash, Nagad, Rocket)
 - View transaction summary with balance calculation
 - Sync transactions to secure webhook endpoint
 - Import historical SMS messages

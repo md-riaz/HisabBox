@@ -1,5 +1,5 @@
 name: hisabbox
-description: An offline-first SMS parser that tracks bKash, Nagad, Rocket, and bank messages
+description: An offline-first SMS parser that tracks bKash, Nagad, and Rocket wallet messages
 publish_to: 'none'
 version: 1.0.1+1
 

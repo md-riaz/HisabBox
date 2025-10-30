@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:hisabbox/models/transaction.dart';
 import 'package:hisabbox/services/provider_settings_service.dart';
-import 'package:hisabbox/services/providers/bank/brac_bank_provider.dart';
 import 'package:hisabbox/services/providers/bkash_provider.dart';
 import 'package:hisabbox/services/providers/nagad_provider.dart';
 import 'package:hisabbox/services/providers/rocket_provider.dart';
@@ -107,15 +106,6 @@ abstract final class BaseSmsProvider {
         RocketProvider(
           senderIds:
               senderIdMap[Provider.rocket] ?? RocketProvider.defaultSenderIds,
-        ),
-      );
-    }
-
-    if (isAllowed(Provider.bracBank)) {
-      providers.add(
-        BracBankProvider(
-          senderIds: senderIdMap[Provider.bracBank] ??
-              BracBankProvider.defaultSenderIds,
         ),
       );
     }

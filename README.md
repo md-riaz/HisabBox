@@ -1,6 +1,6 @@
 # HisabBox
 
-HisabBox is a persistent, webhook-driven SMS automation hub for Bangladesh’s mobile money ecosystem. It converts bKash, Nagad, Rocket, and bank alerts into structured JSON, stores them locally, and pushes each transaction to your webhook the moment connectivity is available.
+HisabBox is a persistent, webhook-driven SMS automation hub for Bangladesh’s mobile money ecosystem. It converts bKash, Nagad, and Rocket wallet alerts into structured JSON, stores them locally, and pushes each transaction to your webhook the moment connectivity is available.
 
 ## Vision
 
@@ -9,14 +9,14 @@ Deliver a **local-first transaction gateway** that never misses a financial SMS,
 ## Product Pillars
 
 1. **Persistent Capture** – Native receivers and a foreground service keep listening even after app kills or device reboots.
-2. **Provider Control** – Users decide which mobile financial services and banks are parsed.
+2. **Provider Control** – Users decide which mobile wallet services are parsed.
 3. **Offline Resilience** – Transactions are stored in SQLite/Drift and queued until the internet returns.
 4. **Webhook-Only Automation** – Structured payloads are POSTed to the user’s endpoint with WorkManager retries and no polling.
 5. **Privacy & Transparency** – Data never leaves the device unless a webhook is explicitly configured.
 
 ## Feature Highlights
 
-- **Automatic SMS Parsing** for bKash, Nagad, Rocket, and Bangladeshi bank alerts with Bangla/English digit normalization.
+- **Automatic SMS Parsing** for bKash, Nagad, and Rocket wallet alerts with Bangla/English digit normalization.
 - **Provider Toggles** so Rocket or any other sender can be paused without uninstalling the app.
 - **Historical Imports** by message count or time range to backfill older statements.
 - **Material 3 Dashboard** showing the most recent 20–30 transactions with provider colors, amounts, balances, and TrxIDs.
@@ -153,7 +153,7 @@ The app requires the following Android permissions:
 
 ### Filtering Transactions
 - Use provider filter chips on dashboard
-- Select/deselect providers (bKash, Nagad, Rocket, Bank)
+- Select/deselect providers (bKash, Nagad, Rocket)
 - Transactions update automatically
 
 ### Provider Toggles & Import Controls

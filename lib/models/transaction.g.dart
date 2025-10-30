@@ -43,11 +43,6 @@ const _$ProviderEnumMap = {
   Provider.bkash: 'bkash',
   Provider.nagad: 'nagad',
   Provider.rocket: 'rocket',
-  Provider.dutchBanglaBank: 'dutchBanglaBank',
-  Provider.bracBank: 'bracBank',
-  Provider.cityBank: 'cityBank',
-  Provider.bankAsia: 'bankAsia',
-  Provider.islamiBank: 'islamiBank',
   Provider.other: 'other',
 };
 

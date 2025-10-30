@@ -44,12 +44,6 @@ A production-ready Android application that:
    - Receive Money
    - Cash Out
 
-4. **Banks** - Generic support for various Bangladeshi banks
-   - Debit transactions
-   - Credit transactions
-   - ATM withdrawals
-   - POS transactions
-
 ## Architecture Highlights
 
 ### Design Patterns
@@ -99,8 +93,6 @@ r'You have sent Tk([\d,]+\.?\d*) to ([\d\s]+) .*?TrxID ([\w\d]+)'
 // Nagad received money
 r'Received Tk\s?([\d,]+\.?\d*) from ([\d\s]+) .*?Trx[.\s]?ID[:\s]?([\w\d]+)'
 
-// Bank debit
-r'(?:Debit|Debited|Withdrawn|Dr).*?(?:BDT|Tk|TK)\s?([\d,]+\.?\d*)'
 ```
 
 ### Database Schema
